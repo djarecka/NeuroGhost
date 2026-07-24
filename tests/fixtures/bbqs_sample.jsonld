@@ -1,0 +1,88 @@
+{
+  "@context": {
+    "schema": "https://schema.org/",
+    "bbqs": "https://brain-bbqs.org/schema/",
+    "name": "schema:name",
+    "identifier": "schema:identifier",
+    "email": "schema:email",
+    "affiliation": "schema:affiliation",
+    "funding": "schema:funding",
+    "species": "bbqs:species",
+    "modality": "bbqs:modality"
+  },
+  "@graph": [
+    {
+      "@id": "bbqs:investigator/laura-cabrera",
+      "@type": ["bbqs:Investigator", "schema:Person"],
+      "name": "Laura Yenisa Cabrera Trujillo",
+      "email": "lcabrera@psu.edu",
+      "identifier": "0000-0002-1234-5678",
+      "affiliation": "Penn State University",
+      "bbqs:researchAreas": ["neuroethics", "DBS"]
+    },
+    {
+      "@id": "bbqs:investigator/charles-mikell",
+      "@type": ["bbqs:Investigator", "schema:Person"],
+      "name": "Charles Mikell",
+      "affiliation": "Stony Brook University",
+      "bbqs:role": "PI"
+    },
+    {
+      "@id": "bbqs:project/1R61MH138612",
+      "@type": ["bbqs:FundedProject", "schema:ResearchProject"],
+      "identifier": "1R61MH138612",
+      "name": "SeeMe: Sensing Emotion in Mood Episodes",
+      "funding": "NIMH",
+      "species": ["Human"],
+      "bbqs:leadInstitution": "Stony Brook University",
+      "bbqs:principalInvestigators": ["bbqs:investigator/charles-mikell"]
+    },
+    {
+      "@id": "bbqs:organization/psu",
+      "@type": ["bbqs:Organization", "schema:CollegeOrUniversity"],
+      "name": "Penn State University",
+      "identifier": "ROR:04p491231"
+    },
+    {
+      "@id": "bbqs:device/neuropixels-2",
+      "@type": ["bbqs:Device", "schema:MedicalDevice"],
+      "name": "Neuropixels 2.0",
+      "modality": "electrophysiology",
+      "bbqs:channels": 384,
+      "bbqs:commonIssues": ["drift correction", "spike sorting artifacts"]
+    },
+    {
+      "@id": "bbqs:device/miniscope-v4",
+      "@type": "bbqs:Device",
+      "name": "UCLA Miniscope V4",
+      "modality": "calcium imaging",
+      "bbqs:commonIssues": ["motion artifacts", "photobleaching"]
+    },
+    {
+      "@id": "bbqs:dataset/ember-000123",
+      "@type": ["bbqs:Dataset", "schema:Dataset"],
+      "identifier": "DANDI:000123",
+      "name": "EMBER Dandiset 000123 — Human iEEG during mood tasks",
+      "species": ["Human"],
+      "modality": "iEEG",
+      "schema:license": "CC-BY-4.0",
+      "schema:url": "https://dandi.emberarchive.org/dandiset/000123"
+    },
+    {
+      "@id": "bbqs:publication/10.1038-fake.2025",
+      "@type": ["bbqs:Publication", "schema:ScholarlyArticle"],
+      "name": "Shared mental models across BBQS R61/R34 cohorts",
+      "schema:datePublished": "2025-09-14",
+      "schema:identifier": "DOI:10.1038/fake.2025",
+      "schema:isPartOf": "Nature Neuroscience"
+    },
+    {
+      "@id": "bbqs:software/spike-sorter-bbqs",
+      "@type": ["bbqs:Software", "schema:SoftwareApplication"],
+      "name": "bbqs-spike-sorter",
+      "schema:programmingLanguage": "Python",
+      "schema:license": "MIT",
+      "schema:codeRepository": "https://github.com/brain-bbqs/spike-sorter"
+    }
+  ]
+}
