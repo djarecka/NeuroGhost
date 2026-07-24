@@ -254,12 +254,39 @@ textarea.yaml-editor{width:100%;height:280px;background:transparent;border:none;
 <div id="view-transform" class="view">
   <div class="transform-panel">
     <div class="query-tabs" style="margin-bottom:20px">
-      <button class="active" onclick="trTabSwitch('browser',this)">In-browser CSV</button>
+      <button onclick="trTabSwitch('demo',this)" class="active">BBQS Live Demo</button>
+      <button onclick="trTabSwitch('browser',this)">In-browser CSV</button>
       <button onclick="trTabSwitch('api',this)">API reference</button>
     </div>
 
+    <!-- BBQS Live Demo -->
+    <div id="tr-tab-demo">
+      <p style="color:var(--text-dim);font-size:12.5px;margin-bottom:20px;line-height:1.6">
+        Transform real BBQS entities to other schemas using live alignment data from the registry. Runs entirely in your browser.
+      </p>
+
+      <div class="transform-section">
+        <h3>1. Pick a BBQS entity</h3>
+        <div id="tr-demo-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:4px"></div>
+      </div>
+
+      <div class="transform-section" id="tr-demo-step2" style="display:none">
+        <h3>2. Target schema</h3>
+        <div class="builder-row">
+          <label>Convert to</label>
+          <select id="tr-demo-tgt" onchange="trRunDemo()"></select>
+        </div>
+        <div id="tr-demo-record" style="margin-top:12px;background:var(--bg-elev);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--text-dim);white-space:pre-wrap;line-height:1.6"></div>
+      </div>
+
+      <div class="transform-section" id="tr-demo-result" style="display:none">
+        <h3>3. Result</h3>
+        <div id="tr-demo-result-inner"></div>
+      </div>
+    </div>
+
     <!-- In-browser CSV transform -->
-    <div id="tr-tab-browser">
+    <div id="tr-tab-browser" style="display:none">
       <p style="color:var(--text-dim);font-size:12.5px;margin-bottom:20px;line-height:1.6">Upload a CSV whose columns match one schema, and convert to another. Uses stored alignments to auto-map columns. Runs entirely in your browser — no data leaves your machine.</p>
 
       <div class="transform-section">
@@ -554,7 +581,7 @@ async function boot(){
     if(pr.status==="fulfilled"&&pr.value.ok)provenance=await pr.value.json();
     renderConceptsSrc();renderConcepts();renderDiffSelects();renderGraph();renderProvenance();
     renderHistList("schemas");renderHistList("classes");renderHistList("properties");
-    initQuery();initTransform();
+    initQuery();initTransform();initDemoCards();
   }catch(e){document.getElementById("status").innerHTML='<span class="status-dot err"></span>Failed to load';}
 }
 
@@ -808,10 +835,121 @@ function renderHistDetail(kind,key){
 function trTabSwitch(tab,btn){
   document.querySelectorAll("#view-transform .query-tabs button").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
+  document.getElementById("tr-tab-demo").style.display=tab==="demo"?"block":"none";
   document.getElementById("tr-tab-browser").style.display=tab==="browser"?"block":"none";
   document.getElementById("tr-tab-api").style.display=tab==="api"?"block":"none";
 }
+
+// ---------------------------------------------------------------------------
+// BBQS Live Demo
+// ---------------------------------------------------------------------------
+const BBQS_ENTITIES=[
+  {type:"Investigator",icon:"👤",record:{name:"Laura Yenisa Cabrera Trujillo",email:"lcabrera@psu.edu",identifier:"0000-0002-1234-5678",affiliation:"Penn State University",researchAreas:"neuroethics, DBS"}},
+  {type:"Dataset",icon:"📊",record:{identifier:"DANDI:000123",name:"EMBER Dandiset 000123 — Human iEEG during mood tasks",species:"Human",modality:"iEEG",license:"CC-BY-4.0",url:"https://dandi.emberarchive.org/dandiset/000123"}},
+  {type:"Device",icon:"🔬",record:{name:"Neuropixels 2.0",modality:"electrophysiology",channels:384,commonIssues:"drift correction, spike sorting artifacts"}},
+  {type:"FundedProject",icon:"🏛️",record:{identifier:"1R61MH138612",name:"SeeMe: Sensing Emotion in Mood Episodes",funding:"NIMH",species:"Human",leadInstitution:"Stony Brook University"}},
+  {type:"Software",icon:"💻",record:{name:"bbqs-spike-sorter",programmingLanguage:"Python",license:"MIT",codeRepository:"https://github.com/brain-bbqs/spike-sorter"}},
+];
+let trDemoEntity=null;
+
+function initDemoCards(){
+  const wrap=document.getElementById("tr-demo-cards");
+  if(!wrap)return;
+  wrap.innerHTML=BBQS_ENTITIES.map((e,i)=>`
+    <div onclick="trSelectEntity(${i})" id="tr-demo-card-${i}" style="cursor:pointer;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;background:var(--surface);transition:border-color .15s">
+      <div style="font-size:20px;margin-bottom:6px">${e.icon}</div>
+      <div style="font-size:11.5px;font-weight:600;color:var(--text)">${e.type}</div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:3px">${Object.keys(e.record).length} fields</div>
+    </div>`).join("");
+  // populate target select
+  const sel=document.getElementById("tr-demo-tgt");
+  if(sel){sel.innerHTML="";allSources.filter(s=>s.label!=="bbqs").forEach(s=>{const o=document.createElement("option");o.value=s.label;o.textContent=s.label;sel.appendChild(o);});}
+}
+
+function trSelectEntity(idx){
+  BBQS_ENTITIES.forEach((_,i)=>{
+    const card=document.getElementById("tr-demo-card-"+i);
+    if(card)card.style.borderColor=i===idx?"var(--teal)":"var(--border)";
+  });
+  trDemoEntity=BBQS_ENTITIES[idx];
+  document.getElementById("tr-demo-step2").style.display="block";
+  document.getElementById("tr-demo-record").textContent=JSON.stringify(trDemoEntity.record,null,2);
+  trRunDemo();
+}
+
+function trRunDemo(){
+  if(!trDemoEntity)return;
+  const tgt=document.getElementById("tr-demo-tgt").value;
+  const record=trDemoEntity.record;
+
+  // Mirror Python transform_record(): find BBQS classes, follow alignment edges
+  // to target classes, match property names case-insensitively.
+  const srcClasses=allClasses.filter(c=>(c.sources||[c.source]).includes("bbqs"));
+  const tgtClassMap={};
+  allClasses.filter(c=>(c.sources||[c.source]).includes(tgt)).forEach(c=>{tgtClassMap[c.uid]=c;});
+
+  const propMap={};
+  for(const srcC of srcClasses){
+    for(const aln of (srcC.alignments||[])){
+      if(aln.distance>0.6)continue;
+      const tgtC=tgtClassMap[aln.target_uid];
+      if(!tgtC)continue;
+      const tgtProps={};
+      (tgtC.properties||[]).forEach(p=>{tgtProps[p.name.toLowerCase()]=p.name;});
+      for(const srcP of (srcC.properties||[])){
+        const sl=srcP.name.toLowerCase();
+        if(tgtProps[sl])propMap[sl]={target:tgtProps[sl],via:`${srcC.name} → ${aln.target_name}`,distance:aln.distance};
+      }
+    }
+  }
+
+  const mapped={},unmapped=[],details=[];
+  Object.entries(record).forEach(([field,value])=>{
+    const m=propMap[field.toLowerCase()];
+    if(m){mapped[m.target]=value;details.push({src:field,tgt:m.target,value,via:m.via,distance:m.distance});}
+    else unmapped.push(field);
+  });
+
+  const hasAlignments=Object.keys(propMap).length>0;
+  const mappedRows=details.map(d=>`
+    <tr>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px">${d.src}</td>
+      <td style="padding:7px 10px;color:var(--teal)">→</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px">${d.tgt}</td>
+      <td style="padding:7px 10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:var(--text-dim)">${String(d.value)}</td>
+      <td style="padding:7px 10px;font-size:10px;color:var(--muted)">${d.via} <span style="color:var(--border-soft)">(d=${d.distance.toFixed(2)})</span></td>
+    </tr>`).join("");
+
+  const unmappedHtml=unmapped.length?`
+    <div style="margin-top:14px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Unmapped fields (no alignment to ${tgt})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${unmapped.map(f=>`<span style="background:var(--bg-elev);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:11px;color:var(--muted)">${f}</span>`).join("")}
+      </div>
+    </div>`:"";
+
+  const warningHtml=!hasAlignments?`<div style="color:var(--yellow,#fbbf24);font-size:12px;padding:10px 0">No alignment edges found between bbqs and ${tgt}. Run the pipeline to compute cross-schema edges.</div>`:"";
+
+  document.getElementById("tr-demo-result").style.display="block";
+  document.getElementById("tr-demo-result-inner").innerHTML=warningHtml+(mappedRows?`
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="padding:6px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">bbqs field</th>
+        <th style="padding:6px 10px"></th>
+        <th style="padding:6px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">${tgt} field</th>
+        <th style="padding:6px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">value</th>
+        <th style="padding:6px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">via alignment</th>
+      </tr></thead>
+      <tbody>${mappedRows}</tbody>
+    </table>`:`<div style="color:var(--muted);font-size:12.5px;padding:8px 0">No property-level mappings found for ${trDemoEntity.type} → ${tgt}.</div>`)+unmappedHtml+
+    `<div style="margin-top:14px;display:flex;gap:8px">
+      <button class="btn" onclick="dlJSON(${JSON.stringify(mapped)},'bbqs-to-${tgt}.json')" style="font-size:11.5px;padding:6px 12px">Download mapped JSON</button>
+    </div>`;
+}
 function initTransform(){
+  // Demo tab is shown by default; hide the others
+  document.getElementById("tr-tab-browser").style.display="none";
+  document.getElementById("tr-tab-api").style.display="none";
   const src=document.getElementById("tr-src"),tgt=document.getElementById("tr-tgt");
   src.innerHTML="";tgt.innerHTML="";
   allSources.forEach((s,i)=>{
