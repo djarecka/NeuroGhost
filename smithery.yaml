@@ -23,8 +23,8 @@ startCommand:
         default: "https://sensein.group/NeuroGhost/data/registry.json"
   commandFunction: |-
     (config) => ({
-      command: "python",
-      args: ["-m", "neuro_ghost.mcp_server"],
+      command: "uvx",
+      args: ["neuroghost-mcp"],
       env: config.registry_url
         ? { NEUROGHOST_REGISTRY_URL: config.registry_url }
         : {}
