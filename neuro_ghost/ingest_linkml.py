@@ -74,7 +74,7 @@ from linkml_runtime.utils.schemaview import SchemaView
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from schema_registry_utils import (
-    RegistryClass, RegistryProperty, ProvenanceEntry, compute_hash_id,
+    RegistryClass, RegistryProperty, ProvenanceEntry, compute_hash_id_for,
 )
 
 from db import (
@@ -315,6 +315,7 @@ def _make_provenance(source_label: str, agent: str, issue: str = "",
         generated_at=now_iso(),
         attributed_to=attributed_to,
         activity=activity,
+        derived_from=[],
     )
 
 
@@ -351,15 +352,19 @@ def build_registry_entities(
         slot = slots.get(slot_name)
         if not slot:
             continue
-        prop = RegistryProperty(
+        fields = dict(
             name=slot_name,
             description=slot["definition"] or "",
             range=slot["value_range"],
             units=slot.get("units") or None,
             slot_uri=slot["iri"] or None,
-            provenance=[_make_provenance(source_label, agent, issue, registry_version)],
+            skos_mappings=[],
         )
-        prop.hash_id = compute_hash_id(prop)
+        prop = RegistryProperty(
+            hash_id=compute_hash_id_for(RegistryProperty, fields),
+            provenance=[_make_provenance(source_label, agent, issue, registry_version)],
+            **fields,
+        )
         properties[slot_name] = prop
 
     registry_classes: dict[str, RegistryClass] = {}
@@ -379,16 +384,22 @@ def build_registry_entities(
         prop_hash_ids = sorted({
             properties[s].hash_id for s in cls["slots"] if s in properties
         })
-        rc = RegistryClass(
+        fields = dict(
             name=cls_name,
             description=cls["definition"] or "",
             class_uri=cls["iri"] or None,
             abstract=cls["is_abstract"],
             is_a=parent_hash_id,
             properties=prop_hash_ids,
-            provenance=[_make_provenance(source_label, agent, issue, registry_version)],
+            relations=[],
+            mixins=[],
+            skos_mappings=[],
         )
-        rc.hash_id = compute_hash_id(rc)
+        rc = RegistryClass(
+            hash_id=compute_hash_id_for(RegistryClass, fields),
+            provenance=[_make_provenance(source_label, agent, issue, registry_version)],
+            **fields,
+        )
         registry_classes[cls_name] = rc
         return rc
 
