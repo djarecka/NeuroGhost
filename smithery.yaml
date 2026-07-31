@@ -10,25 +10,18 @@ homepage: https://sensein.group/NeuroGhost/
 repository: https://github.com/sensein/NeuroGhost
 
 startCommand:
-  type: stdio
-  configSchema:
-    type: object
-    properties:
-      registry_url:
-        type: string
-        description: >
-          Override the registry JSON URL. Defaults to the live GitHub Pages
-          endpoint. Set to a local file path (file:///...) when running offline
-          with a local registry.json.
-        default: "https://sensein.group/NeuroGhost/data/registry.json"
-  commandFunction: |-
-    (config) => ({
-      command: "python",
-      args: ["-m", "neuro_ghost.mcp_server"],
-      env: config.registry_url
-        ? { NEUROGHOST_REGISTRY_URL: config.registry_url }
-        : {}
-    })
+  type: httpStream
+  httpStream:
+    url: "https://neuroghost-production.up.railway.app"
+    configSchema:
+      type: object
+      properties:
+        registry_url:
+          type: string
+          description: >
+            Override the registry JSON URL. Defaults to the live GitHub Pages
+            endpoint.
+          default: "https://sensein.group/NeuroGhost/data/registry.json"
 
 tools:
   - name: list_sources
