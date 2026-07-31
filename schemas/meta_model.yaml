@@ -170,6 +170,11 @@ slots:
     range: ProvenanceEntry
     multivalued: true
     required: true
+    # Inlined so generated code carries ProvenanceEntry objects rather than uid
+    # references: the pipeline builds entries in memory and hands them to the
+    # graph writers, which split them into their own nodes on write.
+    inlined: true
+    inlined_as_list: true
     description: >-
       One ProvenanceEntry per source attesting to this entity. Accumulates
       as more sources are ingested — never affects hash_id.
@@ -177,6 +182,8 @@ slots:
   skos_mappings:
     range: SkosMapping
     multivalued: true
+    inlined: true
+    inlined_as_list: true
     description: Semantic mappings to external vocabulary concepts.
 
   properties:
@@ -226,6 +233,12 @@ slots:
 
   abstract:
     range: boolean
+    # Defaults to false rather than null: `abstract` is identity-defining, so a
+    # null would hash differently from a false and silently change every
+    # RegistryClass hash_id. LinkML has no equivalent for the multivalued slots
+    # (properties/relations/mixins), which still default to null — builders
+    # must pass them explicitly, and compute_hash_id_for() enforces that.
+    ifabsent: 'false'
     description: Whether this registered class is itself declared abstract.
 
   # --- ProvenanceEntry slots -------------------------------------------------

@@ -5,6 +5,9 @@ from schema_registry_utils.models import (
     ProvenanceEntry,
     SkosMapping,
     Relation,
+    Rule,
+    Transform,
+    ValueSet,
     SkosMappingTypeEnum,
 )
 from schema_registry_utils.hashing import (
@@ -20,6 +23,9 @@ __all__ = [
     "ProvenanceEntry",
     "SkosMapping",
     "Relation",
+    "Rule",
+    "Transform",
+    "ValueSet",
     "SkosMappingTypeEnum",
     "compute_hash_id",
     "compute_hash_id_for",
