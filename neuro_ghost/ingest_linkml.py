@@ -34,11 +34,14 @@ WHAT GETS CREATED IN THE GRAPH
 -------------------------------
 For every class → one RegistryClass node
 For every slot  → one RegistryProperty node
+For every slot declaring required/multivalued/pattern/min/max → one Rule
+  node, linked to its property via APPLIES_TO_P (a plain property with none
+  of these gets no Rule at all)
 For every class→slot relationship → one HAS_PROPERTY edge
 For every is_a relationship → one SUBCLASS_OF edge
 For every schema file → one SchemaSource node + one SchemaVersionSnapshot
-For every (entity, source) attestation → one ProvenanceEntry node,
-  linked via HAS_PROVENANCE / HAS_PROVENANCE_P
+For every (entity, source) attestation → one ProvenanceEntry node, linked
+  via HAS_PROVENANCE / HAS_PROVENANCE_P / HAS_PROVENANCE_RULE
 
 CONTENT-ADDRESSED IDENTITY
 ---------------------------
@@ -74,12 +77,12 @@ from linkml_runtime.utils.schemaview import SchemaView
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from schema_registry_utils import (
-    RegistryClass, RegistryProperty, ProvenanceEntry, compute_hash_id,
+    RegistryClass, RegistryProperty, Rule, ProvenanceEntry, compute_hash_id,
 )
 
 from db import (
     get_connection, make_iri, make_uid, now_iso, REG,
-    write_registry_entities, write_structural_edges,
+    write_registry_entities, write_structural_edges, write_rule_edges,
 )
 
 DB_PATH = "./registry.lbug"
@@ -186,6 +189,8 @@ def _slot_to_dict(slot, prefixes: dict[str, str]) -> dict:
         "multivalued": bool(slot.multivalued),
         "required":    bool(slot.required),
         "pattern":     slot.pattern or "",
+        "minimum_value": slot.minimum_value,
+        "maximum_value": slot.maximum_value,
     }
 
 
@@ -318,13 +323,38 @@ def _make_provenance(source_label: str, agent: str, issue: str = "",
     )
 
 
+def _has_constraints(slot: dict) -> bool:
+    """Does this slot carry any usage constraint worth recording as a Rule?"""
+    return bool(
+        slot["required"] or slot["multivalued"] or slot["pattern"]
+        or slot.get("minimum_value") is not None
+        or slot.get("maximum_value") is not None
+    )
+
+
+def _describe_constraints(slot: dict) -> str:
+    """Human-readable summary of a slot's usage constraints, for Rule.description."""
+    parts = []
+    if slot["required"]:
+        parts.append("required")
+    if slot["multivalued"]:
+        parts.append("multivalued")
+    if slot["pattern"]:
+        parts.append(f"pattern: {slot['pattern']}")
+    if slot.get("minimum_value") is not None:
+        parts.append(f"min: {slot['minimum_value']}")
+    if slot.get("maximum_value") is not None:
+        parts.append(f"max: {slot['maximum_value']}")
+    return "; ".join(parts)
+
+
 def build_registry_entities(
     parsed: dict, source_label: str, agent: str, issue: str = "",
     registry_version: str = "",
-) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass]]:
+) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass], dict[str, Rule]]:
     """
     Convert parse_linkml()'s intermediate dict into content-hashed
-    RegistryProperty/RegistryClass instances, keyed by their original
+    RegistryProperty/RegistryClass/Rule instances, keyed by their original
     slot/class name in the source schema.
 
     Properties are built first (classes reference them by hash_id in their
@@ -338,6 +368,12 @@ def build_registry_entities(
     parse_linkml() (via SchemaView) already requires every is_a target to
     resolve within the submitted schema's own import closure, so `classes`
     is guaranteed to contain it.
+
+    A property that declares required/multivalued/pattern/min/max also gets
+    a Rule referencing it (`applies_to` = the property's hash_id) — these
+    usage constraints don't live on RegistryProperty itself (see
+    RegistryProperty's docstring), and a plain property with none of them
+    gets no Rule at all, so unconstrained properties don't accumulate noise.
     """
     slots   = parsed["slots"]
     classes = parsed["classes"]
@@ -347,6 +383,7 @@ def build_registry_entities(
         used_slots.update(cls["slots"])
 
     properties: dict[str, RegistryProperty] = {}
+    rules: dict[str, Rule] = {}
     for slot_name in used_slots:
         slot = slots.get(slot_name)
         if not slot:
@@ -361,6 +398,21 @@ def build_registry_entities(
         )
         prop.hash_id = compute_hash_id(prop)
         properties[slot_name] = prop
+
+        if _has_constraints(slot):
+            rule = Rule(
+                name=f"{slot_name}_rule",
+                description=_describe_constraints(slot),
+                applies_to=prop.hash_id,
+                required=slot["required"],
+                multivalued=slot["multivalued"],
+                pattern=slot["pattern"] or None,
+                minimum_value=slot.get("minimum_value"),
+                maximum_value=slot.get("maximum_value"),
+                provenance=[_make_provenance(source_label, agent, issue, registry_version)],
+            )
+            rule.hash_id = compute_hash_id(rule)
+            rules[slot_name] = rule
 
     registry_classes: dict[str, RegistryClass] = {}
 
@@ -395,7 +447,7 @@ def build_registry_entities(
     for cls_name in classes:
         resolve_class(cls_name)
 
-    return properties, registry_classes
+    return properties, registry_classes, rules
 
 
 # ---------------------------------------------------------------------------
@@ -474,32 +526,34 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
     """
     Insert a parsed LinkML schema into the LadybugDB graph.
 
-      1. Build content-hashed RegistryProperty/RegistryClass instances
+      1. Build content-hashed RegistryProperty/RegistryClass/Rule instances
       2. Write each one (skipped if its hash_id already exists) and attach
          this ingestion's ProvenanceEntry (skipped if this source already
          attested to it)
-      3. Create HAS_PROPERTY and SUBCLASS_OF edges
-      4. Record a SchemaVersionSnapshot — "minor" if any class/property was
-         newly created, "patch" if only a new ProvenanceEntry was added
+      3. Create HAS_PROPERTY, SUBCLASS_OF, and APPLIES_TO_P edges
+      4. Record a SchemaVersionSnapshot — "minor" if any class/property/rule
+         was newly created, "patch" if only a new ProvenanceEntry was added
          (same content, newly attested by this source), unchanged otherwise
 
     Returns a stats dict.
     """
     meta = parsed["meta"]
 
-    properties, registry_classes = build_registry_entities(
+    properties, registry_classes, rules = build_registry_entities(
         parsed, source_label, agent, issue, registry_version,
     )
 
-    stats = write_registry_entities(conn, properties, registry_classes, dry_run=dry_run)
+    stats = write_registry_entities(conn, properties, registry_classes, rules, dry_run=dry_run)
 
     if dry_run:
         return stats
 
     _ensure_schema_source(conn, source_label, meta["version"], registry_version)
-    stats["rels"] = write_structural_edges(conn, registry_classes)
+    stats["rels"] = write_structural_edges(conn, registry_classes) + write_rule_edges(conn, rules)
 
-    has_new_content = bool(stats["classes_new"] or stats["properties_new"])
+    has_new_content = bool(
+        stats["classes_new"] or stats["properties_new"] or stats["rules_new"]
+    )
     has_any_change   = has_new_content or bool(stats["provenance_added"])
 
     prev_ver = _prev_schema_version(conn, source_label)
@@ -515,6 +569,7 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
 
     changes_summary = (
         f"+{stats['classes_new']} classes, +{stats['properties_new']} props, "
+        f"+{stats['rules_new']} rules, "
         f"{stats['provenance_added']} provenance entries added"
     )
 
@@ -538,7 +593,7 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
         "yp":  yml_path,
         "cc":  len(registry_classes),
         "pc":  len(properties),
-        "rc":  0,
+        "rc":  len(rules),
         "cs":  changes_summary,
         "rv":  registry_version,
     })
@@ -612,6 +667,10 @@ def cli(file, db, dry_run, wipe, registry_version, issue, agent) -> None:
                 MATCH (:RegistryProperty)-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry {source: $src})
                 DETACH DELETE pe
             """, {"src": source_label})
+            conn.execute("""
+                MATCH (:Rule)-[:HAS_PROVENANCE_RULE]->(pe:ProvenanceEntry {source: $src})
+                DETACH DELETE pe
+            """, {"src": source_label})
 
         stats = insert_schema(
             conn, parsed, source_label, agent=agent, issue=issue,
@@ -627,6 +686,8 @@ def cli(file, db, dry_run, wipe, registry_version, issue, agent) -> None:
             f"={stats.get('classes_existing',0)} existing | "
             f"+{stats.get('properties_new',0)} props, "
             f"={stats.get('properties_existing',0)} existing | "
+            f"+{stats.get('rules_new',0)} rules, "
+            f"={stats.get('rules_existing',0)} existing | "
             f"+{stats.get('provenance_added',0)} provenance entries"
         )
         if stats.get("schema_version"):
@@ -637,8 +698,9 @@ def cli(file, db, dry_run, wipe, registry_version, issue, agent) -> None:
         if not dry_run:
             nc = conn.execute("MATCH (n:RegistryClass) RETURN count(n)").get_next()[0]
             np = conn.execute("MATCH (n:RegistryProperty) RETURN count(n)").get_next()[0]
+            nr = conn.execute("MATCH (n:Rule) RETURN count(n)").get_next()[0]
             npe = conn.execute("MATCH (n:ProvenanceEntry) RETURN count(n)").get_next()[0]
-            click.echo(f"  Registry: {nc} classes, {np} properties, {npe} provenance entries")
+            click.echo(f"  Registry: {nc} classes, {np} properties, {nr} rules, {npe} provenance entries")
 
 
 if __name__ == "__main__":
