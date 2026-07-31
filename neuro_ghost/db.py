@@ -85,7 +85,11 @@ def bump_version(ver: str, bump: str = "patch") -> str:
 # .derived_from) so this module doesn't need to import schema_registry_utils.
 
 LIST_FIELDS = {"provenance", "skos_mappings", "properties", "relations", "mixins"}
-HAS_PROVENANCE_REL = {"RegistryClass": "HAS_PROVENANCE", "RegistryProperty": "HAS_PROVENANCE_P"}
+HAS_PROVENANCE_REL = {
+    "RegistryClass":    "HAS_PROVENANCE",
+    "RegistryProperty": "HAS_PROVENANCE_P",
+    "Rule":             "HAS_PROVENANCE_RULE",
+}
 
 
 def scalar_fields(entity) -> dict:
@@ -123,6 +127,7 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
     conn.execute("""
         CREATE (:ProvenanceEntry {
             uid: $uid, source: $source, source_description: $source_description,
+            registry_version: $registry_version,
             generated_at: $generated_at, attributed_to: $attributed_to,
             activity: $activity, derived_from: $derived_from
         })
@@ -130,6 +135,7 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
         "uid":                uid,
         "source":             prov.source,
         "source_description": prov.source_description,
+        "registry_version":   prov.registry_version,
         "generated_at":       prov.generated_at.isoformat(),
         "attributed_to":      prov.attributed_to,
         "activity":           prov.activity,
@@ -143,19 +149,22 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
 
 
 def write_registry_entities(conn, properties: dict, registry_classes: dict,
+                             rules: dict | None = None,
                              dry_run: bool = False) -> dict:
     """
-    Write (or reuse) each property/class node by hash_id, then attach this
-    ingestion's ProvenanceEntry to every one of them. Existing nodes are
-    never overwritten — a hash match means identical content, so there is
-    nothing to update; only a new ProvenanceEntry may need attaching.
+    Write (or reuse) each property/class/rule node by hash_id, then attach
+    this ingestion's ProvenanceEntry to every one of them. Existing nodes
+    are never overwritten — a hash match means identical content, so there
+    is nothing to update; only a new ProvenanceEntry may need attaching.
 
-    `properties`/`registry_classes` are name -> entity dicts (values just
-    need .hash_id and .provenance; shared by ingest_linkml.py and seed.py).
+    `properties`/`registry_classes`/`rules` are name -> entity dicts (values
+    just need .hash_id and .provenance; shared by ingest_linkml.py and
+    seed.py). `rules` is optional since seed.py doesn't build any yet.
     """
     stats = {
         "properties_new": 0, "properties_existing": 0,
         "classes_new":    0, "classes_existing":    0,
+        "rules_new":      0, "rules_existing":       0,
         "provenance_added": 0,
     }
 
@@ -179,7 +188,34 @@ def write_registry_entities(conn, properties: dict, registry_classes: dict,
                 if write_provenance(conn, "RegistryClass", rc.hash_id, prov):
                     stats["provenance_added"] += 1
 
+    for rule in (rules or {}).values():
+        is_new = not entity_exists(conn, "Rule", rule.hash_id)
+        if is_new and not dry_run:
+            create_entity_node(conn, "Rule", rule)
+        stats["rules_new" if is_new else "rules_existing"] += 1
+        if not dry_run:
+            for prov in rule.provenance:
+                if write_provenance(conn, "Rule", rule.hash_id, prov):
+                    stats["provenance_added"] += 1
+
     return stats
+
+
+def write_rule_edges(conn, rules: dict) -> int:
+    """APPLIES_TO_P: each Rule to the RegistryProperty it constrains."""
+    rels = 0
+    for rule in rules.values():
+        already = conn.execute("""
+            MATCH (r:Rule {hash_id: $r})-[:APPLIES_TO_P]->(p:RegistryProperty {hash_id: $p})
+            RETURN r.hash_id LIMIT 1
+        """, {"r": rule.hash_id, "p": rule.applies_to}).has_next()
+        if not already:
+            conn.execute("""
+                MATCH (r:Rule {hash_id: $r}), (p:RegistryProperty {hash_id: $p})
+                CREATE (r)-[:APPLIES_TO_P]->(p)
+            """, {"r": rule.hash_id, "p": rule.applies_to})
+            rels += 1
+    return rels
 
 
 def write_structural_edges(conn, registry_classes: dict) -> int:
@@ -424,6 +460,7 @@ _REL_DDL: list[str] = [
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE     (FROM RegistryClass    TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_P   (FROM RegistryProperty TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_R   (FROM Relation         TO ProvenanceEntry)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_RULE (FROM Rule            TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS MIXIN              (FROM RegistryClass    TO RegistryClass)",
     "CREATE REL TABLE IF NOT EXISTS SUBCLASS_OF        (FROM RegistryClass    TO RegistryClass)",
 
@@ -460,6 +497,7 @@ _REL_DDL: list[str] = [
 
     # --- Infrastructure edges ---
     "CREATE REL TABLE IF NOT EXISTS APPLIES_TO         (FROM Rule             TO RegistryClass)",
+    "CREATE REL TABLE IF NOT EXISTS APPLIES_TO_P       (FROM Rule             TO RegistryProperty)",
     "CREATE REL TABLE IF NOT EXISTS PROV_GENERATED     (FROM RegistryClass    TO SchemaActivity)",
     "CREATE REL TABLE IF NOT EXISTS PROV_GENERATED_P   (FROM RegistryProperty TO SchemaActivity)",
     "CREATE REL TABLE IF NOT EXISTS PROV_GENERATED_R   (FROM Rule             TO SchemaActivity)",

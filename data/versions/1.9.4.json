@@ -1,6 +1,6 @@
 {
-  "registry_version": "1.9.6",
-  "generated_at": "2026-07-31T13:23:25.493643+00:00",
+  "registry_version": "1.9.4",
+  "generated_at": "2026-07-24T17:45:03.669212+00:00",
   "sources": [
     {
       "label": "aind",
@@ -1989,7 +1989,7 @@
           "scores": {
             "iri": 1.0,
             "name": 0.3157894736842105,
-            "desc": 0.4752941548000543,
+            "desc": 0.47529405829872734,
             "slot": 0.0
           }
         },
@@ -2002,7 +2002,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.16,
-            "desc": 0.15835712688599088,
+            "desc": 0.1583571634433934,
             "slot": 0.0
           }
         },
@@ -2015,7 +2015,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.20689655172413793,
-            "desc": 0.4078291482209663,
+            "desc": 0.40782925771176937,
             "slot": 0.0
           }
         }
@@ -9895,7 +9895,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.8235294117647058,
-            "desc": 0.1843817560028127,
+            "desc": 0.18438180884148223,
             "slot": 0.0
           }
         },
@@ -9908,7 +9908,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.7058823529411765,
-            "desc": 0.2045696388150376,
+            "desc": 0.20456956958864608,
             "slot": 0.0
           }
         }
@@ -13479,7 +13479,7 @@
           "scores": {
             "iri": 1.0,
             "name": 0.18181818181818182,
-            "desc": 0.460583098337889,
+            "desc": 0.4605828353445836,
             "slot": 0.0
           }
         }
@@ -15262,7 +15262,7 @@
           "scores": {
             "iri": 1.0,
             "name": 1.0,
-            "desc": 0.9349117468858976,
+            "desc": 0.9349116185530282,
             "slot": 0.0
           }
         },
@@ -15275,33 +15275,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.2222222222222222,
-            "desc": 0.4560427144989627,
-            "slot": 0.0
-          }
-        },
-        {
-          "target_hash_id": "sha256:4161437b161ca6a13c515bf1d664b3a742169170c0de2c1b2d8b3d3b9d0ebe75",
-          "target_name": "SoftwareSourceCode",
-          "target_iri": "https://schema.org/SoftwareSourceCode",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.30303030303030304,
-            "desc": 0.41909667047859894,
-            "slot": 0.0
-          }
-        },
-        {
-          "target_hash_id": "sha256:af8fa7e8707756caca1afb110c93c17b2756d05a52c85423f4f29966ab722f50",
-          "target_name": "Article",
-          "target_iri": "https://schema.org/Article",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.4,
-            "desc": 0.3525591698220241,
+            "desc": 0.4560428279810088,
             "slot": 0.0
           }
         },
@@ -15314,7 +15288,20 @@
           "scores": {
             "iri": 0.0,
             "name": 0.3,
-            "desc": 0.37630103447992336,
+            "desc": 0.37630112568185825,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:af8fa7e8707756caca1afb110c93c17b2756d05a52c85423f4f29966ab722f50",
+          "target_name": "Article",
+          "target_iri": "https://schema.org/Article",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.4,
+            "desc": 0.35255919404828795,
             "slot": 0.0
           }
         },
@@ -15327,7 +15314,20 @@
           "scores": {
             "iri": 0.0,
             "name": 0.36363636363636365,
-            "desc": 0.3696708353035831,
+            "desc": 0.36967104909058557,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:4161437b161ca6a13c515bf1d664b3a742169170c0de2c1b2d8b3d3b9d0ebe75",
+          "target_name": "SoftwareSourceCode",
+          "target_iri": "https://schema.org/SoftwareSourceCode",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.30303030303030304,
+            "desc": 0.41909681790908926,
             "slot": 0.0
           }
         }
@@ -16055,7 +16055,7 @@
           "scores": {
             "iri": 1.0,
             "name": 0.6666666666666666,
-            "desc": 0.20069115263416537,
+            "desc": 0.2006911214511835,
             "slot": 0.0
           }
         },
@@ -16068,7 +16068,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.2857142857142857,
-            "desc": 0.11445034502712932,
+            "desc": 0.11445034428909329,
             "slot": 0.0
           }
         }
@@ -19956,7 +19956,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.918918918918919,
-            "desc": 0.3119614898484528,
+            "desc": 0.3119614229712923,
             "slot": 0.0
           }
         }
@@ -20970,7 +20970,7 @@
           "scores": {
             "iri": 1.0,
             "name": 1.0,
-            "desc": 0.5853100542136827,
+            "desc": 0.585310071269582,
             "slot": 0.0
           }
         },
@@ -20983,20 +20983,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.2,
-            "desc": 0.15402160046957122,
-            "slot": 0.0
-          }
-        },
-        {
-          "target_hash_id": "sha256:aa32c2beb20e55789a8b8ed0d9992569c84271324033ce98b9719b44ee07c4c0",
-          "target_name": "ConferenceEvent",
-          "target_iri": "https://schema.org/ConferenceEvent",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.5,
-            "desc": 0.5433127578854128,
+            "desc": 0.15402170570053897,
             "slot": 0.0
           }
         },
@@ -21009,7 +20996,20 @@
           "scores": {
             "iri": 0.0,
             "name": 0.5,
-            "desc": 0.5253376910450708,
+            "desc": 0.5253377130005752,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:aa32c2beb20e55789a8b8ed0d9992569c84271324033ce98b9719b44ee07c4c0",
+          "target_name": "ConferenceEvent",
+          "target_iri": "https://schema.org/ConferenceEvent",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.5,
+            "desc": 0.5433126392906755,
             "slot": 0.0
           }
         }
@@ -22596,7 +22596,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.23076923076923078,
-            "desc": 0.5025051489531435,
+            "desc": 0.5025052282760812,
             "slot": 0.0
           }
         }
@@ -23101,7 +23101,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.2,
-            "desc": 0.07112747492858254,
+            "desc": 0.07112741903375908,
             "slot": 0.0
           }
         }
@@ -24517,7 +24517,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.5714285714285714,
-            "desc": 0.4465129350637422,
+            "desc": 0.44651329390414296,
             "slot": 0.0
           }
         }
@@ -24832,7 +24832,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.7692307692307693,
-            "desc": 0.49683735848335076,
+            "desc": 0.4968373323019849,
             "slot": 0.0
           }
         },
@@ -24845,7 +24845,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.6666666666666666,
-            "desc": 0.46609945056005314,
+            "desc": 0.4660994002690739,
             "slot": 0.0
           }
         },
@@ -24858,7 +24858,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.5625,
-            "desc": 0.46224584672069036,
+            "desc": 0.46224584820948944,
             "slot": 0.0
           }
         }
@@ -25750,7 +25750,7 @@
           "scores": {
             "iri": 1.0,
             "name": 0.1111111111111111,
-            "desc": 0.31152985311992837,
+            "desc": 0.31152995489094015,
             "slot": 0.0
           }
         }
@@ -26294,7 +26294,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.5,
-            "desc": 0.2204241052044173,
+            "desc": 0.22042428019546323,
             "slot": 0.0
           }
         }
@@ -36759,7 +36759,7 @@
           "scores": {
             "iri": 1.0,
             "name": 1.0,
-            "desc": 0.9350209111908971,
+            "desc": 0.9350208650357684,
             "slot": 0.0
           }
         },
@@ -36772,7 +36772,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.11764705882352941,
-            "desc": 0.11065488775619657,
+            "desc": 0.11065491259276977,
             "slot": 0.0
           }
         }
@@ -38469,7 +38469,7 @@
           "scores": {
             "iri": 1.0,
             "name": 1.0,
-            "desc": 0.9999999288615224,
+            "desc": 0.9999999901337986,
             "slot": 0.0
           }
         },
@@ -38495,7 +38495,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.18181818181818182,
-            "desc": 0.18677817400792812,
+            "desc": 0.18677823280665823,
             "slot": 0.0
           }
         }
@@ -41255,7 +41255,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.16666666666666666,
-            "desc": 0.31013226006665173,
+            "desc": 0.31013220395727714,
             "slot": 0.0
           }
         }
@@ -41284,7 +41284,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.16666666666666666,
-            "desc": 0.1703713807572505,
+            "desc": 0.17037137874228564,
             "slot": 0.0
           }
         }
@@ -41589,7 +41589,7 @@
           "scores": {
             "iri": 1.0,
             "name": 0.21428571428571427,
-            "desc": 0.3151663451057479,
+            "desc": 0.3151663123550597,
             "slot": 0.0
           }
         },
@@ -41602,7 +41602,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.4166666666666667,
-            "desc": 0.09986979506920993,
+            "desc": 0.09986980730120243,
             "slot": 0.0
           }
         }
@@ -42330,7 +42330,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.7272727272727273,
-            "desc": 0.41071601298503635,
+            "desc": 0.41071597425453826,
             "slot": 0.0
           }
         }
@@ -44921,7 +44921,7 @@
           "scores": {
             "iri": 1.0,
             "name": 0.6666666666666666,
-            "desc": 0.34866513360688567,
+            "desc": 0.3486651304592102,
             "slot": 0.0
           }
         },
@@ -44934,7 +44934,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.3076923076923077,
-            "desc": 0.09010010899132578,
+            "desc": 0.09010005648600705,
             "slot": 0.0
           }
         }
@@ -46810,7 +46810,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.4,
-            "desc": 0.15301578005534627,
+            "desc": 0.15301584831939796,
             "slot": 0.0
           }
         }
@@ -47276,7 +47276,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.625,
-            "desc": 0.539219871557913,
+            "desc": 0.5392200402364302,
             "slot": 0.0
           }
         }
@@ -47625,7 +47625,7 @@
           "scores": {
             "iri": 1.0,
             "name": 1.0,
-            "desc": 0.5876356762099221,
+            "desc": 0.5876357565019,
             "slot": 0.0
           }
         },
@@ -47638,72 +47638,7 @@
           "scores": {
             "iri": 0.0,
             "name": 0.21052631578947367,
-            "desc": 0.5423945531285117,
-            "slot": 0.0
-          }
-        },
-        {
-          "target_hash_id": "sha256:cddbec7a9fa1f1b5cf68d7fd293db35867b92e501c636ae635633cf118c6808b",
-          "target_name": "Place",
-          "target_iri": "https://schema.org/Place",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.0,
-            "desc": 0.4341564671055363,
-            "slot": 0.0
-          }
-        },
-        {
-          "target_hash_id": "sha256:fcca7d5a0de5ae50df6a5d146151414d64aa286758db2a149a3c5464b84551d6",
-          "target_name": "BioChemEntity",
-          "target_iri": "https://schema.org/BioChemEntity",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.2,
-            "desc": 0.28575915209436514,
-            "slot": 0.0
-          }
-        },
-        {
-          "target_hash_id": "sha256:25bfdf14551465be24a3ac3865482de3f704a1bc90699a47b136452fea83b84e",
-          "target_name": "Organization",
-          "target_iri": "https://schema.org/Organization",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.35294117647058826,
-            "desc": 0.23849352066551854,
-            "slot": 0.0
-          }
-        },
-        {
-          "target_hash_id": "sha256:1c7bd6275c1b59b5b0e0980f8bb791108d201488ffc4ac7250f01f0b874fe071",
-          "target_name": "CreativeWork",
-          "target_iri": "https://schema.org/CreativeWork",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.2222222222222222,
-            "desc": 0.3314154871906024,
-            "slot": 0.0
-          }
-        },
-        {
-          "target_hash_id": "sha256:f36b4e14aa18742c7b3fbf2069f7df09748ecf582608b1c6c7f3c9c02aecd59f",
-          "target_name": "Person",
-          "target_iri": "https://schema.org/Person",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.18181818181818182,
-            "desc": 0.13815648119879942,
+            "desc": 0.5423944330816814,
             "slot": 0.0
           }
         },
@@ -47716,7 +47651,72 @@
           "scores": {
             "iri": 0.0,
             "name": 0.2,
-            "desc": 0.12508266215679487,
+            "desc": 0.12508267275550602,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:cddbec7a9fa1f1b5cf68d7fd293db35867b92e501c636ae635633cf118c6808b",
+          "target_name": "Place",
+          "target_iri": "https://schema.org/Place",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.0,
+            "desc": 0.43415649928446975,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:fcca7d5a0de5ae50df6a5d146151414d64aa286758db2a149a3c5464b84551d6",
+          "target_name": "BioChemEntity",
+          "target_iri": "https://schema.org/BioChemEntity",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.2,
+            "desc": 0.2857590788365405,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:1c7bd6275c1b59b5b0e0980f8bb791108d201488ffc4ac7250f01f0b874fe071",
+          "target_name": "CreativeWork",
+          "target_iri": "https://schema.org/CreativeWork",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.2222222222222222,
+            "desc": 0.33141541859827145,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:25bfdf14551465be24a3ac3865482de3f704a1bc90699a47b136452fea83b84e",
+          "target_name": "Organization",
+          "target_iri": "https://schema.org/Organization",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.35294117647058826,
+            "desc": 0.23849340412784223,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:f36b4e14aa18742c7b3fbf2069f7df09748ecf582608b1c6c7f3c9c02aecd59f",
+          "target_name": "Person",
+          "target_iri": "https://schema.org/Person",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.18181818181818182,
+            "desc": 0.1381564936216879,
             "slot": 0.0
           }
         }
@@ -49851,20 +49851,7 @@
           "scores": {
             "iri": 1.0,
             "name": 0.5263157894736842,
-            "desc": 0.2262063311130929,
-            "slot": 0.0
-          }
-        },
-        {
-          "target_hash_id": "sha256:aa32c2beb20e55789a8b8ed0d9992569c84271324033ce98b9719b44ee07c4c0",
-          "target_name": "ConferenceEvent",
-          "target_iri": "https://schema.org/ConferenceEvent",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.5333333333333333,
-            "desc": 0.3148759745685724,
+            "desc": 0.22620634957114716,
             "slot": 0.0
           }
         },
@@ -49877,7 +49864,20 @@
           "scores": {
             "iri": 0.0,
             "name": 0.4827586206896552,
-            "desc": 0.267063928942796,
+            "desc": 0.2670638976030655,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:aa32c2beb20e55789a8b8ed0d9992569c84271324033ce98b9719b44ee07c4c0",
+          "target_name": "ConferenceEvent",
+          "target_iri": "https://schema.org/ConferenceEvent",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.5333333333333333,
+            "desc": 0.3148760121561828,
             "slot": 0.0
           }
         }
