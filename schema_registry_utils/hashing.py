@@ -17,7 +17,35 @@ def compute_hash_id(entity: RegistryClass | RegistryProperty) -> str:
     Everything but hash_id, provenance, skos_mappings, and class_uri/slot_uri
     is treated as identity-defining content.
     """
-    content = entity.model_dump(exclude=_EXCLUDED_FIELDS)
+    return _digest(entity.model_dump(exclude=_EXCLUDED_FIELDS))
+
+
+def compute_hash_id_for(model_cls: type, fields: dict) -> str:
+    """Compute the hash_id for an entity that has not been constructed yet.
+
+    hash_id is the identifier in schemas/meta_model.yaml, so the generated
+    models require it at construction — but a content hash can only be derived
+    from the content itself. Builders therefore hash the field values they are
+    about to pass, then construct once with the real hash_id, rather than
+    constructing with a placeholder and mutating afterwards.
+
+    `fields` must carry every identity-defining slot of `model_cls`; anything
+    in _EXCLUDED_FIELDS may be present and is ignored. Omitting an identity
+    slot raises, because the alternative is a silently different hash the next
+    time the meta-model grows a slot — which would invalidate every stored
+    hash_id in the registry without anything failing.
+    """
+    identity = set(model_cls.model_fields) - _EXCLUDED_FIELDS
+    missing = identity - set(fields)
+    if missing:
+        raise ValueError(
+            f"{model_cls.__name__}: cannot hash — identity-defining field(s) "
+            f"missing from `fields`: {sorted(missing)}"
+        )
+    return _digest({k: v for k, v in fields.items() if k not in _EXCLUDED_FIELDS})
+
+
+def _digest(content: dict) -> str:
     canonical = json.dumps(_normalize(content), sort_keys=True, separators=(",", ":"))
     digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return f"sha256:{digest}"
