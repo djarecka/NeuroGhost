@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from ingest_linkml import parse_linkml, build_registry_entities
-from schema_registry_utils import RegistryProperty, RegistryClass
+from schema_registry_utils import RegistryProperty, RegistryClass, ValueSet
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -132,6 +132,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "pattern": "^[A-Za-z ]+$",
             },
         },
+        "enums": {},
     }
 
 
@@ -161,7 +162,8 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     ProvenanceEntry.uid/generated_at are non-deterministic per run.
     """
     parsed = parse_linkml(FIXTURES / "comprehensive.yml")
-    properties, registry_classes = build_registry_entities(parsed, "comprehensive", "tester")
+    properties, registry_classes, value_sets = build_registry_entities(parsed, "comprehensive", "tester")
+    assert value_sets == {}  # comprehensive.yml has no enums
 
     assert set(properties) == {"name", "orcid", "role", "created_at"}
     assert set(registry_classes) == {"Timestamped", "Entity", "Person"}
@@ -262,3 +264,40 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "mixins": [],
         },
     }
+
+
+def test_parse_linkml_extracts_enums():
+    """parse_linkml() returns an 'enums' dict with parsed enum definitions."""
+    parsed = parse_linkml(FIXTURES / "schema_with_enums.yml")
+
+    assert "enums" in parsed
+    assert "StatusEnum" in parsed["enums"]
+
+    status_enum = parsed["enums"]["StatusEnum"]
+    assert status_enum["definition"] == "Possible statuses for an annotation."
+    assert set(status_enum["permissible_values"]) == {"active", "deprecated"}
+    assert status_enum["permissible_values"]["active"]["meaning"] == (
+        "http://www.w3.org/2004/02/skos/core#Concept"
+    )
+    assert status_enum["permissible_values"]["deprecated"]["meaning"] == ""
+
+
+def test_build_registry_entities_produces_value_sets():
+    """build_registry_entities() third return value is a dict of ValueSet objects."""
+    parsed = parse_linkml(FIXTURES / "schema_with_enums.yml")
+    properties, registry_classes, value_sets = build_registry_entities(
+        parsed, "enum_test", "tester"
+    )
+
+    assert "StatusEnum" in value_sets
+    vs = value_sets["StatusEnum"]
+    assert isinstance(vs, ValueSet)
+    assert vs.name == "StatusEnum"
+    assert vs.description == "Possible statuses for an annotation."
+    assert len(vs.permissible_values) == 2
+    # hash_ids are deterministic — check they are sha256: prefixes
+    for hid in vs.permissible_values:
+        assert hid.startswith("sha256:")
+    # Provenance from the ingestion
+    assert len(vs.provenance) == 1
+    assert vs.provenance[0].source == "enum_test"

@@ -74,7 +74,8 @@ from linkml_runtime.utils.schemaview import SchemaView
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from schema_registry_utils import (
-    RegistryClass, RegistryProperty, ProvenanceEntry, compute_hash_id_for,
+    RegistryClass, RegistryProperty, PermissibleValue, ValueSet,
+    ProvenanceEntry, compute_hash_id_for,
 )
 
 from db import (
@@ -292,11 +293,32 @@ def parse_linkml(path: Path) -> dict[str, Any]:
             if slot.name not in slots:
                 slots[slot.name] = _slot_to_dict(slot, prefixes)
 
+    enums: dict[str, dict] = {}
+    for enum_name in sv.all_enums():
+        enum_def = sv.get_enum(enum_name)
+        enum_uri  = getattr(enum_def, "enum_uri", None) or ""
+        resolved_iri = resolve_prefix(str(enum_uri), prefixes) if enum_uri else ""
+
+        pv_dict: dict[str, dict] = {}
+        for pv_text, pv_obj in (enum_def.permissible_values or {}).items():
+            raw_meaning = getattr(pv_obj, "meaning", None)
+            pv_dict[pv_text] = {
+                "description": str(pv_obj.description or ""),
+                "meaning": resolve_prefix(str(raw_meaning), prefixes) if raw_meaning else "",
+            }
+
+        enums[enum_name] = {
+            "iri":        resolved_iri,
+            "definition": str(enum_def.description or ""),
+            "permissible_values": pv_dict,
+        }
+
     return {
         "meta":     meta,
         "prefixes": prefixes,
         "classes":  classes,
         "slots":    slots,
+        "enums":    enums,
     }
 
 
@@ -322,7 +344,7 @@ def _make_provenance(source_label: str, agent: str, issue: str = "",
 def build_registry_entities(
     parsed: dict, source_label: str, agent: str, issue: str = "",
     registry_version: str = "",
-) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass]]:
+) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass], dict[str, ValueSet]]:
     """
     Convert parse_linkml()'s intermediate dict into content-hashed
     RegistryProperty/RegistryClass instances, keyed by their original
@@ -406,7 +428,33 @@ def build_registry_entities(
     for cls_name in classes:
         resolve_class(cls_name)
 
-    return properties, registry_classes
+    # Build PermissibleValue + ValueSet instances from parsed enums.
+    prov_factory = lambda: _make_provenance(source_label, agent, issue, registry_version)
+    value_sets: dict[str, ValueSet] = {}
+
+    for enum_name, enum_data in parsed.get("enums", {}).items():
+        pv_hash_ids: list[str] = []
+        for pv_text, pv_data in enum_data["permissible_values"].items():
+            pv_fields = dict(
+                name=pv_text,
+                meaning=pv_data["meaning"] or None,
+            )
+            pv_hash_ids.append(compute_hash_id_for(PermissibleValue, pv_fields))
+
+        vs_fields = dict(
+            name=enum_name,
+            description=enum_data["definition"] or "",
+            permissible_values=sorted(pv_hash_ids),
+            skos_mappings=[],
+        )
+        vs = ValueSet(
+            hash_id=compute_hash_id_for(ValueSet, vs_fields),
+            provenance=[prov_factory()],
+            **vs_fields,
+        )
+        value_sets[enum_name] = vs
+
+    return properties, registry_classes, value_sets
 
 
 # ---------------------------------------------------------------------------
@@ -415,6 +463,51 @@ def build_registry_entities(
 # entity_exists / create_entity_node / write_provenance / write_registry_entities
 # / write_structural_edges all live in db.py — shared with seed.py, which
 # writes the same two node types the same way.
+
+
+# ---------------------------------------------------------------------------
+# ValueSet / PermissibleValue graph writers
+# ---------------------------------------------------------------------------
+
+def _write_value_sets(conn, value_sets: dict[str, "ValueSet"],
+                      enums: dict[str, dict]) -> int:
+    """Write ValueSet and PermissibleValue nodes + edges. Returns edge count."""
+    from db import entity_exists, create_entity_node, write_provenance, scalar_fields
+
+    rels = 0
+    for enum_name, vs in value_sets.items():
+        is_new = not entity_exists(conn, "ValueSet", vs.hash_id)
+        if is_new:
+            create_entity_node(conn, "ValueSet", vs)
+        for prov in vs.provenance:
+            write_provenance(conn, "ValueSet", vs.hash_id, prov)
+
+        # Write each PermissibleValue node and link it.
+        for pv_text, pv_data in enums[enum_name]["permissible_values"].items():
+            pv_fields = dict(name=pv_text, meaning=pv_data["meaning"] or None)
+            pv_hash_id = compute_hash_id_for(PermissibleValue, pv_fields)
+
+            pv_exists = conn.execute(
+                "MATCH (p:PermissibleValue {hash_id: $h}) RETURN p.hash_id LIMIT 1",
+                {"h": pv_hash_id},
+            ).has_next()
+            if not pv_exists:
+                conn.execute("""
+                    CREATE (:PermissibleValue {hash_id: $h, name: $n, meaning: $m})
+                """, {"h": pv_hash_id, "n": pv_text, "m": pv_data["meaning"] or ""})
+
+            edge_exists = conn.execute("""
+                MATCH (vs:ValueSet {hash_id: $vs})-[:HAS_PERMISSIBLE_VALUE]->(pv:PermissibleValue {hash_id: $pv})
+                RETURN vs.hash_id LIMIT 1
+            """, {"vs": vs.hash_id, "pv": pv_hash_id}).has_next()
+            if not edge_exists:
+                conn.execute("""
+                    MATCH (vs:ValueSet {hash_id: $vs}), (pv:PermissibleValue {hash_id: $pv})
+                    CREATE (vs)-[:HAS_PERMISSIBLE_VALUE]->(pv)
+                """, {"vs": vs.hash_id, "pv": pv_hash_id})
+                rels += 1
+
+    return rels
 
 
 # ---------------------------------------------------------------------------
@@ -498,7 +591,7 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
     """
     meta = parsed["meta"]
 
-    properties, registry_classes = build_registry_entities(
+    properties, registry_classes, value_sets = build_registry_entities(
         parsed, source_label, agent, issue, registry_version,
     )
 
@@ -509,6 +602,7 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
 
     _ensure_schema_source(conn, source_label, meta["version"], registry_version)
     stats["rels"] = write_structural_edges(conn, registry_classes)
+    stats["rels"] += _write_value_sets(conn, value_sets, parsed.get("enums", {}))
 
     has_new_content = bool(stats["classes_new"] or stats["properties_new"])
     has_any_change   = has_new_content or bool(stats["provenance_added"])

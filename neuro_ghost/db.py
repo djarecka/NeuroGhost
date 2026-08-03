@@ -84,8 +84,12 @@ def bump_version(ver: str, bump: str = "patch") -> str:
 # .uid/.source/.source_description/.generated_at/.attributed_to/.activity/
 # .derived_from) so this module doesn't need to import schema_registry_utils.
 
-LIST_FIELDS = {"provenance", "skos_mappings", "properties", "relations", "mixins"}
-HAS_PROVENANCE_REL = {"RegistryClass": "HAS_PROVENANCE", "RegistryProperty": "HAS_PROVENANCE_P"}
+LIST_FIELDS = {"provenance", "skos_mappings", "properties", "relations", "mixins", "permissible_values"}
+HAS_PROVENANCE_REL = {
+    "RegistryClass":    "HAS_PROVENANCE",
+    "RegistryProperty": "HAS_PROVENANCE_P",
+    "ValueSet":         "HAS_PROVENANCE_VS",
+}
 
 
 def scalar_fields(entity) -> dict:
@@ -459,6 +463,10 @@ _REL_DDL: list[str] = [
         registry_version    STRING,
         created_at          STRING
     )""",
+
+    # --- ValueSet / PermissibleValue ---
+    "CREATE REL TABLE IF NOT EXISTS HAS_PERMISSIBLE_VALUE (FROM ValueSet TO PermissibleValue)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_VS     (FROM ValueSet TO ProvenanceEntry)",
 
     # --- Infrastructure edges ---
     "CREATE REL TABLE IF NOT EXISTS APPLIES_TO         (FROM Rule             TO RegistryClass)",

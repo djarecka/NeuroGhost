@@ -132,14 +132,26 @@ classes:
       - name
       - description
 
-  ValueSet:
+  PermissibleValue:
     description: >-
-      STUB — a controlled set of permissible values, usable as a
-      RegistryProperty range. Slots intentionally minimal; scope TBD.
+      A single permissible value within a ValueSet enumeration. The `name`
+      field holds the value text (e.g. "EXACT_MATCH"); `meaning` optionally
+      maps it to an external ontology IRI. Identity is content-addressed on
+      (name, meaning) — identical values across sources share one node.
     slots:
       - hash_id
       - name
-      - description
+      - meaning
+
+  ValueSet:
+    is_a: RegistryEntity
+    description: >-
+      A controlled set of permissible values, usable as a RegistryProperty
+      range. LinkML enums ingest as ValueSet nodes; each permissible value
+      becomes a separate PermissibleValue node linked via
+      HAS_PERMISSIBLE_VALUE edges.
+    slots:
+      - permissible_values
 
   SchemaSource:
     description: >-
@@ -402,6 +414,22 @@ slots:
   changes_summary:
     range: string
     description: Human-readable summary of what changed in this version.
+
+  # --- PermissibleValue / ValueSet slots ------------------------------------
+
+  meaning:
+    range: uriorcurie
+    description: >-
+      Ontology IRI this permissible value maps to (e.g. skos:exactMatch
+      for the EXACT_MATCH value in SkosMappingTypeEnum).
+
+  permissible_values:
+    range: PermissibleValue
+    multivalued: true
+    description: >-
+      The set of permissible values for this ValueSet. Stored as hash_id
+      references; HAS_PERMISSIBLE_VALUE edges are the graph traversal.
+
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
