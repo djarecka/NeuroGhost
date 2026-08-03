@@ -1,5 +1,5 @@
 [build]
-builder = "nixpacks"
+builder = "dockerfile"
 
 [deploy]
 startCommand = "MCP_TRANSPORT=sse python -m neuro_ghost.mcp_server"
