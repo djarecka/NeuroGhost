@@ -39,9 +39,8 @@ module before merging.
 
 | Module | Repository | Maintainer | Focus | Status | NeuroGhost Approver |
 |--------|-----------|------------|-------|--------|---------------------|
-| **Nema** | `<!-- TODO: add repo URL -->` | @nema | _TBD_ | Provisional | @Sulstice |
-| **Proteus** | `<!-- TODO: add repo URL -->` | _TBD_ | Cross-schema alignment pipeline | Provisional | @Sulstice |
-| **Dorada** | `djarecka/NeuroGhost` (fork) | @djarecka | LinkML ingestion & Rule model | Provisional | @Sulstice |
+| **Proteus** | [neurovium/Proteus](https://github.com/neurovium/Proteus) | @neurovium (Nema) | Cross-schema alignment pipeline | Provisional | @Sulstice |
+| **Dorada** | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) (fork) | @djarecka | LinkML ingestion & Rule model | Provisional | @Sulstice |
 
 > **Provisional** means the module is tracked here but has no formal SLA yet.
 > **Active** means the module has merged at least one PR into core and follows

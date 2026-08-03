@@ -152,8 +152,7 @@ See [docs/GOVERNANCE.md](docs/GOVERNANCE.md) for the full spec.
 <!-- MODULE_SYNC_START -->
 | Module | Maintainer | Repository | Behind main | Compare |
 |--------|-----------|------------|-------------|---------|
-| Nema | @neurovium | _repo TBD_ | — | — |
-| Proteus | _TBD_ | _repo TBD_ | — | — |
+| Proteus | @neurovium (Nema) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | — | [compare ↗](https://github.com/neurovium/Proteus/compare/main...sensein:NeuroGhost:main) |
 | Dorada | @djarecka | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) | — | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...djarecka:NeuroGhost:main) |
 <!-- MODULE_SYNC_END -->
 

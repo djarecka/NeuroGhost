@@ -31,12 +31,28 @@ jobs:
           README = "README.md"
 
           # --------------- module definitions --------------------------------
-          # Each entry: (display_name, maintainer, repo_or_None, compare_branch)
-          # repo=None means the repo URL is not yet known — skip API call.
+          # kind="fork"       — a fork of sensein/NeuroGhost; we compare
+          #                     sensein/NeuroGhost main...fork:repo:branch
+          # kind="standalone" — an independent repo; we compare its default
+          #                     branch against its own latest commit date and
+          #                     report days since last commit instead of a
+          #                     commit-behind count (cross-repo commit distance
+          #                     is not meaningful for unrelated histories).
           MODULES = [
-              ("Nema",    "@neurovium", None,                          None),
-              ("Proteus", "_TBD_",      None,                          None),
-              ("Dorada",  "@djarecka",  "djarecka/NeuroGhost",        "djarecka:NeuroGhost:main"),
+              {
+                  "name":       "Proteus",
+                  "maintainer": "@neurovium (Nema)",
+                  "repo":       "neurovium/Proteus",
+                  "kind":       "standalone",
+                  "branch":     "main",
+              },
+              {
+                  "name":       "Dorada",
+                  "maintainer": "@djarecka",
+                  "repo":       "djarecka/NeuroGhost",
+                  "kind":       "fork",
+                  "branch":     "djarecka:NeuroGhost:main",
+              },
           ]
 
           def gh_get(path):
@@ -52,32 +68,47 @@ jobs:
               with urllib.request.urlopen(req, timeout=10) as r:
                   return json.loads(r.read())
 
-          def behind(module_branch):
-              """Return 'N commits' or '✓ up to date' or '—' on error."""
+          def behind_fork(fork_branch):
+              """Commits the fork is behind sensein/NeuroGhost main."""
               try:
-                  data = gh_get(f"repos/{REPO}/compare/main...{module_branch}")
+                  data = gh_get(f"repos/{REPO}/compare/main...{fork_branch}")
                   n = data.get("behind_by", 0)
                   return "✓ up to date" if n == 0 else f"{n} commit{'s' if n != 1 else ''}"
               except Exception as e:
-                  print(f"  warn: compare failed for {module_branch}: {e}", file=sys.stderr)
+                  print(f"  warn: compare failed for {fork_branch}: {e}", file=sys.stderr)
+                  return "—"
+
+          def days_since_commit(repo, branch):
+              """Days since last commit on a standalone repo's branch."""
+              try:
+                  import datetime
+                  data = gh_get(f"repos/{repo}/commits/{branch}")
+                  ts   = data["commit"]["committer"]["date"]   # e.g. "2025-03-01T12:00:00Z"
+                  dt   = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                  now  = datetime.datetime.now(datetime.timezone.utc)
+                  days = (now - dt).days
+                  return f"{days}d ago" if days > 0 else "today"
+              except Exception as e:
+                  print(f"  warn: last-commit failed for {repo}@{branch}: {e}", file=sys.stderr)
                   return "—"
 
           # --------------- build table rows ----------------------------------
           rows = ["| Module | Maintainer | Repository | Behind main | Compare |",
                   "|--------|-----------|------------|-------------|---------|"]
 
-          for name, maintainer, repo, branch in MODULES:
-              if repo is None:
-                  repo_cell    = "_repo TBD_"
-                  behind_cell  = "—"
-                  compare_cell = "—"
-              else:
-                  repo_cell    = f"[{repo}](https://github.com/{repo})"
-                  behind_cell  = behind(branch)
-                  compare_url  = f"https://github.com/{REPO}/compare/main...{branch}"
-                  compare_cell = f"[compare ↗]({compare_url})"
+          for m in MODULES:
+              repo_cell = f"[{m['repo']}](https://github.com/{m['repo']})"
 
-              rows.append(f"| {name} | {maintainer} | {repo_cell} | {behind_cell} | {compare_cell} |")
+              if m["kind"] == "fork":
+                  behind_cell  = behind_fork(m["branch"])
+                  compare_url  = f"https://github.com/{REPO}/compare/main...{m['branch']}"
+                  compare_cell = f"[compare ↗]({compare_url})"
+              else:
+                  behind_cell  = days_since_commit(m["repo"], m["branch"])
+                  compare_url  = f"https://github.com/{m['repo']}/commits/{m['branch']}"
+                  compare_cell = f"[commits ↗]({compare_url})"
+
+              rows.append(f"| {m['name']} | {m['maintainer']} | {repo_cell} | {behind_cell} | {compare_cell} |")
 
           table = "\n".join(rows)
 
