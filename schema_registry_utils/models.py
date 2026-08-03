@@ -64,18 +64,3 @@ class RegistryProperty(RegistryEntity):
     slot_uri:         Optional[str]  = None
     range:            str
     units:            Optional[str]  = None
-
-
-class Rule(RegistryEntity):
-    """
-    A usage constraint on a specific RegistryProperty (applies_to holds its
-    hash_id) — required/multivalued/pattern/min/max. Not on RegistryProperty
-    itself: the same property can be required in one source's usage and
-    optional in another's without being a different concept.
-    """
-    applies_to:    str
-    required:      Optional[bool]  = None
-    multivalued:   Optional[bool]  = None
-    pattern:       Optional[str]   = None
-    minimum_value: Optional[float] = None
-    maximum_value: Optional[float] = None

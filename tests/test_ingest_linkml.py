@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from ingest_linkml import parse_linkml, build_registry_entities
-from schema_registry_utils import RegistryProperty, RegistryClass, Rule
+from schema_registry_utils import RegistryProperty, RegistryClass
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -103,8 +103,6 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": "",
-                "minimum_value": None,
-                "maximum_value": None,
             },
             "name": {
                 "iri": "https://schema.org/name",
@@ -114,8 +112,6 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": "",
-                "minimum_value": None,
-                "maximum_value": None,
             },
             "orcid": {
                 "iri": "https://example.org/schema#orcid",
@@ -125,8 +121,6 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": r"^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$",
-                "minimum_value": None,
-                "maximum_value": None,
             },
             "role": {
                 "iri": "",
@@ -136,8 +130,6 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": True,
                 "required": True,
                 "pattern": "^[A-Za-z ]+$",
-                "minimum_value": None,
-                "maximum_value": None,
             },
         },
     }
@@ -146,43 +138,35 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
 def test_registry_property_does_not_retain_usage_constraints():
     """
     parse_linkml()'s dict has multivalued/required/pattern (see above) — but
-    RegistryProperty deliberately doesn't model them at all (deferred to
-    Rule, since the same property can be required in one source's usage
-    and optional in another's without being a different concept). Assert
-    this at the model level, not just "the dict I built doesn't have it" —
-    if someone re-adds these fields to RegistryProperty, this fails. Also
-    confirm they didn't just vanish — they moved to Rule.
+    RegistryProperty deliberately doesn't model them at all (deferred to a
+    future Rule, since the same property can be required in one source's
+    usage and optional in another's without being a different concept).
+    Assert this at the model level, not just "the dict I built doesn't have
+    it" — if someone re-adds these fields to RegistryProperty, this fails.
     """
-    for field in ("required", "multivalued", "pattern", "minimum_value", "maximum_value"):
+    for field in ("required", "multivalued", "pattern"):
         assert field not in RegistryProperty.model_fields
-        assert field in Rule.model_fields
 
 
 def test_build_registry_entities_produces_exactly_the_expected_objects():
     """
     Exact-equality check of build_registry_entities()'s output — the step
     that turns parse_linkml()'s dict into content-hashed RegistryProperty/
-    RegistryClass/Rule instances. hash_id is a pure content hash (no
-    randomness), so these values are reproducible; if the hash computation,
-    the set of fields carried into the model, or the is_a/properties/
-    applies_to resolution ever changes, this fails.
-
-    Only "orcid" (pattern) and "role" (required, multivalued, pattern) carry
-    a constraint in this fixture — "name" and "created_at" have none, so they
-    get no Rule at all (see test_ingest_registry.py for the "no rule created
-    for an unconstrained property" case, checked directly against the graph).
+    RegistryClass instances. hash_id is a pure content hash (no randomness),
+    so these values are reproducible; if the hash computation, the set of
+    fields carried into the model, or the is_a/properties resolution ever
+    changes, this fails.
 
     provenance is checked separately (excluded from the equality dump) since
     ProvenanceEntry.uid/generated_at are non-deterministic per run.
     """
     parsed = parse_linkml(FIXTURES / "comprehensive.yml")
-    properties, registry_classes, rules = build_registry_entities(parsed, "comprehensive", "tester")
+    properties, registry_classes = build_registry_entities(parsed, "comprehensive", "tester")
 
     assert set(properties) == {"name", "orcid", "role", "created_at"}
     assert set(registry_classes) == {"Timestamped", "Entity", "Person"}
-    assert set(rules) == {"orcid", "role"}
 
-    for entity in (*properties.values(), *registry_classes.values(), *rules.values()):
+    for entity in (*properties.values(), *registry_classes.values()):
         assert len(entity.provenance) == 1
         prov = entity.provenance[0]
         assert prov.source == "comprehensive"
@@ -276,35 +260,5 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "relations": [],
             "is_a": "sha256:a5f7bcf3d61d1b1bf7aaee30af3a77d52373a7267a6a40b739b1d8db7644453d",
             "mixins": [],
-        },
-    }
-
-    assert {
-        name: r.model_dump(exclude={"provenance"})
-        for name, r in rules.items()
-    } == {
-        "orcid": {
-            "hash_id": "sha256:1aca93350de8d892498de3703d37a1cbea735ba7db1fa48f8a12fb03d4ae2f99",
-            "name": "orcid_rule",
-            "description": r"pattern: ^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$",
-            "skos_mappings": [],
-            "applies_to": "sha256:8bddfe8f326dab2077cd95446fa63eb7708cab8c096adc2ad53979d91b73862d",
-            "required": False,
-            "multivalued": False,
-            "pattern": r"^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$",
-            "minimum_value": None,
-            "maximum_value": None,
-        },
-        "role": {
-            "hash_id": "sha256:a0640da17823cb046195295b7bf89c79e4dd821a26b3669aa6335a14b51933e1",
-            "name": "role_rule",
-            "description": "required; multivalued; pattern: ^[A-Za-z ]+$",
-            "skos_mappings": [],
-            "applies_to": "sha256:b401d00ccb63e9accb3a1e2360a2f5d6997c21ae205324cf58ddd72712ce1538",
-            "required": True,
-            "multivalued": True,
-            "pattern": "^[A-Za-z ]+$",
-            "minimum_value": None,
-            "maximum_value": None,
         },
     }
