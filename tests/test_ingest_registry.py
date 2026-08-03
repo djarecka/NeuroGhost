@@ -64,14 +64,9 @@ def test_required_does_not_affect_property_identity(tmp_path):
     required_a.yml and required_b.yml declare the exact same "age" slot
     (same name/description/range/units) except one marks it `required: true`
     and the other doesn't. RegistryProperty doesn't model required at all
-    (deferred to Rule — see test_registry_property_does_not_retain_
+    (deferred to a future Rule — see test_registry_property_does_not_retain_
     usage_constraints in test_ingest_linkml.py), so this must not create a
     second node: same hash_id, one node, provenance from both sources.
-
-    required_a's "required: true" doesn't just vanish, though — it produces
-    a Rule (APPLIES_TO_P the "age" property), while required_b's plain
-    declaration produces no Rule at all — the constraint is real, it's just
-    modeled on a separate entity instead of on the property.
     """
     conn = _conn(tmp_path)
 
@@ -79,10 +74,8 @@ def test_required_does_not_affect_property_identity(tmp_path):
     stats_b = insert_schema(conn, parse_linkml(FIXTURES / "required_b.yml"), "required_b", agent="tester")
 
     assert stats_a["properties_new"] == 1
-    assert stats_a["rules_new"] == 1              # required: true -> one Rule
-    assert stats_b["properties_new"] == 0         # not a new node — same hash as required_a's
+    assert stats_b["properties_new"] == 0        # not a new node — same hash as required_a's
     assert stats_b["properties_existing"] == 1
-    assert stats_b["rules_new"] == 0              # no constraints declared -> no Rule
 
     rows = conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.hash_id").get_all()
     assert len(rows) == 1                         # no duplicate node
@@ -92,37 +85,6 @@ def test_required_does_not_affect_property_identity(tmp_path):
         RETURN pe.source
     """).get_all()
     assert {r[0] for r in sources} == {"required_a", "required_b"}
-
-    rule_rows = conn.execute("MATCH (r:Rule) RETURN r.required, r.applies_to").get_all()
-    assert len(rule_rows) == 1                    # exactly one Rule total, from required_a only
-    assert rule_rows[0][0] is True
-    assert rule_rows[0][1] == rows[0][0]           # applies_to the "age" property's hash_id
-
-
-def test_identical_rule_from_two_sources_shares_one_hash_id(tmp_path):
-    """
-    required_a.yml and required_c.yml both mark "age" required: true (under
-    different class names, in different files) — the resulting Rule is
-    content-addressed exactly like RegistryProperty/RegistryClass: one node,
-    provenance from both sources, not two separate Rules.
-    """
-    conn = _conn(tmp_path)
-
-    stats_a = insert_schema(conn, parse_linkml(FIXTURES / "required_a.yml"), "required_a", agent="tester")
-    stats_c = insert_schema(conn, parse_linkml(FIXTURES / "required_c.yml"), "required_c", agent="tester")
-
-    assert stats_a["rules_new"] == 1
-    assert stats_c["rules_new"] == 0        # same constraint, same property -> same hash_id
-    assert stats_c["rules_existing"] == 1
-
-    rows = conn.execute("MATCH (r:Rule) RETURN r.hash_id").get_all()
-    assert len(rows) == 1                   # no duplicate Rule
-
-    sources = conn.execute("""
-        MATCH (:Rule)-[:HAS_PROVENANCE_RULE]->(pe:ProvenanceEntry)
-        RETURN pe.source
-    """).get_all()
-    assert {r[0] for r in sources} == {"required_a", "required_c"}
 
 
 def test_content_change_produces_different_hash_id(tmp_path):

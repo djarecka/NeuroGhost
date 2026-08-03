@@ -1,7 +1,7 @@
 import hashlib
 import json
 
-from schema_registry_utils.models import RegistryClass, RegistryProperty, Rule
+from schema_registry_utils.models import RegistryClass, RegistryProperty
 
 _EXCLUDED_FIELDS = {
     "hash_id", "provenance", "skos_mappings",
@@ -11,14 +11,11 @@ _EXCLUDED_FIELDS = {
 }
 
 
-def compute_hash_id(entity: RegistryClass | RegistryProperty | Rule) -> str:
-    """Compute a content-based hash_id for a RegistryClass, RegistryProperty,
-    or Rule.
+def compute_hash_id(entity: RegistryClass | RegistryProperty) -> str:
+    """Compute a content-based hash_id for a RegistryClass or RegistryProperty.
 
     Everything but hash_id, provenance, skos_mappings, and class_uri/slot_uri
-    is treated as identity-defining content. Rule has neither class_uri nor
-    slot_uri, so all of its own fields (including applies_to) are hashed —
-    a rule's identity is exactly "these constraints, on this property".
+    is treated as identity-defining content.
     """
     content = entity.model_dump(exclude=_EXCLUDED_FIELDS)
     canonical = json.dumps(_normalize(content), sort_keys=True, separators=(",", ":"))
@@ -26,7 +23,7 @@ def compute_hash_id(entity: RegistryClass | RegistryProperty | Rule) -> str:
     return f"sha256:{digest}"
 
 
-def assign_hash_id(entity: RegistryClass | RegistryProperty | Rule) -> RegistryClass | RegistryProperty | Rule:
+def assign_hash_id(entity: RegistryClass | RegistryProperty) -> RegistryClass | RegistryProperty:
     """Compute entity's hash_id from its current content, then suffix its name
     with the first 4 hex characters of the digest (e.g. "age" -> "age_a1b2").
 
