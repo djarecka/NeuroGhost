@@ -78,23 +78,37 @@ jobs:
                   print(f"  warn: compare failed for {fork_branch}: {e}", file=sys.stderr)
                   return "—"
 
-          def days_since_commit(repo, branch):
-              """Days since last commit on a standalone repo's branch."""
+          def commits_ahead_of_pin(repo, branch, pin_sha):
+              """
+              How many commits the repo's branch has made since pin_sha.
+              Used for Proteus: pin_sha is the last commit we inlined into align.py.
+              """
+              if not pin_sha or pin_sha == "UNSET":
+                  return "⚠ pin unset"
               try:
-                  import datetime
-                  data = gh_get(f"repos/{repo}/commits/{branch}")
-                  ts   = data["commit"]["committer"]["date"]   # e.g. "2025-03-01T12:00:00Z"
-                  dt   = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                  now  = datetime.datetime.now(datetime.timezone.utc)
-                  days = (now - dt).days
-                  return f"{days}d ago" if days > 0 else "today"
+                  data = gh_get(f"repos/{repo}/compare/{pin_sha}...{branch}")
+                  n = data.get("ahead_by", 0)
+                  return "✓ up to date" if n == 0 else f"{n} commit{'s' if n != 1 else ''} ahead"
               except Exception as e:
-                  print(f"  warn: last-commit failed for {repo}@{branch}: {e}", file=sys.stderr)
+                  print(f"  warn: pin compare failed for {repo}: {e}", file=sys.stderr)
                   return "—"
+
+          def read_proteus_pin():
+              """Read the SHA from .proteus-pin."""
+              try:
+                  for line in open(".proteus-pin"):
+                      line = line.strip()
+                      if line.startswith("sha=") and not line.startswith("#"):
+                          return line.split("=", 1)[1].strip()
+              except Exception:
+                  pass
+              return "UNSET"
 
           # --------------- build table rows ----------------------------------
           rows = ["| Module | Maintainer | Repository | Behind main | Compare |",
                   "|--------|-----------|------------|-------------|---------|"]
+
+          proteus_pin = read_proteus_pin()
 
           for m in MODULES:
               repo_cell = f"[{m['repo']}](https://github.com/{m['repo']})"
@@ -104,9 +118,14 @@ jobs:
                   compare_url  = f"https://github.com/{REPO}/compare/main...{m['branch']}"
                   compare_cell = f"[compare ↗]({compare_url})"
               else:
-                  behind_cell  = days_since_commit(m["repo"], m["branch"])
-                  compare_url  = f"https://github.com/{m['repo']}/commits/{m['branch']}"
-                  compare_cell = f"[commits ↗]({compare_url})"
+                  # standalone (Proteus): track commits since last align.py sync
+                  behind_cell  = commits_ahead_of_pin(m["repo"], m["branch"], proteus_pin)
+                  compare_url  = (
+                      f"https://github.com/{m['repo']}/compare/{proteus_pin}...{m['branch']}"
+                      if proteus_pin != "UNSET" else
+                      f"https://github.com/{m['repo']}/commits/{m['branch']}"
+                  )
+                  compare_cell = f"[compare ↗]({compare_url})"
 
               rows.append(f"| {m['name']} | {m['maintainer']} | {repo_cell} | {behind_cell} | {compare_cell} |")
 

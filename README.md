@@ -146,7 +146,8 @@ See [docs/GOVERNANCE.md](docs/GOVERNANCE.md) for the full spec.
 
 ### Module sync status
 
-> Tracks how far each module's default branch is behind `sensein/NeuroGhost` main.
+> **Proteus**: commits ahead of the version pinned into `neuro_ghost/align.py` (see `.proteus-pin`).
+> **Dorada**: commits behind `sensein/NeuroGhost` main.
 > Updated automatically by CI on every push to main.
 
 <!-- MODULE_SYNC_START -->
