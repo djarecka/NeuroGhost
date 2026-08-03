@@ -136,6 +136,29 @@ Open `index.html` in a browser when done.
 
 ---
 
+## Satellite Modules
+
+NeuroGhost core is extended by independently maintained satellite modules.
+Each module lives in its own repository and contributes back via pull
+requests; every PR from a satellite module requires one approval from the
+designated NeuroGhost approver before merging.
+See [docs/GOVERNANCE.md](docs/GOVERNANCE.md) for the full spec.
+
+### Module sync status
+
+> **Proteus**: commits ahead of the version pinned into `neuro_ghost/align.py` (see `.proteus-pin`).
+> **Dorada**: commits behind `sensein/NeuroGhost` main.
+> Updated automatically by CI on every push to main.
+
+<!-- MODULE_SYNC_START -->
+| Module | Maintainer | Repository | Behind main | Compare |
+|--------|-----------|------------|-------------|---------|
+| Proteus | @neurovium (Nema) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | — | [compare ↗](https://github.com/neurovium/Proteus/compare/main...sensein:NeuroGhost:main) |
+| Dorada | @djarecka | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) | — | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...djarecka:NeuroGhost:main) |
+<!-- MODULE_SYNC_END -->
+
+---
+
 ## Contributing
 
 - Register a schema via the [Register tab](https://sensein.group/NeuroGhost/).
