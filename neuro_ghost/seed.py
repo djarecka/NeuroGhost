@@ -30,9 +30,13 @@ from pathlib import Path
 import click, httpx, rdflib
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from schema_registry_utils import RegistryClass, RegistryProperty, ProvenanceEntry, compute_hash_id
+from schema_registry_utils import (
+    RegistryClass, RegistryProperty, ProvenanceEntry, compute_hash_id_for,
+)
 
-from db import get_connection, now_iso, write_registry_entities, write_structural_edges
+from db import (
+    get_connection, make_uid, now_iso, write_registry_entities, write_structural_edges,
+)
 
 # ---------------------------------------------------------------------------
 # Config
@@ -153,8 +157,9 @@ def collect_classes(g: rdflib.Graph) -> dict[str, dict]:
 
 def _provenance(agent: str = "system", registry_version: str = "") -> ProvenanceEntry:
     return ProvenanceEntry(
-        uid=None, source="schema.org", registry_version=registry_version or None,
+        uid=make_uid(), source="schema.org", registry_version=registry_version or None,
         generated_at=now_iso(), attributed_to=agent, activity="seeding",
+        derived_from=[],
     )
 
 
@@ -181,14 +186,19 @@ def build_registry_entities(
                 continue
             seen_prop_iris[prop["iri"]] = prop["name"]
             value_range = prop["ranges"][0] if prop["ranges"] else "xsd:string"
-            p = RegistryProperty(
+            fields = dict(
                 name=prop["name"],
                 description=prop["comment"] or "",
                 range=value_range,
+                units=None,          # schema.org carries no unit information
                 slot_uri=prop["iri"] or None,
-                provenance=[_provenance(registry_version=registry_version)],
+                skos_mappings=[],
             )
-            p.hash_id = compute_hash_id(p)
+            p = RegistryProperty(
+                hash_id=compute_hash_id_for(RegistryProperty, fields),
+                provenance=[_provenance(registry_version=registry_version)],
+                **fields,
+            )
             properties[prop["iri"]] = p
 
     registry_classes: dict[str, RegistryClass] = {}
@@ -208,16 +218,22 @@ def build_registry_entities(
         prop_hash_ids = sorted({
             properties[prop["iri"]].hash_id for prop in info["props"]
         })
-        rc = RegistryClass(
+        fields = dict(
             name=name,
             description=info["comment"] or "",
             class_uri=info["iri"] or None,
             abstract=False,
             is_a=parent.hash_id if parent else None,
             properties=prop_hash_ids,
-            provenance=[_provenance(registry_version=registry_version)],
+            relations=[],
+            mixins=[],
+            skos_mappings=[],
         )
-        rc.hash_id = compute_hash_id(rc)
+        rc = RegistryClass(
+            hash_id=compute_hash_id_for(RegistryClass, fields),
+            provenance=[_provenance(registry_version=registry_version)],
+            **fields,
+        )
         registry_classes[name] = rc
         return rc
 

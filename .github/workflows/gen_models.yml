@@ -1,0 +1,104 @@
+name: Generate Pydantic Models
+
+# schema_registry_utils/models.py is generated from schemas/meta_model.yaml by
+# ./scripts/gen_models.sh (which wraps `linkml gen-pydantic`). This workflow
+# keeps the two in sync:
+#
+#   * on a PR touching the meta-model — fail unless the regenerated models are
+#     already committed, so the diff is reviewed alongside the schema change
+#   * on push to main — regenerate and commit if anything is stale
+#
+# LinkML is pinned in requirements.txt (gen-pydantic bakes the metamodel version
+# into its output, and generator changes can shift field defaults that feed
+# compute_hash_id). Both jobs below install that pin rather than restating the
+# version here, so there is only one place to bump.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "schemas/meta_model.yaml"
+      - "scripts/gen_models.sh"
+      - ".github/workflows/gen_models.yml"
+  pull_request:
+    paths:
+      - "schemas/meta_model.yaml"
+      - "scripts/gen_models.sh"
+      - "schema_registry_utils/models.py"
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # PR path: verify only. Never writes to a contributor's branch.
+  # ---------------------------------------------------------------------------
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Only LinkML is needed to verify, so install just its pinned line rather
+      # than all of requirements.txt (which drags in sentence-transformers).
+      - name: Install LinkML
+        run: pip install "$(grep -E '^linkml==' requirements.txt)"
+
+      - name: Verify models.py matches the meta-model
+        run: ./scripts/gen_models.sh --check
+
+  # ---------------------------------------------------------------------------
+  # main path: regenerate, prove the pipeline still works, then commit.
+  # ---------------------------------------------------------------------------
+  regenerate:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push models.py back to main
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Regenerate models.py
+        run: ./scripts/gen_models.sh
+
+      # The generated models are strict (hash_id/uid required, provenance
+      # inlined), so a meta-model change can invalidate the builders in
+      # ingest_linkml.py / seed.py. Committing a models.py that breaks
+      # ingestion would take the nightly rebuild down, so gate on the suite.
+      - name: Run tests against the regenerated models
+        run: pytest tests/ -v
+
+      - name: Commit & push regenerated models
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add schema_registry_utils/models.py
+
+          if git diff --cached --quiet; then
+            echo "models.py already up to date — nothing to commit."
+          else
+            git commit -m "chore(models): regenerate from meta_model.yaml [skip ci]"
+            git push origin HEAD:main
+          fi

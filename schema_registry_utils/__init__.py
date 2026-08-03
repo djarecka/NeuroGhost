@@ -5,9 +5,16 @@ from schema_registry_utils.models import (
     ProvenanceEntry,
     SkosMapping,
     Relation,
+    Rule,
+    Transform,
+    ValueSet,
     SkosMappingTypeEnum,
 )
-from schema_registry_utils.hashing import compute_hash_id, assign_hash_id
+from schema_registry_utils.hashing import (
+    compute_hash_id,
+    compute_hash_id_for,
+    assign_hash_id,
+)
 
 __all__ = [
     "RegistryClass",
@@ -16,7 +23,11 @@ __all__ = [
     "ProvenanceEntry",
     "SkosMapping",
     "Relation",
+    "Rule",
+    "Transform",
+    "ValueSet",
     "SkosMappingTypeEnum",
     "compute_hash_id",
+    "compute_hash_id_for",
     "assign_hash_id",
 ]
