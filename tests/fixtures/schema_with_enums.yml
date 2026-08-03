@@ -1,0 +1,32 @@
+id: https://example.org/enum_test
+name: enum_test
+description: A schema with an enum to exercise enum ingestion.
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ex: https://example.org/schema#
+  skos: http://www.w3.org/2004/02/skos/core#
+default_prefix: ex
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  Annotation:
+    description: An annotation record.
+    slots:
+      - status
+
+slots:
+  status:
+    description: The annotation status.
+    range: StatusEnum
+
+enums:
+  StatusEnum:
+    description: Possible statuses for an annotation.
+    permissible_values:
+      active:
+        description: Currently active.
+        meaning: skos:Concept
+      deprecated:
+        description: No longer in use.

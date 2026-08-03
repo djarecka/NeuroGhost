@@ -269,9 +269,9 @@ class Transform(ConfiguredBaseModel):
     description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
 
 
-class ValueSet(ConfiguredBaseModel):
+class PermissibleValue(ConfiguredBaseModel):
     """
-    STUB — a controlled set of permissible values, usable as a RegistryProperty range. Slots intentionally minimal; scope TBD.
+    A single permissible value within a ValueSet enumeration. The `name` field holds the value text (e.g. \"EXACT_MATCH\"); `meaning` optionally maps it to an external ontology IRI. Identity is content-addressed on (name, meaning) — identical values across sources share one node.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
@@ -280,9 +280,30 @@ class ValueSet(ConfiguredBaseModel):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
+                       'ValueSet',
+                       'PermissibleValue']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet', 'PermissibleValue']} })
+    meaning: Optional[str] = Field(default=None, description="""Ontology IRI this permissible value maps to (e.g. skos:exactMatch for the EXACT_MATCH value in SkosMappingTypeEnum).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PermissibleValue']} })
+
+
+class ValueSet(RegistryEntity):
+    """
+    A controlled set of permissible values, usable as a RegistryProperty range. LinkML enums ingest as ValueSet nodes; each permissible value becomes a separate PermissibleValue node linked via HAS_PERMISSIBLE_VALUE edges.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
+
+    permissible_values: Optional[list[str]] = Field(default=None, description="""The set of permissible values for this ValueSet. Stored as hash_id references; HAS_PERMISSIBLE_VALUE edges are the graph traversal.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ValueSet']} })
+    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'SkosMapping',
+                       'Relation',
+                       'Rule',
+                       'Transform',
+                       'ValueSet',
+                       'PermissibleValue']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet', 'PermissibleValue']} })
     description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
+    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
+    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
 
 
 # Model rebuild
@@ -295,4 +316,5 @@ SkosMapping.model_rebuild()
 Relation.model_rebuild()
 Rule.model_rebuild()
 Transform.model_rebuild()
+PermissibleValue.model_rebuild()
 ValueSet.model_rebuild()

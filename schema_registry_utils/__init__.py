@@ -7,6 +7,7 @@ from schema_registry_utils.models import (
     Relation,
     Rule,
     Transform,
+    PermissibleValue,
     ValueSet,
     SkosMappingTypeEnum,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "Relation",
     "Rule",
     "Transform",
+    "PermissibleValue",
     "ValueSet",
     "SkosMappingTypeEnum",
     "compute_hash_id",
