@@ -78,21 +78,31 @@ curl -X POST https://sensein.group/NeuroGhost/api/transform \
 
 ## How alignment works
 
-Alignment runs the **Proteus pipeline** ([github.com/neurovium/Proteus](https://github.com/neurovium/Proteus)) — inlined into [`neuro_ghost/align.py`](neuro_ghost/align.py). Six stages:
+Alignment runs the **Proteus pipeline** ([github.com/neurovium/Proteus](https://github.com/neurovium/Proteus)) — inlined into [`neuro_ghost/align.py`](neuro_ghost/align.py). **Distance** is `1 − confidence`, so 0.0 = identical, 1.0 = unrelated. Definition embeddings use `all-MiniLM-L6-v2`, cached in `data/embeddings.parquet`.
 
-| Stage | Name | What it does |
-|-------|------|--------------|
-| 0 | Load | Reads every class from LadybugDB into a `MatchingProfile` (name, aliases, IRI, units, definition) |
-| 1 | Block + Unit veto | Generates candidate pairs across schema pairs (recall-focused). Hard-vetoes pairs whose units have known but incompatible SI dimensions (e.g. Hz vs V). This is the **only** precision filter at this stage. |
-| 2 | SignalVector | For each candidate pair, computes a frozen evidence bundle: name similarity, token Jaccard, alias overlap, definition cosine (sentence-transformers), unit compatibility, anchor relation (IRI match). Absent signals are `None`, never `0.0`. |
-| 3 | Calibrate | Weights the present signals into a confidence score. Weights: name 0.45, token Jaccard 0.35, alias overlap 0.20 (renormalized when signals are missing). Adds a 0.05 bonus for known-compatible units. Blends in definition similarity at 25% when embeddings are available. |
-| 4 | Predicate | Two-pathway assignment. **Anchored** (IRI evidence): can reach `skos:exactMatch`, `skos:broadMatch`, `skos:narrowMatch`. **Statistical** (no IRI anchor): caps at `skos:closeMatch`. Pairs below 0.45 confidence are dropped. |
-| 5 | Repair | Structural cleanup — demotes duplicate `exactMatch` claims to `closeMatch`. Never deletes edges. |
-| 6 | Write | Writes `ALIGNED_TO` edges in LadybugDB with `distance`, `skos_relation`, `method`, and per-signal subscores. |
+```mermaid
+flowchart TD
+    A["<b>0 · Load</b><br/>Read every class from LadybugDB<br/>into a MatchingProfile<br/><i>name · aliases · IRI · units · definition</i>"]
+    B["<b>1 · Block + Unit Veto</b><br/>Generate candidate pairs across schema pairs<br/>Hard-veto incompatible SI dimensions<br/><i>e.g. Hz vs V</i>"]
+    C["<b>2 · SignalVector</b><br/>Freeze an evidence bundle per pair<br/><i>name sim · token Jaccard · alias overlap<br/>definition cosine · unit compat · IRI anchor</i><br/>Absent signals → None, never 0.0"]
+    D["<b>3 · Calibrate</b><br/>Weight signals into a confidence score<br/><i>name 0.45 · Jaccard 0.35 · alias 0.20</i><br/>+0.05 unit bonus · 25% definition blend"]
+    E{{"<b>4 · Predicate</b><br/>IRI anchor present?"}}
+    F["<b>Anchored path</b><br/>skos:exactMatch<br/>skos:broadMatch<br/>skos:narrowMatch"]
+    G["<b>Statistical path</b><br/>max skos:closeMatch"]
+    DROP(["drop pair"])
+    H["<b>5 · Repair</b><br/>Demote duplicate exactMatch → closeMatch<br/>Never deletes edges"]
+    I["<b>6 · Write</b><br/>ALIGNED_TO edges in LadybugDB<br/><i>distance · skos_relation · method · subscores</i>"]
 
-**Distance** is `1 − confidence`, so 0.0 = identical, 1.0 = unrelated.
-
-**Definition embeddings** use `all-MiniLM-L6-v2` and are cached in `data/embeddings.parquet` so CI doesn't recompute from scratch.
+    A --> B
+    B --> C
+    C --> D
+    D -- "confidence < 0.45" --> DROP
+    D -- "IRI match" --> F
+    D -- "no IRI anchor" --> G
+    F --> H
+    G --> H
+    H --> I
+```
 
 ---
 
