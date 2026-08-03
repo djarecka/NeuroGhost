@@ -1,0 +1,107 @@
+name: Track satellite module sync
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"   # daily at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-sync-table:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute commit distances and update README
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, re, subprocess, sys, urllib.request
+
+          REPO   = "sensein/NeuroGhost"
+          TOKEN  = os.environ["GH_TOKEN"]
+          README = "README.md"
+
+          # --------------- module definitions --------------------------------
+          # Each entry: (display_name, maintainer, repo_or_None, compare_branch)
+          # repo=None means the repo URL is not yet known — skip API call.
+          MODULES = [
+              ("Nema",    "@neurovium", None,                          None),
+              ("Proteus", "_TBD_",      None,                          None),
+              ("Dorada",  "@djarecka",  "djarecka/NeuroGhost",        "djarecka:NeuroGhost:main"),
+          ]
+
+          def gh_get(path):
+              url = f"https://api.github.com/{path.lstrip('/')}"
+              req = urllib.request.Request(
+                  url,
+                  headers={
+                      "Authorization": f"Bearer {TOKEN}",
+                      "Accept": "application/vnd.github+json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                  },
+              )
+              with urllib.request.urlopen(req, timeout=10) as r:
+                  return json.loads(r.read())
+
+          def behind(module_branch):
+              """Return 'N commits' or '✓ up to date' or '—' on error."""
+              try:
+                  data = gh_get(f"repos/{REPO}/compare/main...{module_branch}")
+                  n = data.get("behind_by", 0)
+                  return "✓ up to date" if n == 0 else f"{n} commit{'s' if n != 1 else ''}"
+              except Exception as e:
+                  print(f"  warn: compare failed for {module_branch}: {e}", file=sys.stderr)
+                  return "—"
+
+          # --------------- build table rows ----------------------------------
+          rows = ["| Module | Maintainer | Repository | Behind main | Compare |",
+                  "|--------|-----------|------------|-------------|---------|"]
+
+          for name, maintainer, repo, branch in MODULES:
+              if repo is None:
+                  repo_cell    = "_repo TBD_"
+                  behind_cell  = "—"
+                  compare_cell = "—"
+              else:
+                  repo_cell    = f"[{repo}](https://github.com/{repo})"
+                  behind_cell  = behind(branch)
+                  compare_url  = f"https://github.com/{REPO}/compare/main...{branch}"
+                  compare_cell = f"[compare ↗]({compare_url})"
+
+              rows.append(f"| {name} | {maintainer} | {repo_cell} | {behind_cell} | {compare_cell} |")
+
+          table = "\n".join(rows)
+
+          # --------------- patch README between sentinel comments ------------
+          readme = open(README).read()
+          updated = re.sub(
+              r"<!-- MODULE_SYNC_START -->.*?<!-- MODULE_SYNC_END -->",
+              f"<!-- MODULE_SYNC_START -->\n{table}\n<!-- MODULE_SYNC_END -->",
+              readme,
+              flags=re.DOTALL,
+          )
+          open(README, "w").write(updated)
+          print("README updated:")
+          print(table)
+          PYEOF
+
+      - name: Commit updated README (if changed)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet README.md; then
+            echo "No sync changes — nothing to commit"
+          else
+            git add README.md
+            git commit -m "auto: update satellite module sync status [skip ci]"
+            git push origin HEAD:main
+          fi
