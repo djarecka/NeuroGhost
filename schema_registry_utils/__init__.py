@@ -9,6 +9,8 @@ from schema_registry_utils.models import (
     Transform,
     PermissibleValue,
     ValueSet,
+    SchemaSource,
+    SchemaVersionSnapshot,
     SkosMappingTypeEnum,
 )
 from schema_registry_utils.hashing import (
@@ -28,6 +30,8 @@ __all__ = [
     "Transform",
     "PermissibleValue",
     "ValueSet",
+    "SchemaSource",
+    "SchemaVersionSnapshot",
     "SkosMappingTypeEnum",
     "compute_hash_id",
     "compute_hash_id_for",

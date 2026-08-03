@@ -133,9 +133,9 @@ class RegistryEntity(ConfiguredBaseModel):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
+                       'PermissibleValue']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
     provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
     skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
 
@@ -157,9 +157,9 @@ class RegistryClass(RegistryEntity):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
+                       'PermissibleValue']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
     provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
     skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
 
@@ -178,9 +178,9 @@ class RegistryProperty(RegistryEntity):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
+                       'PermissibleValue']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
     provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
     skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
 
@@ -191,10 +191,10 @@ class ProvenanceEntry(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    uid: str = Field(default=..., description="""Random unique identifier for this ProvenanceEntry record (not content-derived — a per-attestation record, not a deduplicated entity).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry']} })
+    uid: str = Field(default=..., description="""Random unique identifier for this ProvenanceEntry record (not content-derived — a per-attestation record, not a deduplicated entity).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
     source: str = Field(default=..., description="""Label of the source schema this attestation came from, e.g. \"bids\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry']} })
     source_description: Optional[str] = Field(default=None, description="""This source's own description text for the entity, if it differs from the entity's merged description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry']} })
-    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry']} })
+    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
     generated_at: datetime  = Field(default=..., description="""ISO-8601 timestamp this ProvenanceEntry was generated.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:generatedAtTime'} })
     attributed_to: str = Field(default=..., description="""Agent (user or system) that generated this ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasAttributedTo'} })
     activity: Optional[str] = Field(default=None, description="""The activity that produced this ProvenanceEntry, e.g. \"ingestion\", \"manual\", \"alignment\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasGeneratedBy'} })
@@ -214,7 +214,7 @@ class SkosMapping(ConfiguredBaseModel):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet']} })
+                       'PermissibleValue']} })
     mapping_type: Optional[SkosMappingTypeEnum] = Field(default=None, description="""The kind of SKOS mapping relation this represents.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SkosMapping']} })
     target: Optional[str] = Field(default=None, description="""The external concept this mapping points to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SkosMapping']} })
 
@@ -230,7 +230,7 @@ class Relation(ConfiguredBaseModel):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet']} })
+                       'PermissibleValue']} })
     subject: str = Field(default=..., description="""hash_id of the entity this relation points from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Relation']} })
     predicate: str = Field(default=..., description="""The type of relationship (e.g. isPartOf, isSimilarTo, isDerivedFrom).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Relation']} })
     object: str = Field(default=..., description="""hash_id of the entity this relation points to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Relation']} })
@@ -248,9 +248,9 @@ class Rule(ConfiguredBaseModel):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
+                       'PermissibleValue']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
 
 
 class Transform(ConfiguredBaseModel):
@@ -264,9 +264,9 @@ class Transform(ConfiguredBaseModel):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
+                       'PermissibleValue']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
 
 
 class PermissibleValue(ConfiguredBaseModel):
@@ -280,9 +280,8 @@ class PermissibleValue(ConfiguredBaseModel):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet',
                        'PermissibleValue']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet', 'PermissibleValue']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
     meaning: Optional[str] = Field(default=None, description="""Ontology IRI this permissible value maps to (e.g. skos:exactMatch for the EXACT_MATCH value in SkosMappingTypeEnum).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PermissibleValue']} })
 
 
@@ -298,12 +297,43 @@ class ValueSet(RegistryEntity):
                        'Relation',
                        'Rule',
                        'Transform',
-                       'ValueSet',
                        'PermissibleValue']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet', 'PermissibleValue']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'ValueSet']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
     provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
     skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+
+
+class SchemaSource(ConfiguredBaseModel):
+    """
+    Registry record for a schema source (one node per ingested schema label). Tracks the source's IRI, MIME type, and the registry version it was first added under. Identity uses uid (not hash_id) because this is a mutable administrative record, not a content-addressed entity.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
+
+    uid: str = Field(default=..., description="""Random unique identifier for this ProvenanceEntry record (not content-derived — a per-attestation record, not a deduplicated entity).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    label: str = Field(default=..., description="""Short identifier label for this schema source (e.g. \"bids\", \"nwb\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
+    source_iri: Optional[str] = Field(default=None, description="""Canonical IRI for this schema source.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
+    source_version: Optional[str] = Field(default=None, description="""Semantic version of the schema at the time of ingestion.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot']} })
+    mime_type: Optional[str] = Field(default=None, description="""MIME type of the schema file (e.g. \"application/yaml\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
+    created_at: Optional[datetime ] = Field(default=None, description="""ISO-8601 timestamp when this record was created.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot']} })
+    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+
+
+class SchemaVersionSnapshot(ConfiguredBaseModel):
+    """
+    An immutable snapshot of a schema at a specific version, created each time a schema ingestion produces new or changed content. Records the class and property counts and a human-readable summary of changes.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
+
+    uid: str = Field(default=..., description="""Random unique identifier for this ProvenanceEntry record (not content-derived — a per-attestation record, not a deduplicated entity).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    schema_label: str = Field(default=..., description="""Label of the schema this snapshot belongs to (FK to SchemaSource.label).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
+    source_version: Optional[str] = Field(default=None, description="""Semantic version of the schema at the time of ingestion.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot']} })
+    yml_path: Optional[str] = Field(default=None, description="""Relative path to the schema YAML file at snapshot time.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
+    class_count: Optional[int] = Field(default=None, description="""Number of classes in the schema at this version.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
+    property_count: Optional[int] = Field(default=None, description="""Number of properties in the schema at this version.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
+    changes_summary: Optional[str] = Field(default=None, description="""Human-readable summary of what changed in this version.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
+    created_at: Optional[datetime ] = Field(default=None, description="""ISO-8601 timestamp when this record was created.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot']} })
+    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
 
 
 # Model rebuild
@@ -318,3 +348,5 @@ Rule.model_rebuild()
 Transform.model_rebuild()
 PermissibleValue.model_rebuild()
 ValueSet.model_rebuild()
+SchemaSource.model_rebuild()
+SchemaVersionSnapshot.model_rebuild()
