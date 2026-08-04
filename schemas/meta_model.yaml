@@ -55,7 +55,6 @@ classes:
       in the registry, e.g. "Patient".
     slots:
       - properties
-      - relations
       - is_a
       - mixins
       - class_uri
@@ -104,17 +103,6 @@ classes:
       - hash_id
       - mapping_type
       - target
-
-  Relation:
-    description: >-
-      A directed relationship between two registry entities (classes or
-      properties), with its own content-addressed identity and provenance.
-    slots:
-      - hash_id
-      - subject
-      - predicate
-      - object
-      - provenance
 
   Rule:
     description: >-
@@ -276,11 +264,6 @@ slots:
     multivalued: true
     description: The set of properties that belong to this class.
 
-  relations:
-    range: Relation
-    multivalued: true
-    description: Directed relations from this class to other registry entities.
-
   is_a:
     range: RegistryClass
     slot_uri: linkml:is_a
@@ -330,7 +313,7 @@ slots:
     # Defaults to false rather than null: `abstract` is identity-defining, so a
     # null would hash differently from a false and silently change every
     # RegistryClass hash_id. LinkML has no equivalent for the multivalued slots
-    # (properties/relations/mixins), which still default to null — builders
+    # (properties/mixins), which still default to null — builders
     # must pass them explicitly, and compute_hash_id_for() enforces that.
     ifabsent: 'false'
     description: Whether this registered class is itself declared abstract.
@@ -388,29 +371,9 @@ slots:
     range: string
     multivalued: true
     slot_uri: prov:wasDerivedFrom
-    annotations:
-      db_json: true
     description: >-
       hash_ids of entities this entity was derived from, if any. Stored as
-      a JSON-encoded string array in the graph database.
-
-  # --- Relation slots ------------------------------------------------------
-
-  subject:
-    range: string
-    required: true
-    description: hash_id of the entity this relation points from.
-
-  predicate:
-    range: string
-    required: true
-    description: >-
-      The type of relationship (e.g. isPartOf, isSimilarTo, isDerivedFrom).
-
-  object:
-    range: string
-    required: true
-    description: hash_id of the entity this relation points to.
+      a native list column in the graph database.
 
   # --- SkosMapping slots ---------------------------------------------------
 

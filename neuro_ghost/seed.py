@@ -225,7 +225,6 @@ def build_registry_entities(
             abstract=False,
             is_a=parent.hash_id if parent else None,
             properties=prop_hash_ids,
-            relations=[],
             mixins=[],
             skos_mappings=[],
         )

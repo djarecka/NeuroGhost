@@ -29,7 +29,7 @@ def test_identical_property_from_two_sources_shares_one_hash_id(tmp_path):
 def test_aliases_round_trip_through_the_graph(tmp_path):
     """
     aliases is a plain multivalued string field (not a hash_id-reference list
-    like properties/relations), so it's written to a native list column
+    like properties), so it's written to a native list column
     (STRING[] — see db.py's _build_registry_ddl()) rather than an edge, and
     NOT JSON-encoded into a STRING column: a bound string that looks like a
     Cypher list literal gets silently reparsed and corrupted by the DB

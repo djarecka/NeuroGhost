@@ -114,8 +114,8 @@ def build(mm: dict) -> tuple[list[dict], list[dict]]:
 
     # --- Layout --------------------------------------------------------------
     # Tier 0: concrete classes that inherit from an abstract base (core entities)
-    # Tier 1: standalone classes (ProvenanceEntry, SkosMapping, Relation …)
-    # Tier 2: stubs (Rule, Transform, ValueSet)
+    # Tier 1: standalone classes (ProvenanceEntry, SkosMapping, ValueSet …)
+    # Tier 2: stubs (Rule, Transform)
     def _tier(n: dict) -> int:
         if n["_stub"]:
             return 2

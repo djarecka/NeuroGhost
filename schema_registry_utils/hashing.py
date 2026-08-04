@@ -72,7 +72,7 @@ def _normalize(value):
     if isinstance(value, list):
         normalized = [_normalize(val) for val in value]
         if all(isinstance(val, str) for val in normalized):
-            # reference lists (properties/relations/mixins) are unordered sets
+            # reference lists (properties/mixins) are unordered sets
             return sorted(normalized)
         return normalized
     return value

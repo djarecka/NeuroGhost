@@ -420,7 +420,6 @@ def build_registry_entities(
             abstract=cls["is_abstract"],
             is_a=parent_hash_id,
             properties=prop_hash_ids,
-            relations=[],
             mixins=[],
             skos_mappings=[],
             aliases=cls.get("aliases") or [],
