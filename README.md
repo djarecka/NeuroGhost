@@ -164,7 +164,7 @@ See [docs/GOVERNANCE.md](docs/GOVERNANCE.md) for the full spec.
 | Module | Maintainer | Repository | Behind main | Compare |
 |--------|-----------|------------|-------------|---------|
 | Proteus | @neurovium (Nema) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | ⚠ pin unset | [compare ↗](https://github.com/neurovium/Proteus/commits/main) |
-| search_hybrid | @sensein | [sensein/search_hybrid](https://github.com/sensein/search_hybrid) | ✓ up to date | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...sensein:search_hybrid:main) |
+| Dorada | @djarecka | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) | 5 commits | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...djarecka:NeuroGhost:main) |
 <!-- MODULE_SYNC_END -->
 
 ---
