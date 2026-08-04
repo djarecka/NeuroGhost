@@ -156,13 +156,15 @@ See [docs/GOVERNANCE.md](docs/GOVERNANCE.md) for the full spec.
 
 ### Module sync status
 
-> **search_hybrid**: commits ahead of the version pinned into `neuro_ghost/align.py` (see `.proteus-pin`).
+> **Proteus**: commits ahead of the version pinned into `neuro_ghost/align.py` (see `.proteus-pin`).
+> **search_hybrid**: commits behind `sensein/NeuroGhost` main.
 > Updated automatically by CI on every push to main.
 
 <!-- MODULE_SYNC_START -->
 | Module | Maintainer | Repository | Behind main | Compare |
 |--------|-----------|------------|-------------|---------|
-| search_hybrid | @neurovium (Nema) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | ⚠ pin unset | [compare ↗](https://github.com/neurovium/Proteus/commits/main) |
+| Proteus | @neurovium (Nema) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | ⚠ pin unset | [compare ↗](https://github.com/neurovium/Proteus/commits/main) |
+| search_hybrid | @sensein | [sensein/search_hybrid](https://github.com/sensein/search_hybrid) | ✓ up to date | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...sensein:search_hybrid:main) |
 <!-- MODULE_SYNC_END -->
 
 ---

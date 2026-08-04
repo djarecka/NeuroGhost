@@ -23,14 +23,14 @@ module before merging.
  ┌──────────────────────────────────────────────────┐
  │                 sensein/NeuroGhost               │
  │                    (core registry)               │
- └────────────────────┬─────────────────────────────┘
-                      │
-               PR approval
-                      │
-           ┌──────────▼──────────┐
-           │    search_hybrid    │
-           │  (neurovium/Proteus)│
-           └─────────────────────┘
+ └────────────┬─────────────────────────────────────┘
+              │                    │
+       PR approval           PR approval
+              │                    │
+   ┌──────────▼──────┐   ┌────────▼────────────┐
+   │    Proteus      │   │   search_hybrid      │
+   │ (neurovium)     │   │  (sensein)           │
+   └─────────────────┘   └──────────────────────┘
 ```
 
 ---
@@ -39,7 +39,8 @@ module before merging.
 
 | Module | Repository | Maintainer | Focus | Status | NeuroGhost Approver |
 |--------|-----------|------------|-------|--------|---------------------|
-| **search_hybrid** | [neurovium/Proteus](https://github.com/neurovium/Proteus) | @neurovium (Nema) | Cross-schema alignment pipeline | Provisional | @Sulstice |
+| **Proteus** | [neurovium/Proteus](https://github.com/neurovium/Proteus) | @neurovium (Nema) | Cross-schema alignment pipeline | Provisional | @Sulstice |
+| **search_hybrid** | [sensein/search_hybrid](https://github.com/sensein/search_hybrid) | @sensein | Hybrid search & retrieval tooling | Provisional | @Sulstice |
 
 > **Provisional** means the module is tracked here but has no formal SLA yet.
 > **Active** means the module has merged at least one PR into core and follows
