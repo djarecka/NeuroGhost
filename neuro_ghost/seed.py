@@ -190,7 +190,7 @@ def build_registry_entities(
                 name=prop["name"],
                 description=prop["comment"] or "",
                 range=value_range,
-                units=None,          # schema.org carries no unit information
+                unit=None,           # schema.org carries no unit information
                 slot_uri=prop["iri"] or None,
                 skos_mappings=[],
             )

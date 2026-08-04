@@ -24,7 +24,7 @@ two *different* schemas defined the same thing.
 
 A `RegistryClass`/`RegistryProperty`'s `hash_id` is now a SHA-256 hash of its
 own content — nothing else. Two properties with the same `name`,
-`description`, `range`, and `units` get the **same** `hash_id`, regardless of
+`description`, `range`, and `unit` get the **same** `hash_id`, regardless of
 which schema they came from, what it's called there, or when it was
 ingested. Identity is separate from provenance: instead of creating a second
 node for a second source, the *existing* node gets a second `ProvenanceEntry`
@@ -79,7 +79,7 @@ units, multivalued, required, pattern}}}`.
 Converts the dict into real, hash-identified objects:
 
 - **Properties are built first.** Each one's `hash_id` is computed from
-  `name`/`description`/`range`/`units` only — `slot_uri` is stored on the
+  `name`/`description`/`range`/`unit` only — `slot_uri` is stored on the
   object but excluded from the hash (it's origin metadata, not identity).
 - **Classes reference their properties by hash_id**, sorted. This is why a
   class's own hash depends on its full induced property set — two classes
@@ -112,9 +112,10 @@ and `seed.py` — schema.org is ingested through the exact same path, just with
 |---|---|---|
 | `hash_id` | every entity | Content-derived. `RegistryClass`/`RegistryProperty` only — `ProvenanceEntry` uses a random `uid` instead, since it's a per-attestation record, not a deduplicated concept. |
 | `name`, `description` | `RegistryClass`, `RegistryProperty` | Identity-defining (part of the hash). |
-| `range`, `units` | `RegistryProperty` | Identity-defining. |
+| `range`, `unit` | `RegistryProperty` | Identity-defining. `unit` is a structured `UnitOfMeasure` (`ucum_code`, `has_quantity_kind`, `symbol`, `abbreviation`, `descriptive_name`), inlined onto `RegistryProperty`'s own node — not its own content-addressed entity. |
 | `properties`, `is_a`, `mixins` | `RegistryClass` | Identity-defining — all stored as hash_id references. |
 | `class_uri` / `slot_uri` | `RegistryClass` / `RegistryProperty` | Ontology IRI preserved from the source. **Not** part of the hash — two schemas using different IRIs (or none) for the same content still collapse to one node. |
+| `aliases` | `RegistryEntity` | Alternate names/synonyms (`skos:altLabel`), feeding `align.py`'s `alias_overlap` signal. **Not** part of the hash — like `class_uri`/`slot_uri`, different sources may supply different aliases for the same content. |
 | `provenance` | both | List of `ProvenanceEntry`. Accumulates, never affects `hash_id`. |
 | `source`, `attributed_to`, `generated_at`, `activity`, `derived_from`, `registry_version` | `ProvenanceEntry` | PROV-O–grounded (`slot_uri: prov:wasAttributedTo` etc.). `registry_version` lives here, not on the entity — the same entity can be attested by different sources at different times, each under a different registry version, so a single scalar on the entity doesn't fit (same reasoning as dropping `source_label`). |
 
@@ -207,3 +208,14 @@ registry_version` stays `None` for now, pending a decision on the above.
   (superseded by content-hash identity) but not yet removed.
 - **`pandas`** isn't in `requirements.txt`, so `align.py`'s embedding cache
   silently no-ops (pre-existing gap).
+- **`aliases` and `unit` aren't populated by any real source schema yet.**
+  `ingest_linkml.py` extracts what it can (regex'd free text into
+  `unit.ucum_code`), but none of the six real ingested schemas
+  (aind/bbqs/bids/dandi/nwb/openminds) declare LinkML's own `aliases:`/
+  `unit:` constructs — so both fields stay largely empty until source
+  schemas adopt them, or a text-mining step is built.
+- **`scripts/update_graph.py`'s diagram draws `RegistryProperty --HAS_UNIT-->
+  UnitOfMeasure`** as if it were a separate node/edge — it isn't; `unit` is
+  `db_inline: true` and flattens onto `RegistryProperty`'s own columns (see
+  `_build_registry_ddl()`). The diagram script doesn't special-case
+  `db_inline` the way the real DDL generator does.

@@ -88,6 +88,10 @@ linkml_meta = LinkMLMeta({'default_prefix': 'screg',
                              'prefix_reference': 'https://w3id.org/linkml/'},
                   'prov': {'prefix_prefix': 'prov',
                            'prefix_reference': 'http://www.w3.org/ns/prov#'},
+                  'qudt': {'prefix_prefix': 'qudt',
+                           'prefix_reference': 'http://qudt.org/schema/qudt/'},
+                  'rdfs': {'prefix_prefix': 'rdfs',
+                           'prefix_reference': 'http://www.w3.org/2000/01/rdf-schema#'},
                   'screg': {'prefix_prefix': 'screg',
                             'prefix_reference': 'https://example.org/schema-registry-utils/'},
                   'skos': {'prefix_prefix': 'skos',
@@ -177,7 +181,7 @@ class RegistryProperty(RegistryEntity):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
     range: str = Field(default=..., description="""The data type or value range for this property (e.g. a primitive type name such as \"string\" or \"integer\", or the hash_id of a ValueSet for enumerated values).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty'], 'slot_uri': 'linkml:range'} })
-    units: Optional[str] = Field(default=None, description="""Unit of measure for this property's values, if applicable.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty']} })
+    unit: Optional[UnitOfMeasure] = Field(default=None, description="""Structured unit of measure for this property's values, if applicable. ucum_code is the primary field for programmatic unit-compatibility checks (align.py's unit veto); the others are supplementary.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty'], 'slot_uri': 'qudt:unit'} })
     slot_uri: Optional[str] = Field(default=None, description="""Ontology IRI for this property, preserved from the source schema on ingestion. Not part of the content hash; used for alignment and cross-source lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty']} })
     hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'SkosMapping',
@@ -316,6 +320,21 @@ class ValueSet(RegistryEntity):
     aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
 
 
+class UnitOfMeasure(ConfiguredBaseModel):
+    """
+    A structured unit of measure for a RegistryProperty, inlined (not its own content-addressed entity). Field names/slot_uri follow LinkML's own linkml:units module — defined locally rather than imported, since db.py's DDL generator reads meta_model.yaml's own classes directly and doesn't resolve LinkML imports (see git history for the import-vs- repeat discussion). LinkML's own alignment for units *is* QUDT/rdfs — there's no separate \"linkml:\" URI for these concepts to also target.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'annotations': {'db_inline': {'tag': 'db_inline', 'value': True}},
+         'class_uri': 'qudt:Unit',
+         'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
+
+    ucum_code: Optional[str] = Field(default=None, description="""UCUM (Unified Code for Units of Measure) code, e.g. \"mV\", \"deg\", \"Hz\". Compact and machine-parseable — the primary field for programmatic unit-compatibility checks (align.py's unit veto).""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'qudt:ucumCode'} })
+    has_quantity_kind: Optional[str] = Field(default=None, description="""IRI naming the dimension/kind of quantity being measured, e.g. a QUDT quantity-kind IRI for \"ElectricPotential\" or \"PlaneAngle\". Lets incommensurable units (different quantity kinds) be vetoed outright, independent of whether a conversion factor is known.""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'qudt:hasQuantityKind'} })
+    symbol: Optional[str] = Field(default=None, description="""Name of the unit encoded as a symbol (e.g. \"Ω\", \"°\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'qudt:symbol'} })
+    abbreviation: Optional[str] = Field(default=None, description="""Short ASCII abbreviation for the unit, for contexts where non-ASCII symbols would be problematic.""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'qudt:abbreviation'} })
+    descriptive_name: Optional[str] = Field(default=None, description="""The spelled-out name of the unit, e.g. \"millivolt\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'rdfs:label'} })
+
+
 class SchemaSource(ConfiguredBaseModel):
     """
     Registry record for a schema source (one node per ingested schema label). Tracks the source's IRI, MIME type, and the registry version it was first added under. Identity uses uid (not hash_id) because this is a mutable administrative record, not a content-addressed entity.
@@ -360,5 +379,6 @@ Rule.model_rebuild()
 Transform.model_rebuild()
 PermissibleValue.model_rebuild()
 ValueSet.model_rebuild()
+UnitOfMeasure.model_rebuild()
 SchemaSource.model_rebuild()
 SchemaVersionSnapshot.model_rebuild()

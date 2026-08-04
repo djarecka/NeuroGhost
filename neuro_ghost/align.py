@@ -526,8 +526,8 @@ def load_classes(conn, source_label: str | None = None) -> list[dict]:
         units = [
             r[0] for r in conn.execute("""
                 MATCH (c:RegistryClass {hash_id: $h})-[:HAS_PROPERTY]->(p:RegistryProperty)
-                WHERE p.units IS NOT NULL
-                RETURN p.units
+                WHERE p.ucum_code IS NOT NULL
+                RETURN p.ucum_code
             """, {"h": hash_id}).get_all() if r[0]
         ]
         parent_iris = [

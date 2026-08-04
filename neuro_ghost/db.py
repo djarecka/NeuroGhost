@@ -90,6 +90,15 @@ HAS_PROVENANCE_REL = {
     "ValueSet":         "HAS_PROVENANCE_VS",
 }
 
+# Inline class fields (db_inline in the meta-model): each one's sub-fields
+# become their own columns on the *parent's* node table (see
+# _build_registry_ddl()), never a "unit"-named column of their own. Kept
+# explicit here, matching LIST_FIELDS/HAS_PROVENANCE_REL's style, rather than
+# introspecting meta_model.yaml at write time.
+INLINE_FIELDS = {
+    "unit": ("ucum_code", "has_quantity_kind", "symbol", "abbreviation", "descriptive_name"),
+}
+
 
 def scalar_fields(entity) -> dict:
     """
@@ -100,8 +109,20 @@ def scalar_fields(entity) -> dict:
     _build_registry_ddl(). Do NOT JSON-encode it into a STRING column: a
     bound string that looks like a Cypher list literal gets silently
     reparsed and corrupted by the DB engine.
+
+    An inline-class field (e.g. unit) is flattened into its sub-fields —
+    always, even when the whole thing is None — since the DDL never creates
+    a column named after the field itself, only after its sub-fields.
     """
-    return {k: v for k, v in entity.model_dump().items() if k not in LIST_FIELDS}
+    fields = {k: v for k, v in entity.model_dump().items() if k not in LIST_FIELDS}
+    flattened: dict = {}
+    for k, v in fields.items():
+        if k in INLINE_FIELDS:
+            sub = v or {}
+            flattened.update({name: sub.get(name) for name in INLINE_FIELDS[k]})
+        else:
+            flattened[k] = v
+    return flattened
 
 
 def entity_exists(conn, label: str, hash_id: str) -> bool:

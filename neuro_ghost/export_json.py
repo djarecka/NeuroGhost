@@ -73,7 +73,7 @@ def export_snapshot(conn, registry_version: str) -> dict:
 
         props = conn.execute("""
             MATCH (c:RegistryClass {hash_id: $hash_id})-[:HAS_PROPERTY]->(p:RegistryProperty)
-            RETURN p.hash_id, p.slot_uri, p.name, p.description, p.range, p.units
+            RETURN p.hash_id, p.slot_uri, p.name, p.description, p.range, p.ucum_code
             ORDER BY p.name
         """, {"hash_id": hash_id}).get_all()
 

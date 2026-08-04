@@ -376,11 +376,15 @@ def build_registry_entities(
         slot = slots.get(slot_name)
         if not slot:
             continue
+        unit_text = slot.get("units") or None
         fields = dict(
             name=slot_name,
             description=slot["definition"] or "",
             range=slot["value_range"],
-            units=slot.get("units") or None,
+            # ucum_code, not descriptive_name: this free-text extraction
+            # ("FTE", "mV") is exactly the short-code shape align.py's
+            # _DIMS dimension lookup already expects.
+            unit={"ucum_code": unit_text} if unit_text else None,
             slot_uri=slot["iri"] or None,
             skos_mappings=[],
             aliases=slot.get("aliases") or [],
