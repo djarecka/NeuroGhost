@@ -23,14 +23,14 @@ module before merging.
  ┌──────────────────────────────────────────────────┐
  │                 sensein/NeuroGhost               │
  │                    (core registry)               │
- └────────────┬────────────┬──────────┬─────────────┘
-              │            │          │
-       PR approval  PR approval  PR approval
-              │            │          │
-    ┌─────────▼──┐  ┌──────▼───┐  ┌──▼──────────┐
-    │    Nema    │  │ Proteus  │  │   Dorada    │
-    │  (module)  │  │ (module) │  │  (module)  │
-    └────────────┘  └──────────┘  └─────────────┘
+ └────────────────────┬─────────────────────────────┘
+                      │
+               PR approval
+                      │
+           ┌──────────▼──────────┐
+           │    search_hybrid    │
+           │  (neurovium/Proteus)│
+           └─────────────────────┘
 ```
 
 ---
@@ -39,8 +39,7 @@ module before merging.
 
 | Module | Repository | Maintainer | Focus | Status | NeuroGhost Approver |
 |--------|-----------|------------|-------|--------|---------------------|
-| **Proteus** | [neurovium/Proteus](https://github.com/neurovium/Proteus) | @neurovium (Nema) | Cross-schema alignment pipeline | Provisional | @Sulstice |
-| **Dorada** | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) (fork) | @djarecka | LinkML ingestion & Rule model | Provisional | @Sulstice |
+| **search_hybrid** | [neurovium/Proteus](https://github.com/neurovium/Proteus) | @neurovium (Nema) | Cross-schema alignment pipeline | Provisional | @Sulstice |
 
 > **Provisional** means the module is tracked here but has no formal SLA yet.
 > **Active** means the module has merged at least one PR into core and follows
@@ -95,7 +94,22 @@ To register a new module:
 | Name | GitHub | Role |
 |------|--------|------|
 | Suliman | @Sulstice | Lead maintainer, final approver |
-| Puja Trivedi | @puja-trivedi | Core contributor |
+| Puja Trivedi | @puja-trivedi | Core contributor; meta-model moderator |
+| Dorota Jarecka | @djarecka | Meta-model moderator |
+
+### Meta-model Moderation
+
+Changes to `schemas/meta_model.yaml` and `schema_registry_utils/` require
+approval from at least one **meta-model moderator** before merging:
+
+| Moderator | GitHub |
+|-----------|--------|
+| Puja Trivedi | @puja-trivedi |
+| Dorota Jarecka | @djarecka |
+
+This covers any PR that modifies the LinkML meta-model schema, the generated
+Pydantic models, the hashing logic, or the graph DDL derived from the
+meta-model.
 
 ---
 
