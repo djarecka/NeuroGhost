@@ -518,6 +518,14 @@ def _write_value_sets(conn, value_sets: dict[str, "ValueSet"],
     return rels
 
 
+# TODO: _write_skos_mappings() — not implemented yet. skos_mappings is hardcoded
+# to [] everywhere in build_registry_entities() below; HAS_SKOS_MAPPING /
+# HAS_SKOS_MAPPING_P edges are declared in db.py's DDL but have no writer.
+# Source from the input schema's own exact_mappings/close_mappings/
+# related_mappings/narrow_mappings/broad_mappings (LinkML's own mapping
+# slots) once a real schema actually declares them — none do yet.
+
+
 # ---------------------------------------------------------------------------
 # SchemaSource / SchemaVersionSnapshot (unchanged in spirit from before)
 # ---------------------------------------------------------------------------

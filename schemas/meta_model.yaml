@@ -184,6 +184,11 @@ classes:
     slots:
       - uid
       - label
+      - title
+      - publisher
+      - contact
+      - homepage
+      - is_hub
       - source_iri
       - source_version
       - mime_type
@@ -423,6 +428,33 @@ slots:
     range: string
     required: true
     description: Short identifier label for this schema source (e.g. "bids", "nwb").
+
+  title:
+    range: string
+    description: >-
+      Human-readable full name of the schema (e.g. "Brain Imaging Data
+      Structure"), distinct from the short `label` used as its identifier.
+
+  publisher:
+    range: string
+    description: Organization or group that maintains this schema.
+
+  contact:
+    range: string
+    description: Contact point for this schema (person, mailing list, or URL).
+
+  homepage:
+    range: uri
+    description: Documentation or landing page for this schema.
+
+  is_hub:
+    range: boolean
+    ifabsent: 'false'
+    description: >-
+      True if this schema is (part of) the registry's core/bridge
+      vocabulary that other schemas are matched against, rather than
+      matching every schema pairwise. Not auto-derived — set deliberately,
+      since which schema serves as the hub is a curatorial decision.
 
   source_iri:
     range: uriorcurie
