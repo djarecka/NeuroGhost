@@ -23,7 +23,6 @@ so every script gets the same tables without duplicating DDL.
 from __future__ import annotations
 import datetime
 import hashlib as _hashlib
-import json as _json
 import uuid
 from pathlib import Path
 
@@ -93,7 +92,15 @@ HAS_PROVENANCE_REL = {
 
 
 def scalar_fields(entity) -> dict:
-    """An entity's own node-table columns — excludes list/edge-backed fields."""
+    """
+    An entity's own node-table columns — excludes list/edge-backed fields.
+
+    A plain list-of-scalars field (e.g. aliases) is passed through as a real
+    Python list, bound against a native list column (e.g. STRING[]) — see
+    _build_registry_ddl(). Do NOT JSON-encode it into a STRING column: a
+    bound string that looks like a Cypher list literal gets silently
+    reparsed and corrupted by the DB engine.
+    """
     return {k: v for k, v in entity.model_dump().items() if k not in LIST_FIELDS}
 
 
@@ -139,7 +146,7 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
         "generated_at":       prov.generated_at.isoformat(),
         "attributed_to":      prov.attributed_to,
         "activity":           prov.activity,
-        "derived_from":       _json.dumps(prov.derived_from),
+        "derived_from":       prov.derived_from,
     })
     conn.execute(f"""
         MATCH (n:{label} {{hash_id: $hash_id}}), (pe:ProvenanceEntry {{uid: $uid}})
@@ -284,7 +291,11 @@ def _build_registry_ddl(yaml_path: str | Path = SCHEMA_YAML) -> list[str]:
     - db_inline class ref → flatten its slots inline.
     - Multivalued class ref (e.g. provenance) → REL table (handled in _REL_DDL below; skipped here).
     - Non-multivalued class ref → STRING column (hash_id FK).
-    - Scalar with db_json or multivalued → STRING (stored as JSON array).
+    - Multivalued scalar (e.g. aliases) → native list column, e.g. STRING[].
+      NOT a JSON-encoded STRING: a bound parameter string that looks like a
+      Cypher list literal (starts with "[") gets silently reparsed and
+      corrupted by the DB engine, so multivalued scalars must go through
+      as real Python lists bound against a real list column.
     - Plain scalar → mapped type; identifier slots get PRIMARY KEY.
     """
     schema = _yaml.safe_load(Path(yaml_path).read_text())
@@ -310,7 +321,6 @@ def _build_registry_ddl(yaml_path: str | Path = SCHEMA_YAML) -> list[str]:
             range_    = slot_def.get("range", "string")
             multi     = slot_def.get("multivalued", False)
             is_id     = slot_def.get("identifier", False)
-            db_json   = slot_def.get("annotations", {}).get("db_json", False)
 
             if range_ in inline_classes:
                 if not multi:
@@ -319,13 +329,12 @@ def _build_registry_ddl(yaml_path: str | Path = SCHEMA_YAML) -> list[str]:
                     ).items():
                         sub_range = sub_def.get("range", "string")
                         sub_multi = sub_def.get("multivalued", False)
-                        sub_json  = sub_def.get("annotations", {}).get("db_json", False)
                         if sub_range not in classes:
-                            if sub_json or sub_multi:
-                                columns.append(f"    {sub_name:<24} STRING")
+                            sub_db_type = _LINKML_TYPE_MAP.get(sub_range, "STRING")
+                            if sub_multi:
+                                columns.append(f"    {sub_name:<24} {sub_db_type}[]")
                             else:
-                                db_type = _LINKML_TYPE_MAP.get(sub_range, "STRING")
-                                columns.append(f"    {sub_name:<24} {db_type}")
+                                columns.append(f"    {sub_name:<24} {sub_db_type}")
                 # multivalued inline → not supported; skip
 
             elif range_ in classes:
@@ -336,16 +345,15 @@ def _build_registry_ddl(yaml_path: str | Path = SCHEMA_YAML) -> list[str]:
 
             else:
                 # Scalar
-                if db_json or multi:
-                    columns.append(f"    {slot_name:<24} STRING")
+                db_type = _LINKML_TYPE_MAP.get(range_, "STRING")
+                if multi:
+                    columns.append(f"    {slot_name:<24} {db_type}[]")
+                elif is_id:
+                    columns.append(
+                        f"    {slot_name:<24} {db_type} PRIMARY KEY"
+                    )
                 else:
-                    db_type = _LINKML_TYPE_MAP.get(range_, "STRING")
-                    if is_id:
-                        columns.append(
-                            f"    {slot_name:<24} {db_type} PRIMARY KEY"
-                        )
-                    else:
-                        columns.append(f"    {slot_name:<24} {db_type}")
+                    columns.append(f"    {slot_name:<24} {db_type}")
 
         if columns:
             col_str = ",\n".join(columns)

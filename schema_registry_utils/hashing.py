@@ -7,15 +7,15 @@ _EXCLUDED_FIELDS = {
     "hash_id", "provenance", "skos_mappings",
     # Operational/origin metadata, not identity-defining content: an entity's
     # hash_id must stay the same regardless of which source(s) attest to it.
-    "class_uri", "slot_uri",
+    "class_uri", "slot_uri", "aliases",
 }
 
 
 def compute_hash_id(entity: RegistryClass | RegistryProperty) -> str:
     """Compute a content-based hash_id for a RegistryClass or RegistryProperty.
 
-    Everything but hash_id, provenance, skos_mappings, and class_uri/slot_uri
-    is treated as identity-defining content.
+    Everything but hash_id, provenance, skos_mappings, class_uri/slot_uri, and
+    aliases is treated as identity-defining content.
     """
     return _digest(entity.model_dump(exclude=_EXCLUDED_FIELDS))
 

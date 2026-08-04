@@ -187,6 +187,7 @@ def _slot_to_dict(slot, prefixes: dict[str, str]) -> dict:
         "multivalued": bool(slot.multivalued),
         "required":    bool(slot.required),
         "pattern":     slot.pattern or "",
+        "aliases":     list(slot.aliases or []),
     }
 
 
@@ -287,6 +288,7 @@ def parse_linkml(path: Path) -> dict[str, Any]:
             "is_a":        is_a,
             "is_abstract": bool(cls_def.abstract),
             "slots":       [slot.name for slot in induced_slots],
+            "aliases":     list(cls_def.aliases or []),
         }
 
         for slot in induced_slots:
@@ -381,6 +383,7 @@ def build_registry_entities(
             units=slot.get("units") or None,
             slot_uri=slot["iri"] or None,
             skos_mappings=[],
+            aliases=slot.get("aliases") or [],
         )
         prop = RegistryProperty(
             hash_id=compute_hash_id_for(RegistryProperty, fields),
@@ -416,6 +419,7 @@ def build_registry_entities(
             relations=[],
             mixins=[],
             skos_mappings=[],
+            aliases=cls.get("aliases") or [],
         )
         rc = RegistryClass(
             hash_id=compute_hash_id_for(RegistryClass, fields),

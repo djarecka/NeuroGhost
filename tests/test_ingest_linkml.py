@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from ingest_linkml import parse_linkml, build_registry_entities
-from schema_registry_utils import RegistryProperty, RegistryClass, ValueSet
+from schema_registry_utils import RegistryProperty, RegistryClass, ValueSet, compute_hash_id_for
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -78,6 +78,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "is_a": None,
                 "is_abstract": False,
                 "slots": ["created_at"],
+                "aliases": [],
             },
             "Entity": {
                 "iri": "https://example.org/schema#Entity",
@@ -85,6 +86,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "is_a": None,
                 "is_abstract": True,
                 "slots": ["name"],
+                "aliases": [],
             },
             "Person": {
                 "iri": "https://schema.org/Person",
@@ -92,6 +94,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "is_a": "Entity",
                 "is_abstract": False,
                 "slots": ["orcid", "role", "created_at", "name"],
+                "aliases": ["Investigator"],
             },
         },
         "slots": {
@@ -103,6 +106,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": "",
+                "aliases": [],
             },
             "name": {
                 "iri": "https://schema.org/name",
@@ -112,6 +116,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": "",
+                "aliases": [],
             },
             "orcid": {
                 "iri": "https://example.org/schema#orcid",
@@ -121,6 +126,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": r"^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$",
+                "aliases": ["ORCID iD"],
             },
             "role": {
                 "iri": "",
@@ -130,6 +136,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": True,
                 "required": True,
                 "pattern": "^[A-Za-z ]+$",
+                "aliases": [],
             },
         },
         "enums": {},
@@ -147,6 +154,23 @@ def test_registry_property_does_not_retain_usage_constraints():
     """
     for field in ("required", "multivalued", "pattern"):
         assert field not in RegistryProperty.model_fields
+
+
+def test_aliases_do_not_affect_identity():
+    """
+    aliases is excluded from hash_id (schema_registry_utils/hashing.py's
+    _EXCLUDED_FIELDS) — like class_uri/slot_uri, it's alternate-name metadata
+    a source happens to supply, not part of what the entity *is*. Two
+    otherwise-identical properties with different aliases must still collapse
+    to the same hash_id.
+    """
+    base = dict(
+        name="orcid", description="ORCID identifier.", range="xsd:string",
+        units=None, slot_uri="https://example.org/schema#orcid", skos_mappings=[],
+    )
+    with_alias = compute_hash_id_for(RegistryProperty, dict(base, aliases=["ORCID iD"]))
+    without_alias = compute_hash_id_for(RegistryProperty, dict(base, aliases=[]))
+    assert with_alias == without_alias
 
 
 def test_build_registry_entities_produces_exactly_the_expected_objects():
@@ -188,6 +212,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "slot_uri": "https://schema.org/name",
             "range": "xsd:string",
             "units": None,
+            "aliases": [],
         },
         "orcid": {
             "hash_id": "sha256:8bddfe8f326dab2077cd95446fa63eb7708cab8c096adc2ad53979d91b73862d",
@@ -197,6 +222,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "slot_uri": "https://example.org/schema#orcid",
             "range": "xsd:string",
             "units": None,
+            "aliases": ["ORCID iD"],
         },
         "role": {
             "hash_id": "sha256:b401d00ccb63e9accb3a1e2360a2f5d6997c21ae205324cf58ddd72712ce1538",
@@ -206,6 +232,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "slot_uri": None,
             "range": "xsd:string",
             "units": "FTE",
+            "aliases": [],
         },
         "created_at": {
             "hash_id": "sha256:cec09ed2e03b1e39519b3dffbc5444bebe5f36dc89dd17b3faf4f32cea00c289",
@@ -215,6 +242,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "slot_uri": None,
             "range": "xsd:dateTime",
             "units": None,
+            "aliases": [],
         },
     }
 
@@ -233,6 +261,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "relations": [],
             "is_a": None,
             "mixins": [],
+            "aliases": [],
         },
         "Entity": {
             "hash_id": "sha256:a5f7bcf3d61d1b1bf7aaee30af3a77d52373a7267a6a40b739b1d8db7644453d",
@@ -245,6 +274,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "relations": [],
             "is_a": None,
             "mixins": [],
+            "aliases": [],
         },
         "Person": {
             "hash_id": "sha256:7dbfa717e2624b881589e5beac94e176424b606e75d0f35763cf0faa55cfc588",
@@ -262,6 +292,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "relations": [],
             "is_a": "sha256:a5f7bcf3d61d1b1bf7aaee30af3a77d52373a7267a6a40b739b1d8db7644453d",
             "mixins": [],
+            "aliases": ["Investigator"],
         },
     }
 

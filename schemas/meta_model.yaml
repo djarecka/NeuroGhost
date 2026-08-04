@@ -44,6 +44,7 @@ classes:
       - description
       - provenance
       - skos_mappings
+      - aliases
 
   RegistryClass:
     is_a: RegistryEntity
@@ -229,6 +230,20 @@ slots:
     inlined: true
     inlined_as_list: true
     description: Semantic mappings to external vocabulary concepts.
+
+  aliases:
+    range: string
+    multivalued: true
+    slot_uri: skos:altLabel
+    # Excluded from hash_id (see _EXCLUDED_FIELDS) — like class_uri/slot_uri,
+    # these are alternate names a source happens to supply, not part of what
+    # the entity *is*. Two sources asserting the same property/class with
+    # different aliases must still collapse to one entity.
+    description: >-
+      Alternate names/synonyms/abbreviations for this entity (e.g. "lfp" for
+      "local field potential"), preserved from the source schema. Used as
+      alignment evidence (align.py's alias_overlap signal) — not part of
+      the schema's own semantics.
 
   properties:
     range: RegistryProperty

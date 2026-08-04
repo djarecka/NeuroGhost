@@ -498,16 +498,16 @@ def load_classes(conn, source_label: str | None = None) -> list[dict]:
     if source_label:
         rows = conn.execute("""
             MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry {source: $src})
-            RETURN DISTINCT n.hash_id, n.class_uri, n.name, n.description
+            RETURN DISTINCT n.hash_id, n.class_uri, n.name, n.description, n.aliases
         """, {"src": source_label}).get_all()
     else:
         rows = conn.execute("""
             MATCH (n:RegistryClass)
-            RETURN n.hash_id, n.class_uri, n.name, n.description
+            RETURN n.hash_id, n.class_uri, n.name, n.description, n.aliases
         """).get_all()
 
     classes = []
-    for hash_id, class_uri, name, desc in rows:
+    for hash_id, class_uri, name, desc, aliases in rows:
         sources = {
             r[0] for r in conn.execute("""
                 MATCH (:RegistryClass {hash_id: $h})-[:HAS_PROVENANCE]->(pe:ProvenanceEntry)
@@ -545,7 +545,7 @@ def load_classes(conn, source_label: str | None = None) -> list[dict]:
             "slot_iris":  slot_iris,
             "parent_iris":parent_iris,
             "units":      units,
-            "aliases":    [],  # M3 — populated when alias data lands in schema
+            "aliases":    aliases or [],
         })
     return classes
 
