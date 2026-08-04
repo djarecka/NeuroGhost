@@ -188,6 +188,22 @@ classes:
       An immutable snapshot of a schema at a specific version, created each
       time a schema ingestion produces new or changed content. Records the
       class and property counts and a human-readable summary of changes.
+
+      QUESTIONABLE (as of 2026-08-04): likely unnecessary. It's write-only —
+      nothing outside ingest_linkml.py's own _prev_schema_version() ever
+      reads it back (not export_json.py, not mcp_server.py, not any CI
+      workflow). Its source_version is a self-invented semver bump
+      (_bump_semver()) that, after the first ingestion, ignores the source
+      file's real declared meta["version"] entirely — and it duplicates
+      SchemaSource.source_version, which has its own bug (frozen at
+      first-ingestion value, never updated). The one thing it enables (the
+      "schema unchanged, skip" short-circuit) doesn't need stored history:
+      write_registry_entities() is already idempotent, so stats
+      (classes_new/properties_new/provenance_added) tell you the same thing
+      fresh on every run. Added incidentally in a1dba23 ("Auto-sync graph
+      schema from meta_model.yaml via CI"), not from a deliberate versioning
+      design. Candidate for removal — same category as the Relation class
+      (removed in c599c2b): present in the schema, never actually needed.
     slots:
       - uid
       - schema_label
