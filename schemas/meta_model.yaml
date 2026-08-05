@@ -85,7 +85,7 @@ classes:
       Identified by uid, not hash_id — a ProvenanceEntry is a per-attestation
       record, not a deduplicated, content-addressed registry entity.
     slots:
-      - uid
+      - id
       - source
       - source_description
       - registry_version
