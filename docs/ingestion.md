@@ -116,7 +116,7 @@ in `schemas/meta_model.yaml`.
 
 | Field | On | Notes |
 |---|---|---|
-| `hash_id` | every `RegistryEntity` (`RegistryClass`/`RegistryProperty`/`ValueSet`/`PermissibleValue`/...) | Content-derived. Everything else (`ProvenanceEntry`, `SchemaSource`, `SchemaVersionSnapshot`, `SkosMapping`) uses a plain random `id` instead, since it isn't a deduplicated, content-addressed concept — a per-attestation record or a mutable administrative record. |
+| `hash_id` | every `RegistryEntity` (`RegistryClass`/`RegistryProperty`/`ValueSet`/`PermissibleValue`/...) | Content-derived. Everything else (`ProvenanceEntry`, `SchemaSource`, `SchemaVersionSnapshot`, `Mapping`) uses a plain random `id` instead, since it isn't a deduplicated, content-addressed concept — a per-attestation record or a mutable administrative record. |
 | `name`, `description` | `RegistryClass`, `RegistryProperty` | Identity-defining (part of the hash). |
 | `range`, `unit` | `RegistryProperty` | Identity-defining. `unit` is a structured `UnitOfMeasure` (`ucum_code`, `has_quantity_kind`, `symbol`, `abbreviation`, `descriptive_name`), inlined onto `RegistryProperty`'s own node — not its own content-addressed entity. |
 | `properties`, `is_a`, `mixins` | `RegistryClass` | Identity-defining — all stored as hash_id references. |

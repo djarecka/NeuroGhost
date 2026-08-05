@@ -101,17 +101,42 @@ classes:
       - was_generated_by
       - was_derived_from
 
-  SkosMapping:
+  MappingProvenanceEntry:
+    is_a: ProvenanceEntry
     description: >-
-      A semantic mapping from a registry entity to an external vocabulary
-      concept (SKOS mapping relation). Stored as its own node and linked via
-      HAS_SKOS_MAPPING / HAS_SKOS_MAPPING_P edges. Identified by id, not
-      hash_id — hash_id is reserved for the RegistryEntity family; not
-      is_a RegistryEntity, so it uses the plain identifier slot instead.
+      ProvenanceEntry, but had_primary_source isn't required — a Mapping is
+      often cross-schema (comparing content from two sources) or produced
+      by a pure algorithmic process with no single schema to attribute to,
+      unlike a RegistryClass/RegistryProperty attestation which always
+      traces back to exactly one SchemaSource. Also carries the fields that
+      describe *how* the mapping was produced (justification, evidence,
+      tool) — those belong here rather than on Mapping itself, alongside
+      was_generated_by/generated_at_time.
+    slot_usage:
+      had_primary_source:
+        required: false
+    slots:
+      - mapping_justification
+      - match_string
+      - mapping_tool
+
+  Mapping:
+    description: >-
+      A semantic mapping from a registry entity to a target — another
+      registry entity (by hash_id) or an external vocabulary concept (by
+      IRI). Covers both a source-declared mapping and one align.py
+      computes, distinguished by provenance.mapping_justification, not by
+      class. Identified by id, not hash_id — not is_a RegistryEntity.
     slots:
       - id
       - mapping_type
       - target
+      - confidence
+      - review_status
+      - provenance
+    slot_usage:
+      provenance:
+        range: MappingProvenanceEntry
 
   Rule:
     description: >-
@@ -268,11 +293,11 @@ slots:
       as more sources are ingested — never affects hash_id.
 
   skos_mappings:
-    range: SkosMapping
+    range: Mapping
     multivalued: true
     inlined: true
     inlined_as_list: true
-    description: Semantic mappings to external vocabulary concepts.
+    description: Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences).
 
   aliases:
     range: string
@@ -369,7 +394,7 @@ slots:
     description: >-
       Plain unique identifier, used by every class that isn't part of the
       content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource,
-      SchemaVersionSnapshot, SkosMapping) — LinkML's own conventional name
+      SchemaVersionSnapshot, Mapping) — LinkML's own conventional name
       for a non-content-derived identifier. hash_id is reserved for
       RegistryEntity subclasses.
 
@@ -426,7 +451,7 @@ slots:
       hash_ids of entities this entity was derived from, if any. Stored as
       a native list column in the graph database.
 
-  # --- SkosMapping slots ---------------------------------------------------
+  # --- Mapping slots ---------------------------------------------------
 
   mapping_type:
     range: SkosMappingTypeEnum
@@ -434,7 +459,46 @@ slots:
 
   target:
     range: uriorcurie
-    description: The external concept this mapping points to.
+    description: >-
+      What this mapping points to — an external ontology concept (IRI), or
+      another registry entity's hash_id for align.py's computed
+      cross-schema correspondences.
+
+  # --- MappingProvenanceEntry-only slots: how the mapping was produced ---
+
+  mapping_justification:
+    range: string
+    description: >-
+      How this mapping came to be, e.g. "manual" for a source-schema-
+      declared mapping, or "exact_class_uri" for align.py's placeholder.
+      Plain string for now rather than a controlled vocabulary (e.g.
+      semapv) — nothing yet produces enough distinct justifications to
+      need one.
+
+  match_string:
+    range: string
+    multivalued: true
+    description: The strings/evidence the match was made on, if any.
+
+  mapping_tool:
+    range: string
+    description: Name of the tool/process that produced this mapping, e.g. "align.py".
+
+  confidence:
+    range: float
+    minimum_value: 0.0
+    maximum_value: 1.0
+    description: >-
+      Score in [0,1] assigned by whatever process produced this mapping.
+      Not required — a manually-declared mapping may have no numeric score.
+
+  review_status:
+    range: ReviewStatusEnum
+    description: >-
+      Curation lifecycle state. Always PROPOSED for now — nothing in this
+      registry curates mappings yet, so this field exists to be
+      standards-conformant (SSSOM/Proteus), not because anything sets it
+      to ACCEPTED/REJECTED today.
 
   # --- SchemaSource / SchemaVersionSnapshot slots --------------------------
 
@@ -586,3 +650,15 @@ enums:
       RELATED_MATCH:
         meaning: skos:relatedMatch
         description: The registry entity is related to the external concept.
+
+  ReviewStatusEnum:
+    description: Curation lifecycle of a Mapping.
+    permissible_values:
+      PROPOSED:
+        description: Machine- or human-proposed; not yet reviewed.
+      ACCEPTED:
+        description: Validated by a reviewer; safe for high-rigor queries.
+      REJECTED:
+        description: Reviewed and refuted; retained as negative evidence.
+      SUPERSEDED:
+        description: Replaced by a newer mapping.

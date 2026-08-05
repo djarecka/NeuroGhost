@@ -133,6 +133,28 @@ class SkosMappingTypeEnum(str, Enum):
     """
 
 
+class ReviewStatusEnum(str, Enum):
+    """
+    Curation lifecycle of a Mapping.
+    """
+    PROPOSED = "PROPOSED"
+    """
+    Machine- or human-proposed; not yet reviewed.
+    """
+    ACCEPTED = "ACCEPTED"
+    """
+    Validated by a reviewer; safe for high-rigor queries.
+    """
+    REJECTED = "REJECTED"
+    """
+    Reviewed and refuted; retained as negative evidence.
+    """
+    SUPERSEDED = "SUPERSEDED"
+    """
+    Replaced by a newer mapping.
+    """
+
+
 
 class RegistryEntity(ConfiguredBaseModel):
     """
@@ -147,8 +169,8 @@ class RegistryEntity(ConfiguredBaseModel):
     description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform'],
          'in_subset': ['HashSubset'],
          'slot_uri': 'skos:definition'} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
-    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping']} })
+    skos_mappings: Optional[list[Mapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
 
 
@@ -174,8 +196,8 @@ class RegistryClass(RegistryEntity):
     description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform'],
          'in_subset': ['HashSubset'],
          'slot_uri': 'skos:definition'} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
-    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping']} })
+    skos_mappings: Optional[list[Mapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
 
 
@@ -198,8 +220,8 @@ class RegistryProperty(RegistryEntity):
     description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform'],
          'in_subset': ['HashSubset'],
          'slot_uri': 'skos:definition'} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
-    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping']} })
+    skos_mappings: Optional[list[Mapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
 
 
@@ -209,8 +231,8 @@ class ProvenanceEntry(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""Plain unique identifier, used by every class that isn't part of the content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, SkosMapping) — LinkML's own conventional name for a non-content-derived identifier. hash_id is reserved for RegistryEntity subclasses.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry',
-                       'SkosMapping',
+    id: str = Field(default=..., description="""Plain unique identifier, used by every class that isn't part of the content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping) — LinkML's own conventional name for a non-content-derived identifier. hash_id is reserved for RegistryEntity subclasses.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry',
+                       'Mapping',
                        'SchemaSource',
                        'SchemaVersionSnapshot']} })
     had_primary_source: str = Field(default=..., description="""The SchemaSource this attestation came from (stored as id FK, like is_a). A real Entity->Entity link, not a denormalized label copy — PROV-O's own hadPrimarySource is a relationship between entities.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:hadPrimarySource'} })
@@ -222,18 +244,47 @@ class ProvenanceEntry(ConfiguredBaseModel):
     was_derived_from: Optional[list[str]] = Field(default=None, description="""hash_ids of entities this entity was derived from, if any. Stored as a native list column in the graph database.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasDerivedFrom'} })
 
 
-class SkosMapping(ConfiguredBaseModel):
+class MappingProvenanceEntry(ProvenanceEntry):
     """
-    A semantic mapping from a registry entity to an external vocabulary concept (SKOS mapping relation). Stored as its own node and linked via HAS_SKOS_MAPPING / HAS_SKOS_MAPPING_P edges. Identified by id, not hash_id — hash_id is reserved for the RegistryEntity family; not is_a RegistryEntity, so it uses the plain identifier slot instead.
+    ProvenanceEntry, but had_primary_source isn't required — a Mapping is often cross-schema (comparing content from two sources) or produced by a pure algorithmic process with no single schema to attribute to, unlike a RegistryClass/RegistryProperty attestation which always traces back to exactly one SchemaSource. Also carries the fields that describe *how* the mapping was produced (justification, evidence, tool) — those belong here rather than on Mapping itself, alongside was_generated_by/generated_at_time.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model',
+         'slot_usage': {'had_primary_source': {'name': 'had_primary_source',
+                                               'required': False}}})
 
-    id: str = Field(default=..., description="""Plain unique identifier, used by every class that isn't part of the content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, SkosMapping) — LinkML's own conventional name for a non-content-derived identifier. hash_id is reserved for RegistryEntity subclasses.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry',
-                       'SkosMapping',
+    mapping_justification: Optional[str] = Field(default=None, description="""How this mapping came to be, e.g. \"manual\" for a source-schema- declared mapping, or \"exact_class_uri\" for align.py's placeholder. Plain string for now rather than a controlled vocabulary (e.g. semapv) — nothing yet produces enough distinct justifications to need one.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MappingProvenanceEntry']} })
+    match_string: Optional[list[str]] = Field(default=None, description="""The strings/evidence the match was made on, if any.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MappingProvenanceEntry']} })
+    mapping_tool: Optional[str] = Field(default=None, description="""Name of the tool/process that produced this mapping, e.g. \"align.py\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['MappingProvenanceEntry']} })
+    id: str = Field(default=..., description="""Plain unique identifier, used by every class that isn't part of the content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping) — LinkML's own conventional name for a non-content-derived identifier. hash_id is reserved for RegistryEntity subclasses.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry',
+                       'Mapping',
                        'SchemaSource',
                        'SchemaVersionSnapshot']} })
-    mapping_type: Optional[SkosMappingTypeEnum] = Field(default=None, description="""The kind of SKOS mapping relation this represents.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SkosMapping']} })
-    target: Optional[str] = Field(default=None, description="""The external concept this mapping points to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SkosMapping']} })
+    had_primary_source: Optional[str] = Field(default=None, description="""The SchemaSource this attestation came from (stored as id FK, like is_a). A real Entity->Entity link, not a denormalized label copy — PROV-O's own hadPrimarySource is a relationship between entities.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:hadPrimarySource'} })
+    source_description: Optional[str] = Field(default=None, description="""This source's own description text for the entity, if it differs from the entity's merged description. No direct PROV-O term; a registry-specific extension.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry']} })
+    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself. No PROV-O term — purely our own versioning concept.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    generated_at_time: datetime  = Field(default=..., description="""ISO-8601 timestamp this ProvenanceEntry was generated.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:generatedAtTime'} })
+    was_attributed_to: str = Field(default=..., description="""Agent (user or system) that generated this ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasAttributedTo'} })
+    was_generated_by: Optional[str] = Field(default=None, description="""The activity that produced this ProvenanceEntry, e.g. \"ingestion\", \"manual\", \"alignment\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasGeneratedBy'} })
+    was_derived_from: Optional[list[str]] = Field(default=None, description="""hash_ids of entities this entity was derived from, if any. Stored as a native list column in the graph database.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasDerivedFrom'} })
+
+
+class Mapping(ConfiguredBaseModel):
+    """
+    A semantic mapping from a registry entity to a target — another registry entity (by hash_id) or an external vocabulary concept (by IRI). Covers both a source-declared mapping and one align.py computes, distinguished by provenance.mapping_justification, not by class. Identified by id, not hash_id — not is_a RegistryEntity.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model',
+         'slot_usage': {'provenance': {'name': 'provenance',
+                                       'range': 'MappingProvenanceEntry'}}})
+
+    id: str = Field(default=..., description="""Plain unique identifier, used by every class that isn't part of the content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping) — LinkML's own conventional name for a non-content-derived identifier. hash_id is reserved for RegistryEntity subclasses.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry',
+                       'Mapping',
+                       'SchemaSource',
+                       'SchemaVersionSnapshot']} })
+    mapping_type: Optional[SkosMappingTypeEnum] = Field(default=None, description="""The kind of SKOS mapping relation this represents.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Mapping']} })
+    target: Optional[str] = Field(default=None, description="""What this mapping points to — an external ontology concept (IRI), or another registry entity's hash_id for align.py's computed cross-schema correspondences.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Mapping']} })
+    confidence: Optional[float] = Field(default=None, description="""Score in [0,1] assigned by whatever process produced this mapping. Not required — a manually-declared mapping may have no numeric score.""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['Mapping']} })
+    review_status: Optional[ReviewStatusEnum] = Field(default=None, description="""Curation lifecycle state. Always PROPOSED for now — nothing in this registry curates mappings yet, so this field exists to be standards-conformant (SSSOM/Proteus), not because anything sets it to ACCEPTED/REJECTED today.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Mapping']} })
+    provenance: list[MappingProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping']} })
 
 
 class Rule(ConfiguredBaseModel):
@@ -277,8 +328,8 @@ class PermissibleValue(RegistryEntity):
     description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform'],
          'in_subset': ['HashSubset'],
          'slot_uri': 'skos:definition'} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
-    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping']} })
+    skos_mappings: Optional[list[Mapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
 
 
@@ -295,8 +346,8 @@ class ValueSet(RegistryEntity):
     description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform'],
          'in_subset': ['HashSubset'],
          'slot_uri': 'skos:definition'} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
-    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping']} })
+    skos_mappings: Optional[list[Mapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
 
 
@@ -321,8 +372,8 @@ class SchemaSource(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""Plain unique identifier, used by every class that isn't part of the content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, SkosMapping) — LinkML's own conventional name for a non-content-derived identifier. hash_id is reserved for RegistryEntity subclasses.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry',
-                       'SkosMapping',
+    id: str = Field(default=..., description="""Plain unique identifier, used by every class that isn't part of the content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping) — LinkML's own conventional name for a non-content-derived identifier. hash_id is reserved for RegistryEntity subclasses.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry',
+                       'Mapping',
                        'SchemaSource',
                        'SchemaVersionSnapshot']} })
     label: str = Field(default=..., description="""Short identifier label for this schema source (e.g. \"bids\", \"nwb\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
@@ -345,8 +396,8 @@ class SchemaVersionSnapshot(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""Plain unique identifier, used by every class that isn't part of the content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, SkosMapping) — LinkML's own conventional name for a non-content-derived identifier. hash_id is reserved for RegistryEntity subclasses.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry',
-                       'SkosMapping',
+    id: str = Field(default=..., description="""Plain unique identifier, used by every class that isn't part of the content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping) — LinkML's own conventional name for a non-content-derived identifier. hash_id is reserved for RegistryEntity subclasses.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry',
+                       'Mapping',
                        'SchemaSource',
                        'SchemaVersionSnapshot']} })
     schema_label: str = Field(default=..., description="""Label of the schema this snapshot belongs to (FK to SchemaSource.label).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
@@ -365,7 +416,8 @@ RegistryEntity.model_rebuild()
 RegistryClass.model_rebuild()
 RegistryProperty.model_rebuild()
 ProvenanceEntry.model_rebuild()
-SkosMapping.model_rebuild()
+MappingProvenanceEntry.model_rebuild()
+Mapping.model_rebuild()
 Rule.model_rebuild()
 Transform.model_rebuild()
 PermissibleValue.model_rebuild()

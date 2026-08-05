@@ -50,7 +50,7 @@ def now_iso() -> str:
 
 def make_id() -> str:
     """Generate a random UUID string, for non-content-addressed entities
-    (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, SkosMapping, ...)."""
+    (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping, ...)."""
     return str(uuid.uuid4())
 
 def make_iri(object_id: str) -> str:
@@ -478,8 +478,8 @@ _INFRASTRUCTURE_NODE_DDL: list[str] = [
 _REL_DDL: list[str] = [
     # --- Meta-model multivalued edges ---
     "CREATE REL TABLE IF NOT EXISTS HAS_PROPERTY       (FROM RegistryClass    TO RegistryProperty)",
-    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING   (FROM RegistryClass    TO SkosMapping)",
-    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_P (FROM RegistryProperty TO SkosMapping)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING   (FROM RegistryClass    TO Mapping)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_P (FROM RegistryProperty TO Mapping)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE     (FROM RegistryClass    TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_P   (FROM RegistryProperty TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAD_PRIMARY_SOURCE (FROM ProvenanceEntry  TO SchemaSource)",
@@ -521,7 +521,7 @@ _REL_DDL: list[str] = [
     "CREATE REL TABLE IF NOT EXISTS HAS_PERMISSIBLE_VALUE (FROM ValueSet TO PermissibleValue)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_VS     (FROM ValueSet TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_PV     (FROM PermissibleValue TO ProvenanceEntry)",
-    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_PV   (FROM PermissibleValue TO SkosMapping)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_PV   (FROM PermissibleValue TO Mapping)",
 
     # --- Infrastructure edges ---
     "CREATE REL TABLE IF NOT EXISTS APPLIES_TO         (FROM Rule             TO RegistryClass)",
