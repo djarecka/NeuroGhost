@@ -137,15 +137,21 @@ removed entirely — that's a **`Rule`** concern (still a stub), not identity.
 
 ## Alignment
 
-`neuro_ghost/align.py` runs *after* ingestion, computing a similarity score
-(IRI exact-match + embedding-based name/description similarity) between
-already-distinct `hash_id`s and writing `ALIGNED_TO` edges. It never merges
-identities — that's deliberate for now. Content-hashing already handles
-"these are byte-for-byte the same"; alignment's job is "these are *related*
-but not identical" (`age_years` vs `age_at_scan`), which needs real
-similarity judgment. Until that's built out, ordering it after commit (not
-before, the way some richer designs do) is the correct choice — there's
-nothing yet that could inform the hash before commit anyway.
+`neuro_ghost/align.py` runs *after* ingestion, writing `ALIGNED_TO` edges
+between already-distinct `hash_id`s. It never merges identities — that's
+deliberate for now. Content-hashing already handles "these are
+byte-for-byte the same"; alignment's job is "these are *related* but not
+identical" (`age_years` vs `age_at_scan`), which needs real similarity
+judgment. Until that's built out, ordering it after commit (not before, the
+way some richer designs do) is the correct choice — there's nothing yet
+that could inform the hash before commit anyway.
+
+Currently `align.py` is a **minimal placeholder** (exact `class_uri`
+matches only) — the real, multi-signal alignment work is meant to come
+from an external package, Proteus's own `proteus-align`
+(github.com/neurovium/Proteus). See `align.py`'s own module docstring
+before extending it; the intent is that this file changes only if the
+`ALIGNED_TO` edge shape itself changes, not every time the meta-model does.
 
 ## Testing: two layers, don't conflate them
 
