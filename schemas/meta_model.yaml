@@ -82,7 +82,7 @@ classes:
       (hash_id) never depends on provenance, so the same entity can carry many.
       Stored as its own node, linked via HAS_PROVENANCE / HAS_PROVENANCE_P
       edges (multivalued — cannot be inlined into the parent's node table).
-      Identified by uid, not hash_id — a ProvenanceEntry is a per-attestation
+      Identified by id, not hash_id — a ProvenanceEntry is a per-attestation
       record, not a deduplicated, content-addressed registry entity.
     slots:
       - id
@@ -98,9 +98,11 @@ classes:
     description: >-
       A semantic mapping from a registry entity to an external vocabulary
       concept (SKOS mapping relation). Stored as its own node and linked via
-      HAS_SKOS_MAPPING / HAS_SKOS_MAPPING_P edges.
+      HAS_SKOS_MAPPING / HAS_SKOS_MAPPING_P edges. Identified by id, not
+      hash_id — hash_id is reserved for the RegistryEntity family; not
+      is_a RegistryEntity, so it uses the plain identifier slot instead.
     slots:
-      - hash_id
+      - id
       - mapping_type
       - target
 
@@ -124,14 +126,14 @@ classes:
       - description
 
   PermissibleValue:
+    is_a: RegistryEntity
     description: >-
       A single permissible value within a ValueSet enumeration. The `name`
       field holds the value text (e.g. "EXACT_MATCH"); `meaning` optionally
       maps it to an external ontology IRI. Identity is content-addressed on
-      (name, meaning) — identical values across sources share one node.
+      (name, description, meaning) — identical values across sources share
+      one node, with provenance accumulating like any other RegistryEntity.
     slots:
-      - hash_id
-      - name
       - meaning
 
   ValueSet:
@@ -167,10 +169,10 @@ classes:
     description: >-
       Registry record for a schema source (one node per ingested schema label).
       Tracks the source's IRI, MIME type, and the registry version it was first
-      added under. Identity uses uid (not hash_id) because this is a mutable
+      added under. Identity uses id (not hash_id) because this is a mutable
       administrative record, not a content-addressed entity.
     slots:
-      - uid
+      - id
       - label
       - title
       - publisher
@@ -205,7 +207,7 @@ classes:
       design. Candidate for removal — same category as the Relation class
       (removed in c599c2b): present in the schema, never actually needed.
     slots:
-      - uid
+      - id
       - schema_label
       - source_version
       - yml_path
@@ -245,7 +247,7 @@ slots:
     range: ProvenanceEntry
     multivalued: true
     required: true
-    # Inlined so generated code carries ProvenanceEntry objects rather than uid
+    # Inlined so generated code carries ProvenanceEntry objects rather than id
     # references: the pipeline builds entries in memory and hands them to the
     # graph writers, which split them into their own nodes on write.
     inlined: true
@@ -334,15 +336,19 @@ slots:
     ifabsent: 'false'
     description: Whether this registered class is itself declared abstract.
 
-  # --- ProvenanceEntry slots -------------------------------------------------
+  # --- Plain (non-content-hashed) identifier, shared by every class that
+  # --- isn't part of the RegistryEntity family -------------------------------
 
-  uid:
+  id:
     identifier: true
     required: true
     range: string
     description: >-
-      Random unique identifier for this ProvenanceEntry record (not
-      content-derived — a per-attestation record, not a deduplicated entity).
+      Plain unique identifier, used by every class that isn't part of the
+      content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource,
+      SchemaVersionSnapshot, SkosMapping) — LinkML's own conventional name
+      for a non-content-derived identifier. hash_id is reserved for
+      RegistryEntity subclasses.
 
   source:
     range: string

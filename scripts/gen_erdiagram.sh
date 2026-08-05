@@ -32,7 +32,8 @@ DIAGRAM="$(mktemp)"
 NEW_DOC="$(mktemp)"
 trap 'rm -f "$DIAGRAM" "$NEW_DOC"' EXIT
 
-"$GEN" "$SCHEMA" -f mermaid --no-metadata > "$DIAGRAM"
+# gen-erdiagram pads each field line with trailing spaces; strip them.
+"$GEN" "$SCHEMA" -f mermaid --no-metadata | sed -E 's/[[:space:]]+$//' > "$DIAGRAM"
 
 awk -v start="$START" -v end="$END" -v diagram_file="$DIAGRAM" '
     $0 == start { print; print "```mermaid"; while ((getline line < diagram_file) > 0) print line; print "```"; skip=1; next }

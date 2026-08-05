@@ -35,7 +35,7 @@ from schema_registry_utils import (
 )
 
 from db import (
-    get_connection, make_uid, now_iso, write_registry_entities, write_structural_edges,
+    get_connection, make_id, now_iso, write_registry_entities, write_structural_edges,
 )
 
 # ---------------------------------------------------------------------------
@@ -157,7 +157,7 @@ def collect_classes(g: rdflib.Graph) -> dict[str, dict]:
 
 def _provenance(agent: str = "system", registry_version: str = "") -> ProvenanceEntry:
     return ProvenanceEntry(
-        uid=make_uid(), source="schema.org", registry_version=registry_version or None,
+        id=make_id(), source="schema.org", registry_version=registry_version or None,
         generated_at=now_iso(), attributed_to=agent, activity="seeding",
         derived_from=[],
     )

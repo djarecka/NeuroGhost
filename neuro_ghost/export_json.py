@@ -46,7 +46,7 @@ def _attesting_sources(conn, label: str, rel: str, hash_id: str) -> list[str]:
 def export_snapshot(conn, registry_version: str) -> dict:
     # ---- sources -----------------------------------------------------------
     src_rows = conn.execute(
-        "MATCH (s:SchemaSource) RETURN s.uid, s.label, s.source_version"
+        "MATCH (s:SchemaSource) RETURN s.id, s.label, s.source_version"
     ).get_all()
 
     sources = []

@@ -15,96 +15,100 @@ what's identity-defining vs. provenance vs. alignment evidence.
 ```mermaid
 erDiagram
 PermissibleValue {
-    string name  
-    uriorcurie hash_id  
-    uriorcurie meaning  
+    uriorcurie meaning
+    string name
+    string description
+    stringList aliases
+    uriorcurie hash_id
 }
 ProvenanceEntry {
-    string activity  
-    string attributed_to  
-    stringList derived_from  
-    datetime generated_at  
-    string registry_version  
-    string source  
-    string source_description  
-    string uid  
+    string id
+    string activity
+    string attributed_to
+    stringList derived_from
+    datetime generated_at
+    string registry_version
+    string source
+    string source_description
 }
 RegistryClass {
-    boolean abstract  
-    uriorcurie class_uri  
-    string name  
-    string description  
-    stringList aliases  
-    uriorcurie hash_id  
+    boolean abstract
+    uriorcurie class_uri
+    string name
+    string description
+    stringList aliases
+    uriorcurie hash_id
 }
 RegistryEntity {
-    string name  
-    string description  
-    stringList aliases  
-    uriorcurie hash_id  
+    string name
+    string description
+    stringList aliases
+    uriorcurie hash_id
 }
 RegistryProperty {
-    string range  
-    uriorcurie slot_uri  
-    string name  
-    string description  
-    stringList aliases  
-    uriorcurie hash_id  
+    string range
+    uriorcurie slot_uri
+    string name
+    string description
+    stringList aliases
+    uriorcurie hash_id
 }
 Rule {
-    string name  
-    string description  
-    uriorcurie hash_id  
+    string name
+    string description
+    uriorcurie hash_id
 }
 SchemaSource {
-    string contact  
-    datetime created_at  
-    uri homepage  
-    boolean is_hub  
-    string label  
-    string mime_type  
-    string publisher  
-    string registry_version  
-    uriorcurie source_iri  
-    string source_version  
-    string title  
-    string uid  
+    string id
+    string contact
+    datetime created_at
+    uri homepage
+    boolean is_hub
+    string label
+    string mime_type
+    string publisher
+    string registry_version
+    uriorcurie source_iri
+    string source_version
+    string title
 }
 SchemaVersionSnapshot {
-    string changes_summary  
-    integer class_count  
-    datetime created_at  
-    integer property_count  
-    string registry_version  
-    string schema_label  
-    string source_version  
-    string uid  
-    string yml_path  
+    string id
+    string changes_summary
+    integer class_count
+    datetime created_at
+    integer property_count
+    string registry_version
+    string schema_label
+    string source_version
+    string yml_path
 }
 SkosMapping {
-    uriorcurie hash_id  
-    SkosMappingTypeEnum mapping_type  
-    uriorcurie target  
+    string id
+    SkosMappingTypeEnum mapping_type
+    uriorcurie target
 }
 Transform {
-    string name  
-    string description  
-    uriorcurie hash_id  
+    string name
+    string description
+    uriorcurie hash_id
 }
 UnitOfMeasure {
-    string abbreviation  
-    string descriptive_name  
-    uriorcurie has_quantity_kind  
-    string symbol  
-    string ucum_code  
+    string abbreviation
+    string descriptive_name
+    uriorcurie has_quantity_kind
+    string symbol
+    string ucum_code
 }
 ValueSet {
-    string name  
-    string description  
-    stringList aliases  
-    uriorcurie hash_id  
+    string name
+    string description
+    stringList aliases
+    uriorcurie hash_id
 }
 
+PermissibleValue ||--}o SkosMapping : "skos_mappings"
+PermissibleValue ||--}| ProvenanceEntry : "provenance"
 RegistryClass ||--|o RegistryClass : "is_a"
 RegistryClass ||--}o RegistryClass : "mixins"
 RegistryClass ||--}o RegistryProperty : "properties"

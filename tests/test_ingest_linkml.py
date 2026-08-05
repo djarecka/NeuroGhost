@@ -3,7 +3,9 @@ from pathlib import Path
 import pytest
 
 from ingest_linkml import parse_linkml, build_registry_entities
-from schema_registry_utils import RegistryProperty, RegistryClass, ValueSet, compute_hash_id_for
+from schema_registry_utils import (
+    RegistryProperty, RegistryClass, ValueSet, PermissibleValue, compute_hash_id_for,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -183,11 +185,14 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     changes, this fails.
 
     provenance is checked separately (excluded from the equality dump) since
-    ProvenanceEntry.uid/generated_at are non-deterministic per run.
+    ProvenanceEntry.id/generated_at are non-deterministic per run.
     """
     parsed = parse_linkml(FIXTURES / "comprehensive.yml")
-    properties, registry_classes, value_sets = build_registry_entities(parsed, "comprehensive", "tester")
+    properties, registry_classes, value_sets, permissible_values = build_registry_entities(
+        parsed, "comprehensive", "tester"
+    )
     assert value_sets == {}  # comprehensive.yml has no enums
+    assert permissible_values == {}
 
     assert set(properties) == {"name", "orcid", "role", "created_at"}
     assert set(registry_classes) == {"Timestamped", "Entity", "Person"}
@@ -317,9 +322,15 @@ def test_parse_linkml_extracts_enums():
 
 
 def test_build_registry_entities_produces_value_sets():
-    """build_registry_entities() third return value is a dict of ValueSet objects."""
+    """
+    build_registry_entities()'s 3rd/4th return values are ValueSet and
+    PermissibleValue dicts. PermissibleValue is a real RegistryEntity now
+    (not the old hand-rolled node) — it gets a real description and
+    provenance, keyed by hash_id since it's shared across enums/sources
+    rather than tied to one source name.
+    """
     parsed = parse_linkml(FIXTURES / "schema_with_enums.yml")
-    properties, registry_classes, value_sets = build_registry_entities(
+    properties, registry_classes, value_sets, permissible_values = build_registry_entities(
         parsed, "enum_test", "tester"
     )
 
@@ -335,3 +346,10 @@ def test_build_registry_entities_produces_value_sets():
     # Provenance from the ingestion
     assert len(vs.provenance) == 1
     assert vs.provenance[0].source == "enum_test"
+
+    assert set(vs.permissible_values) == set(permissible_values)
+    for pv in permissible_values.values():
+        assert isinstance(pv, PermissibleValue)
+        assert pv.name in ("active", "deprecated")
+        assert len(pv.provenance) == 1
+        assert pv.provenance[0].source == "enum_test"

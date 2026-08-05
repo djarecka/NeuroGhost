@@ -12,7 +12,7 @@ Single source of truth for:
         unused now (superseded by content-hash identity + ProvenanceEntry)
         but not yet removed — a separate cleanup pass, not touched here.
       Relationship tables → defined here.
-  - Identity helpers (make_uid, make_iri, now_iso)
+  - Identity helpers (make_id, make_iri, now_iso)
   - Graph writers for content-addressed entities (scalar_fields,
     entity_exists, create_entity_node, write_provenance)
 
@@ -48,9 +48,9 @@ SCHEMA_YAML = Path(__file__).parent.parent / "schemas" / "meta_model.yaml"
 def now_iso() -> str:
     return datetime.datetime.now(datetime.UTC).isoformat()
 
-def make_uid() -> str:
+def make_id() -> str:
     """Generate a random UUID string, for non-content-addressed entities
-    (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, ...)."""
+    (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, SkosMapping, ...)."""
     return str(uuid.uuid4())
 
 def make_iri(object_id: str) -> str:
@@ -80,7 +80,7 @@ def bump_version(ver: str, bump: str = "patch") -> str:
 # it. This is how "identity is separate from provenance" plays out on disk.
 #
 # Duck-typed on purpose (entity just needs .model_dump(); prov just needs
-# .uid/.source/.source_description/.generated_at/.attributed_to/.activity/
+# .id/.source/.source_description/.generated_at/.attributed_to/.activity/
 # .derived_from) so this module doesn't need to import schema_registry_utils.
 
 LIST_FIELDS = {"provenance", "skos_mappings", "properties", "mixins", "permissible_values"}
@@ -88,6 +88,7 @@ HAS_PROVENANCE_REL = {
     "RegistryClass":    "HAS_PROVENANCE",
     "RegistryProperty": "HAS_PROVENANCE_P",
     "ValueSet":         "HAS_PROVENANCE_VS",
+    "PermissibleValue": "HAS_PROVENANCE_PV",
 }
 
 # Inline class fields (db_inline in the meta-model): each one's sub-fields
@@ -146,21 +147,21 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
     rel = HAS_PROVENANCE_REL[label]
     already = conn.execute(f"""
         MATCH (n:{label} {{hash_id: $hash_id}})-[:{rel}]->(pe:ProvenanceEntry {{source: $source}})
-        RETURN pe.uid LIMIT 1
+        RETURN pe.id LIMIT 1
     """, {"hash_id": hash_id, "source": prov.source}).has_next()
     if already:
         return False
 
-    uid = prov.uid or make_uid()
+    pe_id = prov.id or make_id()
     conn.execute("""
         CREATE (:ProvenanceEntry {
-            uid: $uid, source: $source, source_description: $source_description,
+            id: $id, source: $source, source_description: $source_description,
             registry_version: $registry_version,
             generated_at: $generated_at, attributed_to: $attributed_to,
             activity: $activity, derived_from: $derived_from
         })
     """, {
-        "uid":                uid,
+        "id":                  pe_id,
         "source":             prov.source,
         "source_description": prov.source_description,
         "registry_version":   prov.registry_version,
@@ -170,9 +171,9 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
         "derived_from":       prov.derived_from,
     })
     conn.execute(f"""
-        MATCH (n:{label} {{hash_id: $hash_id}}), (pe:ProvenanceEntry {{uid: $uid}})
+        MATCH (n:{label} {{hash_id: $hash_id}}), (pe:ProvenanceEntry {{id: $id}})
         CREATE (n)-[:{rel}]->(pe)
-    """, {"hash_id": hash_id, "uid": uid})
+    """, {"hash_id": hash_id, "id": pe_id})
     return True
 
 
@@ -394,35 +395,13 @@ def _build_registry_ddl(yaml_path: str | Path = SCHEMA_YAML) -> list[str]:
 _REGISTRY_NODE_DDL: list[str] = _build_registry_ddl()
 
 # Infrastructure node tables — not part of the meta-model; defined here.
+# SchemaSource / SchemaVersionSnapshot used to be hand-written here too, but
+# are now first-class meta-model classes (_REGISTRY_NODE_DDL, generated from
+# schemas/meta_model.yaml) — that duplicate definition (with the pre-rework
+# field names: iri/uri/version/rule_count) was dead code (IF NOT EXISTS made
+# it a silent no-op, since _REGISTRY_NODE_DDL always runs first) and has been
+# removed.
 _INFRASTRUCTURE_NODE_DDL: list[str] = [
-    # SchemaSource — origin schemas ingested into the registry
-    """CREATE NODE TABLE IF NOT EXISTS SchemaSource (
-        uid              STRING PRIMARY KEY,
-        iri              STRING,
-        uri              STRING,
-        version          STRING,
-        created_at       STRING,
-        label            STRING,
-        mime_type        STRING,
-        registry_version STRING
-    )""",
-
-    # SchemaVersionSnapshot — one per (schema_name, semver) pair
-    """CREATE NODE TABLE IF NOT EXISTS SchemaVersionSnapshot (
-        uid              STRING PRIMARY KEY,
-        iri              STRING,
-        uri              STRING,
-        version          STRING,
-        created_at       STRING,
-        schema_label     STRING,
-        yml_path         STRING,
-        class_count      INT64,
-        property_count   INT64,
-        rule_count       INT64,
-        changes_summary  STRING,
-        registry_version STRING
-    )""",
-
     # SchemaActivity — PROV-O activity log (defined but not yet written by any script)
     """CREATE NODE TABLE IF NOT EXISTS SchemaActivity (
         uid              STRING PRIMARY KEY,
@@ -494,6 +473,8 @@ _REL_DDL: list[str] = [
     # --- ValueSet / PermissibleValue ---
     "CREATE REL TABLE IF NOT EXISTS HAS_PERMISSIBLE_VALUE (FROM ValueSet TO PermissibleValue)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_VS     (FROM ValueSet TO ProvenanceEntry)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_PV     (FROM PermissibleValue TO ProvenanceEntry)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_PV   (FROM PermissibleValue TO SkosMapping)",
 
     # --- Infrastructure edges ---
     "CREATE REL TABLE IF NOT EXISTS APPLIES_TO         (FROM Rule             TO RegistryClass)",
