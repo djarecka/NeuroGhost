@@ -108,6 +108,9 @@ and `seed.py` — schema.org is ingested through the exact same path, just with
 
 ## The data model
 
+See [`model.md`](model.md) for a diagram of every class and relationship
+in `schemas/meta_model.yaml`.
+
 | Field | On | Notes |
 |---|---|---|
 | `hash_id` | every entity | Content-derived. `RegistryClass`/`RegistryProperty` only — `ProvenanceEntry` uses a random `uid` instead, since it's a per-attestation record, not a deduplicated concept. |
