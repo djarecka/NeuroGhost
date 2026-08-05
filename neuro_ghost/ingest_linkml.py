@@ -525,13 +525,13 @@ def _ensure_schema_source(conn, source_label: str, version: str, registry_versio
     uid = make_uid()
     conn.execute("""
         CREATE (:SchemaSource {
-            uid: $uid, iri: $uri, uri: $uri,
-            version: $version, created_at: $t,
+            uid: $uid, source_iri: $source_iri,
+            source_version: $source_version, created_at: $t,
             label: $label, mime_type: 'application/yaml',
             registry_version: $rv
         })
     """, {
-        "uid": uid, "uri": f"{REG}source/{uid}", "version": version,
+        "uid": uid, "source_iri": f"{REG}source/{uid}", "source_version": version,
         "t": now_iso(), "label": source_label, "rv": registry_version,
     })
     return uid
@@ -541,7 +541,7 @@ def _prev_schema_version(conn, source_label: str) -> str | None:
     """Find the most recent SchemaVersionSnapshot for this schema, or None."""
     r = conn.execute("""
         MATCH (s:SchemaVersionSnapshot {schema_label: $src})
-        RETURN s.version, s.created_at
+        RETURN s.source_version, s.created_at
         ORDER BY s.created_at DESC LIMIT 1
     """, {"src": source_label})
     return r.get_next()[0] if r.has_next() else None
@@ -624,26 +624,21 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
     )
 
     snap_uid = make_uid()
-    snap_iri = f"{REG}schema/{source_label}/v/{schema_ver}"
     conn.execute("""
         CREATE (:SchemaVersionSnapshot {
-            uid: $uid, iri: $iri, uri: $uri,
-            version: $version, created_at: $created_at,
+            uid: $uid, source_version: $source_version, created_at: $created_at,
             schema_label: $sl, yml_path: $yp,
-            class_count: $cc, property_count: $pc, rule_count: $rc,
+            class_count: $cc, property_count: $pc,
             changes_summary: $cs, registry_version: $rv
         })
     """, {
-        "uid":        snap_uid,
-        "iri":        snap_iri,
-        "uri":        snap_iri,
-        "version":    schema_ver,
-        "created_at": now_iso(),
+        "uid":            snap_uid,
+        "source_version": schema_ver,
+        "created_at":     now_iso(),
         "sl":  source_label,
         "yp":  yml_path,
         "cc":  len(registry_classes),
         "pc":  len(properties),
-        "rc":  0,
         "cs":  changes_summary,
         "rv":  registry_version,
     })
