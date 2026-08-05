@@ -160,11 +160,11 @@ def test_registry_property_does_not_retain_usage_constraints():
 
 def test_aliases_do_not_affect_identity():
     """
-    aliases is excluded from hash_id (schema_registry_utils/hashing.py's
-    _EXCLUDED_FIELDS) — like class_uri/slot_uri, it's alternate-name metadata
-    a source happens to supply, not part of what the entity *is*. Two
-    otherwise-identical properties with different aliases must still collapse
-    to the same hash_id.
+    aliases isn't tagged in_subset: HashSubset in meta_model.yaml, so
+    it's excluded from hash_id — like class_uri/slot_uri, it's alternate-name
+    metadata a source happens to supply, not part of what the entity *is*.
+    Two otherwise-identical properties with different aliases must still
+    collapse to the same hash_id.
     """
     base = dict(
         name="orcid", description="ORCID identifier.", range="xsd:string",

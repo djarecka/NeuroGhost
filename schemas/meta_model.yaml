@@ -21,6 +21,13 @@ default_range: string
 imports:
   - linkml:types
 
+subsets:
+  HashSubset:
+    description: >-
+      Slots that are part of a RegistryEntity subclass's content hash
+      (hash_id). schema_registry_utils/hashing.py derives the identity
+      field set from each field's in_subset metadata.
+
 # ---------------------------------------------------------------------------
 # Classes
 # ---------------------------------------------------------------------------
@@ -235,12 +242,16 @@ slots:
   name:
     range: string
     required: true
+    in_subset:
+      - HashSubset
     description: Human-readable label for this entity.
 
   description:
     range: string
     required: true
     slot_uri: skos:definition
+    in_subset:
+      - HashSubset
     description: Human-readable description of this entity.
 
   provenance:
@@ -267,9 +278,9 @@ slots:
     range: string
     multivalued: true
     slot_uri: skos:altLabel
-    # Excluded from hash_id (see _EXCLUDED_FIELDS) — like class_uri/slot_uri,
-    # these are alternate names a source happens to supply, not part of what
-    # the entity *is*. Two sources asserting the same property/class with
+    # Not in_subset: HashSubset — like class_uri/slot_uri, these are
+    # alternate names a source happens to supply, not part of what the
+    # entity *is*. Two sources asserting the same property/class with
     # different aliases must still collapse to one entity.
     description: >-
       Alternate names/synonyms/abbreviations for this entity (e.g. "lfp" for
@@ -280,22 +291,30 @@ slots:
   properties:
     range: RegistryProperty
     multivalued: true
+    in_subset:
+      - HashSubset
     description: The set of properties that belong to this class.
 
   is_a:
     range: RegistryClass
     slot_uri: linkml:is_a
+    in_subset:
+      - HashSubset
     description: The class this class inherits from (stored as hash_id FK).
 
   mixins:
     range: RegistryClass
     multivalued: true
+    in_subset:
+      - HashSubset
     description: Additional classes mixed into this class.
 
   range:
     range: string
     required: true
     slot_uri: linkml:range
+    in_subset:
+      - HashSubset
     description: >-
       The data type or value range for this property (e.g. a primitive type
       name such as "string" or "integer", or the hash_id of a ValueSet for
@@ -305,6 +324,8 @@ slots:
     range: UnitOfMeasure
     inlined: true
     slot_uri: qudt:unit
+    in_subset:
+      - HashSubset
     description: >-
       Structured unit of measure for this property's values, if applicable.
       ucum_code is the primary field for programmatic unit-compatibility
@@ -328,6 +349,8 @@ slots:
   abstract:
     range: boolean
     slot_uri: linkml:abstract
+    in_subset:
+      - HashSubset
     # Defaults to false rather than null: `abstract` is identity-defining, so a
     # null would hash differently from a false and silently change every
     # RegistryClass hash_id. LinkML has no equivalent for the multivalued slots
@@ -488,6 +511,8 @@ slots:
 
   meaning:
     range: uriorcurie
+    in_subset:
+      - HashSubset
     description: >-
       Ontology IRI this permissible value maps to (e.g. skos:exactMatch
       for the EXACT_MATCH value in SkosMappingTypeEnum).
@@ -495,6 +520,8 @@ slots:
   permissible_values:
     range: PermissibleValue
     multivalued: true
+    in_subset:
+      - HashSubset
     description: >-
       The set of permissible values for this ValueSet. Stored as hash_id
       references; HAS_PERMISSIBLE_VALUE edges are the graph traversal.
