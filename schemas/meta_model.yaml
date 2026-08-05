@@ -86,13 +86,13 @@ classes:
       record, not a deduplicated, content-addressed registry entity.
     slots:
       - id
-      - source
+      - had_primary_source
       - source_description
       - registry_version
-      - generated_at
-      - attributed_to
-      - activity
-      - derived_from
+      - generated_at_time
+      - was_attributed_to
+      - was_generated_by
+      - was_derived_from
 
   SkosMapping:
     description: >-
@@ -350,16 +350,21 @@ slots:
       for a non-content-derived identifier. hash_id is reserved for
       RegistryEntity subclasses.
 
-  source:
-    range: string
+  had_primary_source:
+    range: SchemaSource
     required: true
-    description: Label of the source schema this attestation came from, e.g. "bids".
+    slot_uri: prov:hadPrimarySource
+    description: >-
+      The SchemaSource this attestation came from (stored as id FK, like
+      is_a). A real Entity->Entity link, not a denormalized label copy —
+      PROV-O's own hadPrimarySource is a relationship between entities.
 
   source_description:
     range: string
     description: >-
       This source's own description text for the entity, if it differs
-      from the entity's merged description.
+      from the entity's merged description. No direct PROV-O term; a
+      registry-specific extension.
 
   registry_version:
     range: string
@@ -368,28 +373,29 @@ slots:
       generated. Not on RegistryClass/RegistryProperty directly — the same
       entity can be attested by different sources at different times, each
       under a different registry version, so it belongs on the per-source
-      attestation, not the entity itself.
+      attestation, not the entity itself. No PROV-O term — purely our own
+      versioning concept.
 
-  generated_at:
+  generated_at_time:
     range: datetime
     required: true
     slot_uri: prov:generatedAtTime
     description: ISO-8601 timestamp this ProvenanceEntry was generated.
 
-  attributed_to:
+  was_attributed_to:
     range: string
     required: true
     slot_uri: prov:wasAttributedTo
     description: Agent (user or system) that generated this ProvenanceEntry.
 
-  activity:
+  was_generated_by:
     range: string
     slot_uri: prov:wasGeneratedBy
     description: >-
       The activity that produced this ProvenanceEntry, e.g. "ingestion",
       "manual", "alignment".
 
-  derived_from:
+  was_derived_from:
     range: string
     multivalued: true
     slot_uri: prov:wasDerivedFrom

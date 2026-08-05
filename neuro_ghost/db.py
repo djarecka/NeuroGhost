@@ -80,8 +80,9 @@ def bump_version(ver: str, bump: str = "patch") -> str:
 # it. This is how "identity is separate from provenance" plays out on disk.
 #
 # Duck-typed on purpose (entity just needs .model_dump(); prov just needs
-# .id/.source/.source_description/.generated_at/.attributed_to/.activity/
-# .derived_from) so this module doesn't need to import schema_registry_utils.
+# .id/.had_primary_source/.source_description/.generated_at_time/
+# .was_attributed_to/.was_generated_by/.was_derived_from) so this module
+# doesn't need to import schema_registry_utils.
 
 LIST_FIELDS = {"provenance", "skos_mappings", "properties", "mixins", "permissible_values"}
 HAS_PROVENANCE_REL = {
@@ -143,38 +144,83 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
     """
     Attach a ProvenanceEntry to an entity, unless this exact source has
     already attested to it. Returns True if a new ProvenanceEntry was added.
+
+    had_primary_source is a real Entity->Entity link (prov:hadPrimarySource)
+    to the attesting SchemaSource, not a denormalized label — so this also
+    creates the HAD_PRIMARY_SOURCE edge alongside the ProvenanceEntry node.
+    prov.had_primary_source must already be a SchemaSource id (the caller
+    ensures that source exists before building any ProvenanceEntry).
     """
     rel = HAS_PROVENANCE_REL[label]
     already = conn.execute(f"""
-        MATCH (n:{label} {{hash_id: $hash_id}})-[:{rel}]->(pe:ProvenanceEntry {{source: $source}})
+        MATCH (n:{label} {{hash_id: $hash_id}})-[:{rel}]->(pe:ProvenanceEntry {{had_primary_source: $had_primary_source}})
         RETURN pe.id LIMIT 1
-    """, {"hash_id": hash_id, "source": prov.source}).has_next()
+    """, {"hash_id": hash_id, "had_primary_source": prov.had_primary_source}).has_next()
     if already:
         return False
 
     pe_id = prov.id or make_id()
     conn.execute("""
         CREATE (:ProvenanceEntry {
-            id: $id, source: $source, source_description: $source_description,
+            id: $id, had_primary_source: $had_primary_source, source_description: $source_description,
             registry_version: $registry_version,
-            generated_at: $generated_at, attributed_to: $attributed_to,
-            activity: $activity, derived_from: $derived_from
+            generated_at_time: $generated_at_time, was_attributed_to: $was_attributed_to,
+            was_generated_by: $was_generated_by, was_derived_from: $was_derived_from
         })
     """, {
         "id":                  pe_id,
-        "source":             prov.source,
+        "had_primary_source": prov.had_primary_source,
         "source_description": prov.source_description,
         "registry_version":   prov.registry_version,
-        "generated_at":       prov.generated_at.isoformat(),
-        "attributed_to":      prov.attributed_to,
-        "activity":           prov.activity,
-        "derived_from":       prov.derived_from,
+        "generated_at_time":  prov.generated_at_time.isoformat(),
+        "was_attributed_to":  prov.was_attributed_to,
+        "was_generated_by":   prov.was_generated_by,
+        "was_derived_from":   prov.was_derived_from,
     })
     conn.execute(f"""
         MATCH (n:{label} {{hash_id: $hash_id}}), (pe:ProvenanceEntry {{id: $id}})
         CREATE (n)-[:{rel}]->(pe)
     """, {"hash_id": hash_id, "id": pe_id})
+    conn.execute("""
+        MATCH (pe:ProvenanceEntry {id: $id}), (ss:SchemaSource {id: $ss_id})
+        CREATE (pe)-[:HAD_PRIMARY_SOURCE]->(ss)
+    """, {"id": pe_id, "ss_id": prov.had_primary_source})
     return True
+
+
+def ensure_schema_source(conn, source_label: str, version: str, registry_version: str,
+                         dry_run: bool = False) -> str:
+    """
+    One SchemaSource node per source label, reused across ingests. Shared by
+    ingest_linkml.py and seed.py, same as the other entity/provenance writers.
+
+    Must run before any ProvenanceEntry is built, since
+    ProvenanceEntry.had_primary_source is a real FK to it — including in
+    --dry-run, which must stay read-only. In dry-run, an as-yet-unseen
+    source gets a throwaway placeholder id instead of a real CREATE;
+    nothing downstream persists it anyway.
+    """
+    r = conn.execute(
+        "MATCH (s:SchemaSource {label: $label}) RETURN s.id LIMIT 1",
+        {"label": source_label},
+    )
+    if r.has_next():
+        return r.get_next()[0]
+    if dry_run:
+        return f"dry-run-placeholder:{source_label}"
+    source_id = make_id()
+    conn.execute("""
+        CREATE (:SchemaSource {
+            id: $id, source_iri: $source_iri,
+            source_version: $source_version, created_at: $t,
+            label: $label, mime_type: 'application/yaml',
+            registry_version: $rv
+        })
+    """, {
+        "id": source_id, "source_iri": f"{REG}source/{source_id}", "source_version": version,
+        "t": now_iso(), "label": source_label, "rv": registry_version,
+    })
+    return source_id
 
 
 def write_registry_entities(conn, properties: dict, registry_classes: dict,
@@ -436,6 +482,7 @@ _REL_DDL: list[str] = [
     "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_P (FROM RegistryProperty TO SkosMapping)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE     (FROM RegistryClass    TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_P   (FROM RegistryProperty TO ProvenanceEntry)",
+    "CREATE REL TABLE IF NOT EXISTS HAD_PRIMARY_SOURCE (FROM ProvenanceEntry  TO SchemaSource)",
     "CREATE REL TABLE IF NOT EXISTS MIXIN              (FROM RegistryClass    TO RegistryClass)",
     "CREATE REL TABLE IF NOT EXISTS SUBCLASS_OF        (FROM RegistryClass    TO RegistryClass)",
 

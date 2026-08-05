@@ -497,7 +497,7 @@ def load_classes(conn, source_label: str | None = None) -> list[dict]:
     """
     if source_label:
         rows = conn.execute("""
-            MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry {source: $src})
+            MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: $src})
             RETURN DISTINCT n.hash_id, n.class_uri, n.name, n.description, n.aliases
         """, {"src": source_label}).get_all()
     else:
@@ -510,8 +510,8 @@ def load_classes(conn, source_label: str | None = None) -> list[dict]:
     for hash_id, class_uri, name, desc, aliases in rows:
         sources = {
             r[0] for r in conn.execute("""
-                MATCH (:RegistryClass {hash_id: $h})-[:HAS_PROVENANCE]->(pe:ProvenanceEntry)
-                RETURN pe.source
+                MATCH (:RegistryClass {hash_id: $h})-[:HAS_PROVENANCE]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
+                RETURN ss.label
             """, {"h": hash_id}).get_all()
         }
         if not sources:

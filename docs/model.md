@@ -23,13 +23,12 @@ PermissibleValue {
 }
 ProvenanceEntry {
     string id
-    string activity
-    string attributed_to
-    stringList derived_from
-    datetime generated_at
+    datetime generated_at_time
     string registry_version
-    string source
     string source_description
+    string was_attributed_to
+    stringList was_derived_from
+    string was_generated_by
 }
 RegistryClass {
     boolean abstract
@@ -109,6 +108,7 @@ ValueSet {
 
 PermissibleValue ||--}o SkosMapping : "skos_mappings"
 PermissibleValue ||--}| ProvenanceEntry : "provenance"
+ProvenanceEntry ||--|| SchemaSource : "had_primary_source"
 RegistryClass ||--|o RegistryClass : "is_a"
 RegistryClass ||--}o RegistryClass : "mixins"
 RegistryClass ||--}o RegistryProperty : "properties"

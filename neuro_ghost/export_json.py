@@ -37,8 +37,8 @@ def _attesting_sources(conn, label: str, rel: str, hash_id: str) -> list[str]:
     """Every distinct source that has a ProvenanceEntry for this entity."""
     return sorted({
         r[0] for r in conn.execute(f"""
-            MATCH (:{label} {{hash_id: $hash_id}})-[:{rel}]->(pe:ProvenanceEntry)
-            RETURN pe.source
+            MATCH (:{label} {{hash_id: $hash_id}})-[:{rel}]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
+            RETURN ss.label
         """, {"hash_id": hash_id}).get_all()
     })
 
@@ -52,7 +52,7 @@ def export_snapshot(conn, registry_version: str) -> dict:
     sources = []
     for _, label, ver in src_rows:
         count = conn.execute("""
-            MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry {source: $src})
+            MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: $src})
             RETURN count(DISTINCT n)
         """, {"src": label}).get_next()[0]
         sources.append({"label": label, "version": ver or "1.0.0",

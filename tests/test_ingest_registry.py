@@ -20,8 +20,8 @@ def test_identical_property_from_two_sources_shares_one_hash_id(tmp_path):
     assert len(rows) == 1
 
     sources = conn.execute("""
-        MATCH (:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry)
-        RETURN pe.source
+        MATCH (:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
+        RETURN ss.label
     """).get_all()
     assert {r[0] for r in sources} == {"source_a", "source_b"}
 
@@ -105,8 +105,8 @@ def test_required_does_not_affect_property_identity(tmp_path):
     assert len(rows) == 1                         # no duplicate node
 
     sources = conn.execute("""
-        MATCH (:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry)
-        RETURN pe.source
+        MATCH (:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
+        RETURN ss.label
     """).get_all()
     assert {r[0] for r in sources} == {"required_a", "required_b"}
 

@@ -36,8 +36,8 @@ schema_b.yml: Participant.age  (same content, different class)
                     │
                     ▼
         ONE RegistryProperty node (hash_id = hash of the content)
-              ├── ProvenanceEntry{source: "schema_a", ...}
-              └── ProvenanceEntry{source: "schema_b", ...}
+              ├── ProvenanceEntry{had_primary_source: SchemaSource("schema_a"), ...}
+              └── ProvenanceEntry{had_primary_source: SchemaSource("schema_b"), ...}
 ```
 
 No alignment step, no manual annotation — pure hash equality gives you this
@@ -89,9 +89,12 @@ Converts the dict into real, hash-identified objects:
   classes appear in the file. A schema that parses at all is guaranteed to
   have every `is_a` target resolvable within its own import closure (that's
   `SchemaView`'s job), so this recursion always terminates cleanly.
-- **Every entity gets one `ProvenanceEntry`** for this ingestion — `source`,
-  `attributed_to` (agent), `generated_at`, `activity`, `registry_version` —
-  entirely separate from the hash computation.
+- **Every entity gets one `ProvenanceEntry`** for this ingestion —
+  `had_primary_source` (a real FK to the SchemaSource that attested to it,
+  not a denormalized label), `was_attributed_to` (agent), `generated_at_time`,
+  `was_generated_by`, `registry_version` — entirely separate from the hash
+  computation. Field names mirror PROV-O terms directly (`prov:hadPrimarySource`,
+  `prov:wasAttributedTo`, `prov:generatedAtTime`, `prov:wasGeneratedBy`).
 
 ### 3. `write_registry_entities()` + `write_structural_edges()` (`neuro_ghost/db.py`)
 
@@ -120,7 +123,7 @@ in `schemas/meta_model.yaml`.
 | `class_uri` / `slot_uri` | `RegistryClass` / `RegistryProperty` | Ontology IRI preserved from the source. **Not** part of the hash — two schemas using different IRIs (or none) for the same content still collapse to one node. |
 | `aliases` | `RegistryEntity` | Alternate names/synonyms (`skos:altLabel`), feeding `align.py`'s `alias_overlap` signal. **Not** part of the hash — like `class_uri`/`slot_uri`, different sources may supply different aliases for the same content. |
 | `provenance` | both | List of `ProvenanceEntry`. Accumulates, never affects `hash_id`. |
-| `source`, `attributed_to`, `generated_at`, `activity`, `derived_from`, `registry_version` | `ProvenanceEntry` | PROV-O–grounded (`slot_uri: prov:wasAttributedTo` etc.). `registry_version` lives here, not on the entity — the same entity can be attested by different sources at different times, each under a different registry version, so a single scalar on the entity doesn't fit (same reasoning as dropping `source_label`). |
+| `had_primary_source`, `was_attributed_to`, `generated_at_time`, `was_generated_by`, `was_derived_from`, `registry_version` | `ProvenanceEntry` | Field names mirror PROV-O terms directly (`prov:hadPrimarySource`, `prov:wasAttributedTo`, `prov:generatedAtTime`, `prov:wasGeneratedBy`, `prov:wasDerivedFrom`). `had_primary_source` is a real FK to the attesting `SchemaSource`, not a denormalized label. `registry_version` and `source_description` have no PROV-O term — purely registry-specific extensions. `registry_version` lives here, not on the entity — the same entity can be attested by different sources at different times, each under a different registry version, so a single scalar on the entity doesn't fit. |
 
 Field names were deliberately aligned with LinkML's own metamodel
 (`description`, `range`, `class_uri`/`slot_uri`, `is_a`, `abstract`) rather
@@ -202,11 +205,11 @@ registry_version` stays `None` for now, pending a decision on the above.
   (`source` singular; `multivalued`/`required` on properties). A minimal
   compat patch was written and then deliberately reverted — not worth fixing
   until a proper UI pass.
-- **`derived_from`** on `ProvenanceEntry` is never populated — nothing yet
+- **`was_derived_from`** on `ProvenanceEntry` is never populated — nothing yet
   detects "this hash supersedes that one" (would need an anchor like
   `(name, source)` to correlate an edit against prior content).
-- **`Rule`/`Transform`/`ValueSet`** are stubs (`hash_id`/`name`/`description`
-  only).
+- **`Rule`/`Transform`** are still stubs (`hash_id`/`name`/`description`
+  only) — `ValueSet` and `PermissibleValue` are real now.
 - **`SemanticIdentity`/`PRIOR_VERSION*`** tables in `db.py`'s DDL are dead
   (superseded by content-hash identity) but not yet removed.
 - **`pandas`** isn't in `requirements.txt`, so `align.py`'s embedding cache

@@ -4,7 +4,8 @@ seed.py — Populate the SenseIn Schema Registry from schema.org
 Fetches schema.org's machine-readable JSON-LD and inserts the core type
 hierarchy as content-hashed RegistryClass + RegistryProperty nodes, exactly
 the way ingest_linkml.py ingests any other schema — schema.org is just
-another source, with source="schema.org" on its ProvenanceEntry records.
+another source, with a SchemaSource {label: "schema.org"} as the
+had_primary_source of its ProvenanceEntry records.
 
 Seeded types (top-level schema.org hierarchy):
   Thing → CreativeWork, Event, Organization, Person, Place,
@@ -36,6 +37,7 @@ from schema_registry_utils import (
 
 from db import (
     get_connection, make_id, now_iso, write_registry_entities, write_structural_edges,
+    ensure_schema_source,
 )
 
 # ---------------------------------------------------------------------------
@@ -155,16 +157,16 @@ def collect_classes(g: rdflib.Graph) -> dict[str, dict]:
 # Insert into LadybugDB
 # ---------------------------------------------------------------------------
 
-def _provenance(agent: str = "system", registry_version: str = "") -> ProvenanceEntry:
+def _provenance(schema_source_id: str, agent: str = "system", registry_version: str = "") -> ProvenanceEntry:
     return ProvenanceEntry(
-        id=make_id(), source="schema.org", registry_version=registry_version or None,
-        generated_at=now_iso(), attributed_to=agent, activity="seeding",
-        derived_from=[],
+        id=make_id(), had_primary_source=schema_source_id, registry_version=registry_version or None,
+        generated_at_time=now_iso(), was_attributed_to=agent, was_generated_by="seeding",
+        was_derived_from=[],
     )
 
 
 def build_registry_entities(
-    classes: dict[str, dict], registry_version: str = "",
+    classes: dict[str, dict], schema_source_id: str, registry_version: str = "",
 ) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass]]:
     """
     Convert collect_classes()'s output into content-hashed RegistryProperty/
@@ -196,7 +198,7 @@ def build_registry_entities(
             )
             p = RegistryProperty(
                 hash_id=compute_hash_id_for(RegistryProperty, fields),
-                provenance=[_provenance(registry_version=registry_version)],
+                provenance=[_provenance(schema_source_id, registry_version=registry_version)],
                 **fields,
             )
             properties[prop["iri"]] = p
@@ -230,7 +232,7 @@ def build_registry_entities(
         )
         rc = RegistryClass(
             hash_id=compute_hash_id_for(RegistryClass, fields),
-            provenance=[_provenance(registry_version=registry_version)],
+            provenance=[_provenance(schema_source_id, registry_version=registry_version)],
             **fields,
         )
         registry_classes[name] = rc
@@ -252,18 +254,18 @@ def seed(db_path: str = "./registry.lbug",
     if wipe and not dry_run:
         print("Wiping existing schema.org attestations …")
         conn.execute("""
-            MATCH (:RegistryClass)-[:HAS_PROVENANCE]->(pe:ProvenanceEntry {source: 'schema.org'})
+            MATCH (:RegistryClass)-[:HAS_PROVENANCE]->(pe:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: 'schema.org'})
             DETACH DELETE pe
         """)
         conn.execute("""
-            MATCH (:RegistryProperty)-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry {source: 'schema.org'})
+            MATCH (:RegistryProperty)-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: 'schema.org'})
             DETACH DELETE pe
         """)
 
     # Idempotency check
     if not dry_run and not wipe:
         r = conn.execute("""
-            MATCH (n:RegistryClass {name: 'Thing'})-[:HAS_PROVENANCE]->(:ProvenanceEntry {source: 'schema.org'})
+            MATCH (n:RegistryClass {name: 'Thing'})-[:HAS_PROVENANCE]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: 'schema.org'})
             RETURN n.hash_id LIMIT 1
         """)
         if r.has_next():
@@ -271,11 +273,15 @@ def seed(db_path: str = "./registry.lbug",
                   "Use --wipe to re-seed.")
             return
 
+    # SchemaSource must exist before any ProvenanceEntry is built, since
+    # had_primary_source is a real FK to it — same reasoning as ingest_linkml.py.
+    schema_source_id = ensure_schema_source(conn, "schema.org", "", registry_version, dry_run=dry_run)
+
     g = fetch_schema_graph()
     classes = collect_classes(g)
 
     print(f"Building {len(classes)} classes …")
-    properties, registry_classes = build_registry_entities(classes, registry_version)
+    properties, registry_classes = build_registry_entities(classes, schema_source_id, registry_version)
 
     if dry_run:
         print(f"\n[dry-run] Would insert:")

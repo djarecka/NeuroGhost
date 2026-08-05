@@ -185,7 +185,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     changes, this fails.
 
     provenance is checked separately (excluded from the equality dump) since
-    ProvenanceEntry.id/generated_at are non-deterministic per run.
+    ProvenanceEntry.id/generated_at_time are non-deterministic per run.
     """
     parsed = parse_linkml(FIXTURES / "comprehensive.yml")
     properties, registry_classes, value_sets, permissible_values = build_registry_entities(
@@ -200,10 +200,10 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     for entity in (*properties.values(), *registry_classes.values()):
         assert len(entity.provenance) == 1
         prov = entity.provenance[0]
-        assert prov.source == "comprehensive"
-        assert prov.attributed_to == "tester"
-        assert prov.activity == "ingestion"
-        assert prov.derived_from == []
+        assert prov.had_primary_source == "comprehensive"
+        assert prov.was_attributed_to == "tester"
+        assert prov.was_generated_by == "ingestion"
+        assert prov.was_derived_from == []
 
     assert {
         name: p.model_dump(exclude={"provenance"})
@@ -345,11 +345,11 @@ def test_build_registry_entities_produces_value_sets():
         assert hid.startswith("sha256:")
     # Provenance from the ingestion
     assert len(vs.provenance) == 1
-    assert vs.provenance[0].source == "enum_test"
+    assert vs.provenance[0].had_primary_source == "enum_test"
 
     assert set(vs.permissible_values) == set(permissible_values)
     for pv in permissible_values.values():
         assert isinstance(pv, PermissibleValue)
         assert pv.name in ("active", "deprecated")
         assert len(pv.provenance) == 1
-        assert pv.provenance[0].source == "enum_test"
+        assert pv.provenance[0].had_primary_source == "enum_test"

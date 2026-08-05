@@ -79,8 +79,8 @@ from schema_registry_utils import (
 )
 
 from db import (
-    get_connection, make_iri, make_id, now_iso, REG,
-    write_registry_entities, write_structural_edges,
+    get_connection, make_iri, make_id, now_iso,
+    write_registry_entities, write_structural_edges, ensure_schema_source,
 )
 
 DB_PATH = "./registry.lbug"
@@ -328,23 +328,23 @@ def parse_linkml(path: Path) -> dict[str, Any]:
 # Parsed dict → content-hashed RegistryClass / RegistryProperty
 # ---------------------------------------------------------------------------
 
-def _make_provenance(source_label: str, agent: str, issue: str = "",
+def _make_provenance(schema_source_id: str, agent: str, issue: str = "",
                      registry_version: str = "",
                      activity: str = "ingestion") -> ProvenanceEntry:
     attributed_to = f"{agent} (issue #{issue})" if issue else agent
     return ProvenanceEntry(
         id=make_id(),
-        source=source_label,
+        had_primary_source=schema_source_id,
         registry_version=registry_version or None,
-        generated_at=now_iso(),
-        attributed_to=attributed_to,
-        activity=activity,
-        derived_from=[],
+        generated_at_time=now_iso(),
+        was_attributed_to=attributed_to,
+        was_generated_by=activity,
+        was_derived_from=[],
     )
 
 
 def build_registry_entities(
-    parsed: dict, source_label: str, agent: str, issue: str = "",
+    parsed: dict, schema_source_id: str, agent: str, issue: str = "",
     registry_version: str = "",
 ) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass], dict[str, ValueSet], dict[str, PermissibleValue]]:
     """
@@ -393,7 +393,7 @@ def build_registry_entities(
         )
         prop = RegistryProperty(
             hash_id=compute_hash_id_for(RegistryProperty, fields),
-            provenance=[_make_provenance(source_label, agent, issue, registry_version)],
+            provenance=[_make_provenance(schema_source_id, agent, issue, registry_version)],
             **fields,
         )
         properties[slot_name] = prop
@@ -428,7 +428,7 @@ def build_registry_entities(
         )
         rc = RegistryClass(
             hash_id=compute_hash_id_for(RegistryClass, fields),
-            provenance=[_make_provenance(source_label, agent, issue, registry_version)],
+            provenance=[_make_provenance(schema_source_id, agent, issue, registry_version)],
             **fields,
         )
         registry_classes[cls_name] = rc
@@ -442,7 +442,7 @@ def build_registry_entities(
     # name/description/meaning), so — like properties/classes above — it
     # gets a real ProvenanceEntry, not the hand-rolled node the old
     # non-RegistryEntity version used.
-    prov_factory = lambda: _make_provenance(source_label, agent, issue, registry_version)
+    prov_factory = lambda: _make_provenance(schema_source_id, agent, issue, registry_version)
     value_sets: dict[str, ValueSet] = {}
     permissible_values: dict[str, PermissibleValue] = {}
 
@@ -547,29 +547,6 @@ def _write_value_sets(conn, value_sets: dict[str, "ValueSet"],
 # SchemaSource / SchemaVersionSnapshot (unchanged in spirit from before)
 # ---------------------------------------------------------------------------
 
-def _ensure_schema_source(conn, source_label: str, version: str, registry_version: str) -> str:
-    """One SchemaSource node per source label, reused across ingests."""
-    r = conn.execute(
-        "MATCH (s:SchemaSource {label: $label}) RETURN s.id LIMIT 1",
-        {"label": source_label},
-    )
-    if r.has_next():
-        return r.get_next()[0]
-    source_id = make_id()
-    conn.execute("""
-        CREATE (:SchemaSource {
-            id: $id, source_iri: $source_iri,
-            source_version: $source_version, created_at: $t,
-            label: $label, mime_type: 'application/yaml',
-            registry_version: $rv
-        })
-    """, {
-        "id": source_id, "source_iri": f"{REG}source/{source_id}", "source_version": version,
-        "t": now_iso(), "label": source_label, "rv": registry_version,
-    })
-    return source_id
-
-
 def _prev_schema_version(conn, source_label: str) -> str | None:
     """Find the most recent SchemaVersionSnapshot for this schema, or None."""
     r = conn.execute("""
@@ -624,8 +601,15 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
     """
     meta = parsed["meta"]
 
+    # SchemaSource must exist before any ProvenanceEntry is built, since
+    # had_primary_source is a real FK to it — including in dry-run, which
+    # gets a throwaway placeholder id instead of writing anything.
+    schema_source_id = ensure_schema_source(
+        conn, source_label, meta["version"], registry_version, dry_run=dry_run,
+    )
+
     properties, registry_classes, value_sets, permissible_values = build_registry_entities(
-        parsed, source_label, agent, issue, registry_version,
+        parsed, schema_source_id, agent, issue, registry_version,
     )
 
     stats = write_registry_entities(conn, properties, registry_classes, dry_run=dry_run)
@@ -633,7 +617,6 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
     if dry_run:
         return stats
 
-    _ensure_schema_source(conn, source_label, meta["version"], registry_version)
     stats["rels"] = write_structural_edges(conn, registry_classes)
     stats["rels"] += _write_value_sets(conn, value_sets, permissible_values)
 
@@ -738,11 +721,11 @@ def cli(file, db, dry_run, wipe, registry_version, issue, agent) -> None:
             # RegistryClass/RegistryProperty nodes themselves (another
             # source may still attest to the same content).
             conn.execute("""
-                MATCH (:RegistryClass)-[:HAS_PROVENANCE]->(pe:ProvenanceEntry {source: $src})
+                MATCH (:RegistryClass)-[:HAS_PROVENANCE]->(pe:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: $src})
                 DETACH DELETE pe
             """, {"src": source_label})
             conn.execute("""
-                MATCH (:RegistryProperty)-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry {source: $src})
+                MATCH (:RegistryProperty)-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: $src})
                 DETACH DELETE pe
             """, {"src": source_label})
 
