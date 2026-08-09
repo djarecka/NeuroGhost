@@ -44,6 +44,7 @@ classes:
     - Acquisition__acquisition_type
     - Acquisition__notes
     - Acquisition__coordinate_system
+    - Acquisition__global_coordinate_system
     - Acquisition__calibrations
     - Acquisition__maintenance
     - Acquisition__data_streams
@@ -84,7 +85,7 @@ classes:
     - AdditionalImagingDevice__imaging_device_type
   Affine:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Affine
-    description: Definition of an affine transform 3x4 matrix
+    description: Definition of an NxN+1 affine transform matrix
     slots:
     - Affine__object_type
     - Affine__affine_transform
@@ -105,6 +106,7 @@ classes:
     - AirPuffConfig__valence
     - AirPuffConfig__relative_position
     - AirPuffConfig__coordinate_system
+    - AirPuffConfig__local_coordinate_system
     - AirPuffConfig__transform
     - AirPuffConfig__pressure
     - AirPuffConfig__pressure_unit
@@ -209,7 +211,7 @@ classes:
     - Arecont_Vision_Costar__registry_identifier
   Arena:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Arena
-    description: Description of a rectangular arena
+    description: Description of an arena
     slots:
     - Arena__object_type
     - Arena__name
@@ -220,6 +222,7 @@ classes:
     - Arena__notes
     - Arena__size
     - Arena__size_unit
+    - Arena__shape
     - Arena__objects_in_arena
   Asus:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Asus
@@ -238,6 +241,7 @@ classes:
     - Atlas__origin
     - Atlas__axes
     - Atlas__axis_unit
+    - Atlas__handedness
     - Atlas__version
     - Atlas__size
     - Atlas__size_unit
@@ -249,6 +253,7 @@ classes:
     slots:
     - AtlasCoordinate__object_type
     - AtlasCoordinate__translation
+    - AtlasCoordinate__reference_coordinate_system
     - AtlasCoordinate__coordinate_system
   Audioswitch:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Audioswitch
@@ -473,6 +478,7 @@ classes:
     - CameraAssembly__object_type
     - CameraAssembly__relative_position
     - CameraAssembly__coordinate_system
+    - CameraAssembly__local_coordinate_system
     - CameraAssembly__transform
     - CameraAssembly__name
     - CameraAssembly__target
@@ -591,6 +597,13 @@ classes:
     - Chroma__abbreviation
     - Chroma__registry
     - Chroma__registry_identifier
+  Circle:
+    class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Circle
+    description: Circle geometry
+    slots:
+    - Circle__object_type
+    - Circle__radius
+    - Circle__radius_unit
   Clocksynchronizer:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Clocksynchronizer
     description: Model ClockSynchronizer
@@ -692,13 +705,14 @@ classes:
     - Container__uri
   CoordinateSystem:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#CoordinateSystem
-    description: Definition of a coordinate system relative to a brain
+    description: Definition of a coordinate system
     slots:
     - CoordinateSystem__object_type
     - CoordinateSystem__name
     - CoordinateSystem__origin
     - CoordinateSystem__axes
     - CoordinateSystem__axis_unit
+    - CoordinateSystem__handedness
   CoupledPlane:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#CoupledPlane
     description: Configuration of a pair of coupled imaging plane
@@ -947,6 +961,17 @@ classes:
     slots:
     - DeviceConfig__object_type
     - DeviceConfig__device_name
+  DeviceImplant:
+    class_uri: https://aind-data-schema.readthedocs.io/en/stable/#DeviceImplant
+    description: Description of a generic device implant procedure
+    slots:
+    - DeviceImplant__object_type
+    - DeviceImplant__relative_position
+    - DeviceImplant__coordinate_system
+    - DeviceImplant__local_coordinate_system
+    - DeviceImplant__transform
+    - DeviceImplant__protocol_id
+    - DeviceImplant__implanted_device
   Digikey:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Digikey
     description: Model DigiKey
@@ -1071,6 +1096,7 @@ classes:
     - Enclosure__notes
     - Enclosure__size
     - Enclosure__size_unit
+    - Enclosure__shape
     - Enclosure__internal_material
     - Enclosure__external_material
     - Enclosure__grounded
@@ -1218,9 +1244,27 @@ classes:
     - Filter__cut_on_wavelength
     - Filter__center_wavelength
     - Filter__wavelength_unit
+  FluorescentReagent:
+    class_uri: https://aind-data-schema.readthedocs.io/en/stable/#FluorescentReagent
+    description: Description of an inherently fluorescent marker. Note this class
+      will change name in v3.0
+    slots:
+    - FluorescentReagent__object_type
+    - FluorescentReagent__name
+    - FluorescentReagent__source
+    - FluorescentReagent__rrid
+    - FluorescentReagent__lot_number
+    - FluorescentReagent__expiration_date
+    - FluorescentReagent__stain_type
+    - FluorescentReagent__excitation_wavelength
+    - FluorescentReagent__emission_wavelength
+    - FluorescentReagent__wavelength_unit
   FluorescentStain:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#FluorescentStain
-    description: Description of a fluorescent stain
+    description: 'Description of a fluorescent stain consisting of a probe associated
+      with a fluorophore.
+
+      Note this class will change names in v3.0'
     slots:
     - FluorescentStain__object_type
     - FluorescentStain__name
@@ -1470,6 +1514,7 @@ classes:
     - ImagingConfig__device_name
     - ImagingConfig__channels
     - ImagingConfig__coordinate_system
+    - ImagingConfig__local_coordinate_system
     - ImagingConfig__images
     - ImagingConfig__sampling_strategy
   Immersion:
@@ -1529,6 +1574,7 @@ classes:
     - Instrument__modalities
     - Instrument__calibrations
     - Instrument__coordinate_system
+    - Instrument__global_coordinate_system
     - Instrument__temperature_control
     - Instrument__notes
     - Instrument__connections
@@ -1619,6 +1665,13 @@ classes:
     - Johns_Hopkins_University__abbreviation
     - Johns_Hopkins_University__registry
     - Johns_Hopkins_University__registry_identifier
+  JoystickConfig:
+    class_uri: https://aind-data-schema.readthedocs.io/en/stable/#JoystickConfig
+    description: Configuration of joystick
+    slots:
+    - JoystickConfig__object_type
+    - JoystickConfig__device_name
+    - JoystickConfig__is_isometric
   Julabo:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Julabo
     description: Model Julabo
@@ -1788,6 +1841,7 @@ classes:
     - LickSpoutConfig__volume_unit
     - LickSpoutConfig__relative_position
     - LickSpoutConfig__coordinate_system
+    - LickSpoutConfig__local_coordinate_system
     - LickSpoutConfig__transform
     - LickSpoutConfig__notes
   Licketysplit:
@@ -1865,6 +1919,7 @@ classes:
     - MISCameraConfig__object_type
     - MISCameraConfig__relative_position
     - MISCameraConfig__coordinate_system
+    - MISCameraConfig__local_coordinate_system
     - MISCameraConfig__transform
     - MISCameraConfig__device_name
     - MISCameraConfig__detector_config
@@ -1950,6 +2005,7 @@ classes:
     - ManipulatorConfig__object_type
     - ManipulatorConfig__device_name
     - ManipulatorConfig__coordinate_system
+    - ManipulatorConfig__local_coordinate_system
     - ManipulatorConfig__local_axis_positions
   Mapseq:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Mapseq
@@ -2145,6 +2201,7 @@ classes:
     - Monitor__object_type
     - Monitor__relative_position
     - Monitor__coordinate_system
+    - Monitor__local_coordinate_system
     - Monitor__transform
     - Monitor__name
     - Monitor__serial_number
@@ -2672,6 +2729,7 @@ classes:
     - PlanarSectioning__object_type
     - PlanarSectioning__sections
     - PlanarSectioning__coordinate_system
+    - PlanarSectioning__global_coordinate_system
     - PlanarSectioning__section_orientation
   Plane:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Plane
@@ -2767,6 +2825,7 @@ classes:
     - ProbeConfig__other_targeted_structure
     - ProbeConfig__atlas_coordinate
     - ProbeConfig__coordinate_system
+    - ProbeConfig__local_coordinate_system
     - ProbeConfig__transform
     - ProbeConfig__dye
     - ProbeConfig__notes
@@ -2808,6 +2867,7 @@ classes:
     - Procedures__subject_procedures
     - Procedures__specimen_procedures
     - Procedures__coordinate_system
+    - Procedures__global_coordinate_system
     - Procedures__notes
   Processing:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Processing
@@ -2906,6 +2966,14 @@ classes:
     - Reagent__rrid
     - Reagent__lot_number
     - Reagent__expiration_date
+  Rectangle:
+    class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Rectangle
+    description: Rectangle geometry
+    slots:
+    - Rectangle__object_type
+    - Rectangle__width
+    - Rectangle__height
+    - Rectangle__size_unit
   ResourceTimestamped:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#ResourceTimestamped
     description: Description of resource usage at a moment in time
@@ -2948,14 +3016,15 @@ classes:
     description: 'Rotation
 
 
-      Rotations are applied as Euler angles in order X/Y/Z
-
-
-      Angles follow right-hand rule, with positive angles rotating counter-clockwise.'
+      Rotations should be applied as Euler angles in the specified axis order.'
     slots:
     - Rotation__object_type
     - Rotation__angles
     - Rotation__angles_unit
+    - Rotation__axis_order
+    - Rotation__reference_coordinate_system
+    - Rotation__rotation_direction
+    - Rotation__pivot
   Same_Sky:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Same_Sky
     description: Model Same Sky
@@ -2995,6 +3064,7 @@ classes:
     slots:
     - Scale__object_type
     - Scale__scale
+    - Scale__pivot
   Scanner:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Scanner
     description: Description of a MRI Scanner
@@ -3180,6 +3250,7 @@ classes:
     - Speaker__object_type
     - Speaker__relative_position
     - Speaker__coordinate_system
+    - Speaker__local_coordinate_system
     - Speaker__transform
     - Speaker__name
     - Speaker__serial_number
@@ -3240,6 +3311,14 @@ classes:
     - Spinnaker__abbreviation
     - Spinnaker__registry
     - Spinnaker__registry_identifier
+  Stanford_University:
+    class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Stanford_University
+    description: Model Stanford University
+    slots:
+    - Stanford_University__name
+    - Stanford_University__abbreviation
+    - Stanford_University__registry
+    - Stanford_University__registry_identifier
   Stepperdriver:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Stepperdriver
     description: Model StepperDriver
@@ -3296,6 +3375,7 @@ classes:
     - Surgery__anaesthesia
     - Surgery__workstation_id
     - Surgery__coordinate_system
+    - Surgery__global_coordinate_system
     - Surgery__measured_coordinates
     - Surgery__procedures
     - Surgery__notes
@@ -3439,6 +3519,7 @@ classes:
     slots:
     - Translation__object_type
     - Translation__translation
+    - Translation__reference_coordinate_system
   Treadmill:
     class_uri: https://aind-data-schema.readthedocs.io/en/stable/#Treadmill
     description: Model Treadmill
@@ -3834,6 +3915,14 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#experimenters
+  Acquisition__global_coordinate_system:
+    description: Origin and axis definitions for determining the configured position
+      of devices during acquisition. Required when coordinates are provided within
+      the Acquisition
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#global_coordinate_system
   Acquisition__instrument_id:
     description: Should match the Instrument.instrument_id. Required when instrument
       metadata is available.
@@ -4029,6 +4118,12 @@ slots:
     range: float
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#duration
+  AirPuffConfig__local_coordinate_system:
+    description: Device local coordinate system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
   AirPuffConfig__object_type:
     description: Object Type
     multivalued: false
@@ -4054,7 +4149,7 @@ slots:
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#relative_position
   AirPuffConfig__transform:
-    description: Device to acquisition transform
+    description: Entry coordinate, depth, and rotation in the Acquisition.global_coordinate_system
     multivalued: true
     range: string
     required: false
@@ -4413,6 +4508,12 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#serial_number
+  Arena__shape:
+    description: Shape of the arena
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#shape
   Arena__size:
     description: 3D Size
     multivalued: false
@@ -4461,6 +4562,12 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
+  AtlasCoordinate__reference_coordinate_system:
+    description: Whether to translate on the global or local coordinate system axes
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#reference_coordinate_system
   AtlasCoordinate__translation:
     description: Translation parameters
     multivalued: true
@@ -4479,6 +4586,12 @@ slots:
     range: string
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#axis_unit
+  Atlas__handedness:
+    description: Whether the coordinate system is right-handed or left-handed
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#handedness
   Atlas__name:
     description: Atlas name
     multivalued: false
@@ -4546,7 +4659,7 @@ slots:
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#direction
   Axis__name:
-    description: Axis
+    description: 'Note: axis names do not influence order or orientation'
     multivalued: false
     range: string
     required: true
@@ -5099,6 +5212,12 @@ slots:
     range: string
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#lens
+  CameraAssembly__local_coordinate_system:
+    description: Device local coordinate system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
   CameraAssembly__name:
     description: Camera assembly name
     multivalued: false
@@ -5124,7 +5243,7 @@ slots:
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#target
   CameraAssembly__transform:
-    description: Position and orientation of the device in the instrument coordinate
+    description: Position and orientation of the device in the instrument global coordinate
       system
     multivalued: true
     range: string
@@ -5689,6 +5808,24 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#registry_identifier
+  Circle__object_type:
+    description: Object Type
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
+  Circle__radius:
+    description: Radius
+    multivalued: false
+    range: float
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#radius
+  Circle__radius_unit:
+    description: Radius unit
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#radius_unit
   Clocksynchronizer__name:
     description: Name
     multivalued: false
@@ -6031,8 +6168,14 @@ slots:
     range: string
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#axis_unit
+  CoordinateSystem__handedness:
+    description: Whether the coordinate system is right-handed or left-handed
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#handedness
   CoordinateSystem__name:
-    description: Name
+    description: Convention is to use <Origin>_<POS_X_DIR><POS_Y_DIR><POS_Z_DIR> etc
     multivalued: false
     range: string
     required: true
@@ -7011,6 +7154,49 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
+  DeviceImplant__coordinate_system:
+    description: Device coordinate system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#coordinate_system
+  DeviceImplant__implanted_device:
+    description: Implanted device
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#implanted_device
+  DeviceImplant__local_coordinate_system:
+    description: Device local coordinate system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
+  DeviceImplant__object_type:
+    description: Object Type
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
+  DeviceImplant__protocol_id:
+    description: DOI for protocols.io
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#protocol_id
+  DeviceImplant__relative_position:
+    description: Relative position
+    multivalued: true
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#relative_position
+  DeviceImplant__transform:
+    description: Position and orientation of the device in the instrument global coordinate
+      system
+    multivalued: true
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#transform
   Device__additional_settings:
     description: Additional parameters
     multivalued: false
@@ -7503,6 +7689,12 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#serial_number
+  Enclosure__shape:
+    description: Shape of the enclosure
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#shape
   Enclosure__size:
     description: Size
     multivalued: false
@@ -8017,6 +8209,66 @@ slots:
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#serial_number
   Filter__wavelength_unit:
     description: Wavelength unit
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#wavelength_unit
+  FluorescentReagent__emission_wavelength:
+    description: Emission wavelength (nm)
+    multivalued: false
+    range: integer
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#emission_wavelength
+  FluorescentReagent__excitation_wavelength:
+    description: Excitation wavelength (nm)
+    multivalued: false
+    range: integer
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#excitation_wavelength
+  FluorescentReagent__expiration_date:
+    description: Lot expiration date
+    multivalued: false
+    range: date
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#expiration_date
+  FluorescentReagent__lot_number:
+    description: Lot number
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#lot_number
+  FluorescentReagent__name:
+    description: Name
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#name
+  FluorescentReagent__object_type:
+    description: Object Type
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
+  FluorescentReagent__rrid:
+    description: Research Resource ID
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#rrid
+  FluorescentReagent__source:
+    description: Source
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#source
+  FluorescentReagent__stain_type:
+    description: ''
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#stain_type
+  FluorescentReagent__wavelength_unit:
+    description: Excitation wavelength unit
     multivalued: false
     range: string
     required: false
@@ -8857,6 +9109,13 @@ slots:
     range: string
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#images
+  ImagingConfig__local_coordinate_system:
+    description: Required for ImageSPIM objects and when the imaging coordinate system
+      differs from the Acquisition.global_coordinate_system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
   ImagingConfig__object_type:
     description: Object Type
     multivalued: false
@@ -9037,7 +9296,7 @@ slots:
       components
     multivalued: false
     range: string
-    required: true
+    required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#coordinate_system
   Instrument__describedBy:
     description: Describedby
@@ -9045,6 +9304,13 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#describedBy
+  Instrument__global_coordinate_system:
+    description: Origin and axis definitions for determining the position of the instrument's
+      components
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#global_coordinate_system
   Instrument__instrument_id:
     description: Unique instrument identifier
     multivalued: false
@@ -9347,6 +9613,24 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#registry_identifier
+  JoystickConfig__device_name:
+    description: Must match a device defined in the instrument.json
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#device_name
+  JoystickConfig__is_isometric:
+    description: Whether the joystick is use isometrically or non-isometrically
+    multivalued: false
+    range: boolean
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#is_isometric
+  JoystickConfig__object_type:
+    description: Object Type
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
   Julabo__abbreviation:
     description: Abbreviation
     multivalued: false
@@ -9839,6 +10123,12 @@ slots:
     range: string
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#device_name
+  LickSpoutConfig__local_coordinate_system:
+    description: Device local coordinate system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
   LickSpoutConfig__notes:
     description: Notes
     multivalued: false
@@ -9870,7 +10160,7 @@ slots:
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#solution_valence
   LickSpoutConfig__transform:
-    description: Entry coordinate, depth, and rotation in the Acquisition.coordinate_system
+    description: Entry coordinate, depth, and rotation in the Acquisition.global_coordinate_system
     multivalued: true
     range: string
     required: false
@@ -10187,6 +10477,12 @@ slots:
     range: string
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#device_name
+  MISCameraConfig__local_coordinate_system:
+    description: Device local coordinate system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
   MISCameraConfig__module:
     description: Module
     multivalued: false
@@ -10206,7 +10502,7 @@ slots:
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#relative_position
   MISCameraConfig__transform:
-    description: Position and orientation of the device in the instrument coordinate
+    description: Position and orientation of the device in the instrument global coordinate
       system
     multivalued: true
     range: string
@@ -10474,7 +10770,7 @@ slots:
     description: Device coordinate system
     multivalued: false
     range: string
-    required: true
+    required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#coordinate_system
   ManipulatorConfig__device_name:
     description: Must match a device defined in the instrument.json
@@ -10488,6 +10784,12 @@ slots:
     range: string
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_axis_positions
+  ManipulatorConfig__local_coordinate_system:
+    description: Device local coordinate system
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
   ManipulatorConfig__object_type:
     description: Object Type
     multivalued: false
@@ -11247,6 +11549,12 @@ slots:
     range: integer
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#height
+  Monitor__local_coordinate_system:
+    description: Device local coordinate system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
   Monitor__manufacturer:
     description: Manufacturer
     multivalued: false
@@ -11302,7 +11610,7 @@ slots:
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#size_unit
   Monitor__transform:
-    description: Position and orientation of the device in the instrument coordinate
+    description: Position and orientation of the device in the instrument global coordinate
       system
     multivalued: true
     range: string
@@ -13085,6 +13393,12 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#coordinate_system
+  PlanarSectioning__global_coordinate_system:
+    description: Only required if different from the Procedures.global_coordinate_system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#global_coordinate_system
   PlanarSectioning__object_type:
     description: Object Type
     multivalued: false
@@ -13427,7 +13741,7 @@ slots:
       relative to the Acquisition.coordinate_system
     multivalued: false
     range: string
-    required: true
+    required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#coordinate_system
   ProbeConfig__device_name:
     description: Must match a device defined in the instrument.json
@@ -13441,6 +13755,13 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#dye
+  ProbeConfig__local_coordinate_system:
+    description: Device coordinate system, defines un-rotated probe's orientation
+      relative to the Acquisition.global_coordinate_system
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
   ProbeConfig__notes:
     description: Notes
     multivalued: false
@@ -13466,7 +13787,7 @@ slots:
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#primary_targeted_structure
   ProbeConfig__transform:
-    description: Entry coordinate, depth, and rotation in the Acquisition.coordinate_system
+    description: Entry coordinate, depth, and rotation in the Acquisition.global_coordinate_system
     multivalued: true
     range: string
     required: true
@@ -13569,6 +13890,14 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#describedBy
+  Procedures__global_coordinate_system:
+    description: Origin and axis definitions for determining the configured position
+      of devices implanted during procedures. Required when coordinates are provided
+      within the Procedures
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#global_coordinate_system
   Procedures__notes:
     description: Notes
     multivalued: false
@@ -13950,6 +14279,30 @@ slots:
     range: string
     required: true
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#source
+  Rectangle__height:
+    description: Height
+    multivalued: false
+    range: float
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#height
+  Rectangle__object_type:
+    description: Object Type
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
+  Rectangle__size_unit:
+    description: Size unit
+    multivalued: false
+    range: string
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#size_unit
+  Rectangle__width:
+    description: Width
+    multivalued: false
+    range: float
+    required: true
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#width
   ResourceTimestamped__object_type:
     description: Object Type
     multivalued: false
@@ -14088,12 +14441,38 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#angles_unit
+  Rotation__axis_order:
+    description: Order of rotation axes as a string (e.g. 'xyz', 'zyx'). Must match
+      the length of angles.
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#axis_order
   Rotation__object_type:
     description: Object Type
     multivalued: false
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
+  Rotation__pivot:
+    description: Whether to rotate around the global or local coordinate system origin
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#pivot
+  Rotation__reference_coordinate_system:
+    description: Whether to rotate around the global or local coordinate system axes
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#reference_coordinate_system
+  Rotation__rotation_direction:
+    description: 'Right-hand rule: positive angles rotate CCW when looking toward
+      the origin from the positive axis'
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#rotation_direction
   Same_Sky__abbreviation:
     description: Abbreviation
     multivalued: false
@@ -14202,6 +14581,12 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
+  Scale__pivot:
+    description: Whether to scale around the global or local coordinate system origin
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#pivot
   Scale__scale:
     description: Scale parameters
     multivalued: true
@@ -14817,6 +15202,12 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#coordinate_system
+  Speaker__local_coordinate_system:
+    description: Device local coordinate system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#local_coordinate_system
   Speaker__manufacturer:
     description: Manufacturer
     multivalued: false
@@ -14860,7 +15251,7 @@ slots:
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#serial_number
   Speaker__transform:
-    description: Position and orientation of the device in the instrument coordinate
+    description: Position and orientation of the device in the instrument global coordinate
       system
     multivalued: true
     range: string
@@ -15011,6 +15402,30 @@ slots:
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#registry
   Spinnaker__registry_identifier:
+    description: Registry Identifier
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#registry_identifier
+  Stanford_University__abbreviation:
+    description: Abbreviation
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#abbreviation
+  Stanford_University__name:
+    description: Name
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#name
+  Stanford_University__registry:
+    description: ''
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#registry
+  Stanford_University__registry_identifier:
     description: Registry Identifier
     multivalued: false
     range: string
@@ -15189,6 +15604,13 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#experimenters
+  Surgery__global_coordinate_system:
+    description: Only required when the Surgery.global_coordinate_system is different
+      from the Procedures.global_coordinate_system
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#global_coordinate_system
   Surgery__measured_coordinates:
     description: Coordinates measured during the procedure, for example Bregma and
       Lambda
@@ -15640,6 +16062,12 @@ slots:
     range: string
     required: false
     slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#object_type
+  Translation__reference_coordinate_system:
+    description: Whether to translate on the global or local coordinate system axes
+    multivalued: false
+    range: string
+    required: false
+    slot_uri: https://aind-data-schema.readthedocs.io/en/stable/#reference_coordinate_system
   Translation__translation:
     description: Translation parameters
     multivalued: true
