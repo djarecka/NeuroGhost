@@ -28,18 +28,14 @@
 
 ## Roadmap
 
-**MVP (Oct 16):** take a BBQS dataset, convert to DANDI, convert back, show what survived — a live round-trip via `/api/transform`.
+**MVP (Sep 29):** BBQS and DANDI aligned, transform API live, users can sign up. Full public launch with BrainKB on Oct 23.
 
-| # | Date | Milestone | Owner | Issue |
-|---|------|-----------|-------|-------|
-| M0 | Aug 14 | Sync debt cleared — Proteus pinned, search_hybrid caught up | @Sulstice | [#50](https://github.com/sensein/NeuroGhost/issues/50) |
-| M1 | Aug 28 | DANDI ingested end-to-end, aligned against BBQS | @Sulstice | [#51](https://github.com/sensein/NeuroGhost/issues/51) |
-| M2 ⚠ | Sep 11 | Gold-set precision/recall baseline | @neurovium · @djarecka | [#52](https://github.com/sensein/NeuroGhost/issues/52) |
-| M3 | Sep 25 | Meta-model v1 — rules, provenance, DANDI stress test | @puja-trivedi · @djarecka | [#53](https://github.com/sensein/NeuroGhost/issues/53) |
-| M4 | Oct 9 | BBQS into BrainKB | @Sulstice | [#54](https://github.com/sensein/NeuroGhost/issues/54) |
-| M5 ⚠ | Oct 16 | Round-trip demo via `/api/transform` — **MVP** | @Sulstice | [#55](https://github.com/sensein/NeuroGhost/issues/55) |
-
-⚠ = at-risk · M2 depends on gold-set quality · M5 depends on a serverless layer for the transform endpoint
+| # | Date | Milestone | Owners | Issue |
+|---|------|-----------|--------|-------|
+| M1 | Aug 28 | Foundation — modules, meta-model v1, BICAN ingested, cloud deploy | @neurovium · @puja-trivedi · @djarecka · @Sulstice | [#56](https://github.com/sensein/NeuroGhost/issues/56) |
+| M2 | Sep 11 | Alignment consolidated, DANDI ingested, schema strategy | @neurovium · @djarecka · @Sulstice | [#57](https://github.com/sensein/NeuroGhost/issues/57) |
+| M3 | Sep 29 | **MVP soft launch** — users can sign up | @Sulstice + team | [#58](https://github.com/sensein/NeuroGhost/issues/58) |
+| M4 | Oct 23 | Full public launch with BrainKB | @Sulstice + team | [#59](https://github.com/sensein/NeuroGhost/issues/59) |
 
 ---
 
