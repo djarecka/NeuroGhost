@@ -12,6 +12,26 @@
 
 ---
 
+## Roadmap
+
+**MVP target (Oct 16):** take a BBQS dataset, convert it to DANDI format, convert it back, and show exactly what survived — a live round-trip via `/api/transform`.
+
+| Milestone | Date | Goal |
+|-----------|------|------|
+| **M0** | Aug 14 | Sync debt cleared — Proteus pin set, search_hybrid caught up to main |
+| **M1** | Aug 28 | DANDI ingested end-to-end and aligned against BBQS |
+| **M2** | Sep 11 | Alignment unified with hand-labeled gold set; precision/recall reported ⚠ |
+| **M3** | Sep 25 | Meta-model v1 — rules and provenance, DANDI as stress case |
+| **M4** | Oct 9 | BBQS → BrainKB integration |
+| **M5** | Oct 16 | Round-trip demo via `/api/transform` ⚠ |
+
+> ⚠ **M2 (Sep 11)** is the highest-risk milestone — alignment quality is hard to predict until the gold set is built.
+> ⚠ **M5 (Oct 16)** depends on a serverless layer for the transform endpoints; flagged as at-risk if M3/M4 slip.
+
+**Owners:** Nima — Proteus & alignment · Dorota — alignment oversight & meta-model · Puja — meta-model & ingestion · Satra — meta-model · Sully — integration & ingestion
+
+---
+
 ## Website
 
 **[sensein.group/NeuroGhost](https://sensein.group/NeuroGhost/)** — seven tabs: **Concepts**, **Diff**, **Graph Schema**, **Transform**, **Query**, **Provenance**, **Register**. Every view has download buttons.
@@ -163,7 +183,7 @@ See [docs/GOVERNANCE.md](docs/GOVERNANCE.md) for the full spec.
 <!-- MODULE_SYNC_START -->
 | Module | Maintainer | Repository | Behind main | Compare |
 |--------|-----------|------------|-------------|---------|
-| Proteus | @neurovium (Nema) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | ⚠ pin unset | [compare ↗](https://github.com/neurovium/Proteus/commits/main) |
+| Proteus | @neurovium (Nima) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | ⚠ pin unset | [compare ↗](https://github.com/neurovium/Proteus/commits/main) |
 | search_hybrid | @sensein | [sensein/search_hybrid](https://github.com/sensein/search_hybrid) | ✓ up to date | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...sensein:search_hybrid:main) |
 <!-- MODULE_SYNC_END -->
 
