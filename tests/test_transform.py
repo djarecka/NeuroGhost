@@ -344,7 +344,7 @@ def test_device_to_nwb_maps_name_and_modality():
 def test_device_to_bids_has_no_alignments():
     dev = _flat(_entity("Device"))
     result = transform_record("bbqs", "bids", dev)
-    assert any("No property alignments" in w for w in result["warnings"])
+    assert any("no alignment" in w for w in result["warnings"])
 
 
 # ---------------------------------------------------------------------------

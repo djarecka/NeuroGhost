@@ -20,4 +20,6 @@ linkml==1.11.1
 # Pinned <3.0.0 to avoid torchcodec + FFmpeg system dependency
 sentence-transformers>=2.7.0,<3.0.0
 pytest>=8.0.0
-mcp[cli]>=1.0.0
+# Upper bound matches pyproject.toml: mcp 2.0.0 dropped mcp.server.fastmcp,
+# which neuro_ghost/mcp_server.py imports.
+mcp[cli]>=1.0.0,<2.0.0
