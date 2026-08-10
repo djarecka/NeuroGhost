@@ -28,35 +28,18 @@
 
 ## Roadmap
 
-**MVP:** take a BBQS dataset, convert to DANDI, convert back, show what survived — a live round-trip via `/api/transform`.
+**MVP (Oct 16):** take a BBQS dataset, convert to DANDI, convert back, show what survived — a live round-trip via `/api/transform`.
 
-```mermaid
-gantt
-    dateFormat  YYYY-MM-DD
-    axisFormat  %b %d
-    title       Road to MVP · Oct 16
+| # | Date | Milestone | Owner | Issue |
+|---|------|-----------|-------|-------|
+| M0 | Aug 14 | Sync debt cleared — Proteus pinned, search_hybrid caught up | @Sulstice | [#50](https://github.com/sensein/NeuroGhost/issues/50) |
+| M1 | Aug 28 | DANDI ingested end-to-end, aligned against BBQS | @Sulstice | [#51](https://github.com/sensein/NeuroGhost/issues/51) |
+| M2 ⚠ | Sep 11 | Gold-set precision/recall baseline | @neurovium · @djarecka | [#52](https://github.com/sensein/NeuroGhost/issues/52) |
+| M3 | Sep 25 | Meta-model v1 — rules, provenance, DANDI stress test | @puja-trivedi · @djarecka | [#53](https://github.com/sensein/NeuroGhost/issues/53) |
+| M4 | Oct 9 | BBQS into BrainKB | @Sulstice | [#54](https://github.com/sensein/NeuroGhost/issues/54) |
+| M5 ⚠ | Oct 16 | Round-trip demo via `/api/transform` — **MVP** | @Sulstice | [#55](https://github.com/sensein/NeuroGhost/issues/55) |
 
-    section Infrastructure
-    M0 Sync debt cleared          :active,  m0, 2026-08-10, 2026-08-14
-
-    section Ingestion
-    M1 DANDI ingested & aligned   :         m1, 2026-08-14, 2026-08-28
-
-    section Alignment quality
-    M2 Gold-set precision / recall :crit,   m2, 2026-08-28, 2026-09-11
-
-    section Meta-model
-    M3 Meta-model v1 + provenance :         m3, 2026-09-11, 2026-09-25
-
-    section Integration
-    M4 BBQS into BrainKB          :         m4, 2026-09-25, 2026-10-09
-    M5 Round-trip /api/transform  :crit,    m5, 2026-10-09, 2026-10-16
-```
-
-> **M2 (Sep 11)** — highest-risk milestone; alignment quality is hard to forecast until the gold set is built.  
-> **M5 (Oct 16)** — depends on a serverless layer for the transform endpoints; at-risk if M3/M4 slip.
-
-**Owners:** Nima — Proteus & alignment · Dorota — alignment oversight & meta-model · Puja — meta-model & ingestion · Satra — meta-model · Sully — integration & ingestion
+⚠ = at-risk · M2 depends on gold-set quality · M5 depends on a serverless layer for the transform endpoint
 
 ---
 
