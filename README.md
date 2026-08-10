@@ -12,21 +12,49 @@
 
 ---
 
+## By the Numbers
+
+| Stat | Value |
+|------|-------|
+| Schemas registered | **7** — aind · bids · nwb · bbqs · dandi · openminds · personinfo |
+| Classes catalogued | **671** across all schemas |
+| Properties indexed | **~3,800** content-addressed nodes |
+| Alignment edges | **56** across 28 classes · mean distance **0.17** |
+| Alignment methods | IRI anchor 77% · semantic-name 14% · composite 9% |
+| Confidence floor | **0.45** — pairs below this threshold are dropped |
+| `skos:exactMatch` threshold | **0.95** — IRI anchor + unit compatibility required |
+
+---
+
 ## Roadmap
 
-**MVP target (Oct 16):** take a BBQS dataset, convert it to DANDI format, convert it back, and show exactly what survived — a live round-trip via `/api/transform`.
+**MVP:** take a BBQS dataset, convert to DANDI, convert back, show what survived — a live round-trip via `/api/transform`.
 
-| Milestone | Date | Goal |
-|-----------|------|------|
-| **M0** | Aug 14 | Sync debt cleared — Proteus pin set, search_hybrid caught up to main |
-| **M1** | Aug 28 | DANDI ingested end-to-end and aligned against BBQS |
-| **M2** | Sep 11 | Alignment unified with hand-labeled gold set; precision/recall reported ⚠ |
-| **M3** | Sep 25 | Meta-model v1 — rules and provenance, DANDI as stress case |
-| **M4** | Oct 9 | BBQS → BrainKB integration |
-| **M5** | Oct 16 | Round-trip demo via `/api/transform` ⚠ |
+```mermaid
+gantt
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+    title       Road to MVP · Oct 16
 
-> ⚠ **M2 (Sep 11)** is the highest-risk milestone — alignment quality is hard to predict until the gold set is built.
-> ⚠ **M5 (Oct 16)** depends on a serverless layer for the transform endpoints; flagged as at-risk if M3/M4 slip.
+    section Infrastructure
+    M0 Sync debt cleared          :active,  m0, 2026-08-10, 2026-08-14
+
+    section Ingestion
+    M1 DANDI ingested & aligned   :         m1, 2026-08-14, 2026-08-28
+
+    section Alignment quality
+    M2 Gold-set precision / recall :crit,   m2, 2026-08-28, 2026-09-11
+
+    section Meta-model
+    M3 Meta-model v1 + provenance :         m3, 2026-09-11, 2026-09-25
+
+    section Integration
+    M4 BBQS into BrainKB          :         m4, 2026-09-25, 2026-10-09
+    M5 Round-trip /api/transform  :crit,    m5, 2026-10-09, 2026-10-16
+```
+
+> **M2 (Sep 11)** — highest-risk milestone; alignment quality is hard to forecast until the gold set is built.  
+> **M5 (Oct 16)** — depends on a serverless layer for the transform endpoints; at-risk if M3/M4 slip.
 
 **Owners:** Nima — Proteus & alignment · Dorota — alignment oversight & meta-model · Puja — meta-model & ingestion · Satra — meta-model · Sully — integration & ingestion
 
