@@ -28,35 +28,14 @@
 
 ## Roadmap
 
-**MVP:** take a BBQS dataset, convert to DANDI, convert back, show what survived — a live round-trip via `/api/transform`.
+**MVP (Sep 29):** BBQS and DANDI aligned, transform API live, users can sign up. Full public launch with BrainKB on Oct 23.
 
-```mermaid
-gantt
-    dateFormat  YYYY-MM-DD
-    axisFormat  %b %d
-    title       Road to MVP · Oct 16
-
-    section Infrastructure
-    M0 Sync debt cleared          :active,  m0, 2026-08-10, 2026-08-14
-
-    section Ingestion
-    M1 DANDI ingested & aligned   :         m1, 2026-08-14, 2026-08-28
-
-    section Alignment quality
-    M2 Gold-set precision / recall :crit,   m2, 2026-08-28, 2026-09-11
-
-    section Meta-model
-    M3 Meta-model v1 + provenance :         m3, 2026-09-11, 2026-09-25
-
-    section Integration
-    M4 BBQS into BrainKB          :         m4, 2026-09-25, 2026-10-09
-    M5 Round-trip /api/transform  :crit,    m5, 2026-10-09, 2026-10-16
-```
-
-> **M2 (Sep 11)** — highest-risk milestone; alignment quality is hard to forecast until the gold set is built.  
-> **M5 (Oct 16)** — depends on a serverless layer for the transform endpoints; at-risk if M3/M4 slip.
-
-**Owners:** Nima — Proteus & alignment · Dorota — alignment oversight & meta-model · Puja — meta-model & ingestion · Satra — meta-model · Sully — integration & ingestion
+| # | Date | Milestone | Owners | Issue |
+|---|------|-----------|--------|-------|
+| M1 | Aug 28 | Foundation — modules, meta-model v1, BICAN ingested, cloud deploy | @neurovium · @puja-trivedi · @djarecka · @Sulstice | [#56](https://github.com/sensein/NeuroGhost/issues/56) |
+| M2 | Sep 11 | Alignment consolidated, DANDI ingested, schema strategy | @neurovium · @djarecka · @Sulstice | [#57](https://github.com/sensein/NeuroGhost/issues/57) |
+| M3 | Sep 29 | **MVP soft launch** — users can sign up | @Sulstice + team | [#58](https://github.com/sensein/NeuroGhost/issues/58) |
+| M4 | Oct 23 | Full public launch with BrainKB | @Sulstice + team | [#59](https://github.com/sensein/NeuroGhost/issues/59) |
 
 ---
 
