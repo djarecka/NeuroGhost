@@ -35,8 +35,8 @@ _EDGE_LABELS: dict[str, str] = {
     "skos_mappings": "HAS_SKOS_MAPPING",
     "properties":    "HAS_PROPERTY",
     "relations":     "HAS_RELATION",
-    "is_a":          "SUBCLASS_OF",
-    "mixins":        "MIXES_IN",
+    "parent_class":  "SUBCLASS_OF",
+    "class_mixins":  "MIXES_IN",
 }
 
 

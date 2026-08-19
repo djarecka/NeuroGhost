@@ -13,7 +13,7 @@ ProvenanceEntry field renames, none of which had anything to do with
 alignment logic itself, just with keeping an inlined copy in sync.
 
 This placeholder does the simplest defensible thing instead: exact
-class_uri matches only, using just hash_id/class_uri/name — the most
+concept_uri matches only, using just hash_id/concept_uri/name — the most
 stable fields in the schema, unlikely to be renamed. It exists so
 export_json.py's "alignments" export and mcp_server.py's alignment-reading
 tools have something real to read, not as a stand-in for real alignment
@@ -27,7 +27,7 @@ ALIGNED_TO edge shape (matches db.py's _migrate_aligned_to()):
 
 USAGE
 -----
-  python align.py                  # exact class_uri matches, all classes
+  python align.py                  # exact concept_uri matches, all classes
   python align.py --dry-run        # print pairs without writing
 """
 
@@ -41,19 +41,19 @@ DB_PATH = "./registry.lbug"
 
 
 def load_classes(conn) -> list[dict]:
-    """hash_id, class_uri, name for every RegistryClass — nothing else."""
+    """hash_id, concept_uri, name for every RegistryClass — nothing else."""
     rows = conn.execute(
-        "MATCH (n:RegistryClass) RETURN n.hash_id, n.class_uri, n.name"
+        "MATCH (n:RegistryClass) RETURN n.hash_id, n.concept_uri, n.name"
     ).get_all()
-    return [{"hash_id": h, "class_uri": c or "", "name": n or ""} for h, c, n in rows]
+    return [{"hash_id": h, "concept_uri": c or "", "name": n or ""} for h, c, n in rows]
 
 
-def exact_class_uri_pairs(classes: list[dict]) -> list[tuple[dict, dict]]:
-    """Every pair of distinct classes sharing a non-empty class_uri."""
+def exact_concept_uri_pairs(classes: list[dict]) -> list[tuple[dict, dict]]:
+    """Every pair of distinct classes sharing a non-empty concept_uri."""
     by_uri: dict[str, list[dict]] = {}
     for c in classes:
-        if c["class_uri"]:
-            by_uri.setdefault(c["class_uri"], []).append(c)
+        if c["concept_uri"]:
+            by_uri.setdefault(c["concept_uri"], []).append(c)
 
     pairs = []
     for group in by_uri.values():
@@ -73,7 +73,7 @@ def write_alignment(conn, a: dict, b: dict, registry_version: str = "") -> None:
         conn.execute("""
             MATCH (x:RegistryClass {hash_id: $ua}), (y:RegistryClass {hash_id: $ub})
             CREATE (x)-[:ALIGNED_TO {
-                distance: 0.0, method: 'exact_class_uri', skos_relation: 'skos:exactMatch',
+                distance: 0.0, method: 'exact_concept_uri', skos_relation: 'skos:exactMatch',
                 score_iri: 1.0, score_name: 0.0, score_desc: 0.0, score_slot: 0.0,
                 registry_version: $rv
             }]->(y)
@@ -88,7 +88,7 @@ def write_alignment(conn, a: dict, b: dict, registry_version: str = "") -> None:
               help="Print pairs without writing to graph.")
 def cli(db, registry_version, dry_run) -> None:
     """
-    Placeholder alignment: exact class_uri matches only.
+    Placeholder alignment: exact concept_uri matches only.
 
     Not the real alignment pipeline — see module docstring.
     """
@@ -99,18 +99,18 @@ def cli(db, registry_version, dry_run) -> None:
         click.echo("No classes found. Run seed.py and ingest_linkml.py first.")
         return
 
-    pairs = exact_class_uri_pairs(classes)
+    pairs = exact_concept_uri_pairs(classes)
 
     for a, b in pairs:
         if dry_run:
-            click.echo(f"  [exact] {a['name']} <-> {b['name']}  ({a['class_uri']})")
+            click.echo(f"  [exact] {a['name']} <-> {b['name']}  ({a['concept_uri']})")
         else:
             write_alignment(conn, a, b, registry_version)
 
     action = "Would write" if dry_run else "Wrote"
     click.echo(
         f"{action} {len(pairs) * 2} ALIGNED_TO edges "
-        f"from {len(pairs)} exact class_uri matches."
+        f"from {len(pairs)} exact concept_uri matches."
     )
 
 

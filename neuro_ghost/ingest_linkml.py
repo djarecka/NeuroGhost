@@ -382,12 +382,12 @@ def build_registry_entities(
         fields = dict(
             name=slot_name,
             description=slot["definition"] or "",
-            range=slot["value_range"],
+            property_range=slot["value_range"],
             # ucum_code, not descriptive_name: this free-text extraction
             # ("FTE", "mV") is exactly the short-code shape align.py's
             # _DIMS dimension lookup already expects.
             unit={"ucum_code": unit_text} if unit_text else None,
-            slot_uri=slot["iri"] or None,
+            concept_uri=slot["iri"] or None,
             skos_mappings=[],
             aliases=slot.get("aliases") or [],
         )
@@ -418,11 +418,11 @@ def build_registry_entities(
         fields = dict(
             name=cls_name,
             description=cls["definition"] or "",
-            class_uri=cls["iri"] or None,
-            abstract=cls["is_abstract"],
-            is_a=parent_hash_id,
+            concept_uri=cls["iri"] or None,
+            is_abstract=cls["is_abstract"],
+            parent_class=parent_hash_id,
             properties=prop_hash_ids,
-            mixins=[],
+            class_mixins=[],
             skos_mappings=[],
             aliases=cls.get("aliases") or [],
         )

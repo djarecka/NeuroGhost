@@ -84,7 +84,7 @@ def bump_version(ver: str, bump: str = "patch") -> str:
 # .was_attributed_to/.was_generated_by/.was_derived_from) so this module
 # doesn't need to import schema_registry_utils.
 
-LIST_FIELDS = {"provenance", "skos_mappings", "properties", "mixins", "permissible_values"}
+LIST_FIELDS = {"provenance", "skos_mappings", "properties", "class_mixins", "permissible_values"}
 HAS_PROVENANCE_REL = {
     "RegistryClass":    "HAS_PROVENANCE",
     "RegistryProperty": "HAS_PROVENANCE_P",
@@ -284,7 +284,7 @@ def write_structural_edges(conn, registry_classes: dict) -> int:
                 rels += 1
 
     for rc in registry_classes.values():
-        parent_hash_id = rc.is_a
+        parent_hash_id = rc.parent_class
         if not parent_hash_id:
             continue
 

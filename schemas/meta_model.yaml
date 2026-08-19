@@ -54,6 +54,7 @@ classes:
       - provenance
       - skos_mappings
       - aliases
+      - concept_uri
 
   RegistryClass:
     is_a: RegistryEntity
@@ -62,10 +63,9 @@ classes:
       in the registry, e.g. "Patient".
     slots:
       - properties
-      - is_a
-      - mixins
-      - class_uri
-      - abstract
+      - parent_class
+      - class_mixins
+      - is_abstract
 
   RegistryProperty:
     is_a: RegistryEntity
@@ -77,9 +77,8 @@ classes:
       in one source's usage and optional in another's without being a
       different concept.
     slots:
-      - range
+      - property_range
       - unit
-      - slot_uri
 
   ProvenanceEntry:
     description: >-
@@ -320,21 +319,21 @@ slots:
       - HashSubset
     description: The set of properties that belong to this class.
 
-  is_a:
+  parent_class:
     range: RegistryClass
     slot_uri: linkml:is_a
     in_subset:
       - HashSubset
     description: The class this class inherits from (stored as hash_id FK).
 
-  mixins:
+  class_mixins:
     range: RegistryClass
     multivalued: true
     in_subset:
       - HashSubset
     description: Additional classes mixed into this class.
 
-  range:
+  property_range:
     range: string
     required: true
     slot_uri: linkml:range
@@ -356,30 +355,22 @@ slots:
       ucum_code is the primary field for programmatic unit-compatibility
       checks (align.py's unit veto); the others are supplementary.
 
-  class_uri:
-    range: uriorcurie
-    slot_uri: linkml:class_uri
-    description: >-
-      Ontology IRI for this class, preserved from the source schema on
-      ingestion. Not part of the content hash; used for alignment and
-      cross-source lookup.
-
-  slot_uri:
+  concept_uri:
     range: uriorcurie
     description: >-
-      Ontology IRI for this property, preserved from the source schema on
-      ingestion. Not part of the content hash; used for alignment and
-      cross-source lookup.
+      Ontology IRI for this entity (class or property), preserved from the
+      source schema on ingestion. Not part of the content hash; used for
+      alignment and cross-source lookup.
 
-  abstract:
+  is_abstract:
     range: boolean
     slot_uri: linkml:abstract
     in_subset:
       - HashSubset
-    # Defaults to false rather than null: `abstract` is identity-defining, so a
-    # null would hash differently from a false and silently change every
+    # Defaults to false rather than null: `is_abstract` is identity-defining,
+    # so a null would hash differently from a false and silently change every
     # RegistryClass hash_id. LinkML has no equivalent for the multivalued slots
-    # (properties/mixins), which still default to null — builders
+    # (properties/class_mixins), which still default to null — builders
     # must pass them explicitly, and compute_hash_id_for() enforces that.
     ifabsent: 'false'
     description: Whether this registered class is itself declared abstract.
