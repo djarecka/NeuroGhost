@@ -37,8 +37,8 @@ def _attesting_sources(conn, label: str, rel: str, hash_id: str) -> list[str]:
     """Every distinct source that has a ProvenanceEntry for this entity."""
     return sorted({
         r[0] for r in conn.execute(f"""
-            MATCH (:{label} {{hash_id: $hash_id}})-[:{rel}]->(pe:ProvenanceEntry)
-            RETURN pe.source
+            MATCH (:{label} {{hash_id: $hash_id}})-[:{rel}]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
+            RETURN ss.label
         """, {"hash_id": hash_id}).get_all()
     })
 
@@ -46,13 +46,13 @@ def _attesting_sources(conn, label: str, rel: str, hash_id: str) -> list[str]:
 def export_snapshot(conn, registry_version: str) -> dict:
     # ---- sources -----------------------------------------------------------
     src_rows = conn.execute(
-        "MATCH (s:SchemaSource) RETURN s.uid, s.label, s.source_version"
+        "MATCH (s:SchemaSource) RETURN s.id, s.label, s.source_version"
     ).get_all()
 
     sources = []
     for _, label, ver in src_rows:
         count = conn.execute("""
-            MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry {source: $src})
+            MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: $src})
             RETURN count(DISTINCT n)
         """, {"src": label}).get_next()[0]
         sources.append({"label": label, "version": ver or "1.0.0",
@@ -63,30 +63,30 @@ def export_snapshot(conn, registry_version: str) -> dict:
     # has a single "source" — it has a `sources` list, one per ProvenanceEntry.
     cls_rows = conn.execute("""
         MATCH (n:RegistryClass)
-        RETURN n.hash_id, n.class_uri, n.name, n.description, n.abstract
+        RETURN n.hash_id, n.concept_uri, n.name, n.description, n.is_abstract
         ORDER BY n.name
     """).get_all()
 
     classes = []
     for row in cls_rows:
-        hash_id, class_uri, name, desc, is_abstract = row
+        hash_id, concept_uri, name, desc, is_abstract = row
 
         props = conn.execute("""
             MATCH (c:RegistryClass {hash_id: $hash_id})-[:HAS_PROPERTY]->(p:RegistryProperty)
-            RETURN p.hash_id, p.slot_uri, p.name, p.description, p.range, p.units
+            RETURN p.hash_id, p.concept_uri, p.name, p.description, p.property_range, p.ucum_code
             ORDER BY p.name
         """, {"hash_id": hash_id}).get_all()
 
         subclass_of = [
             r[0] for r in conn.execute("""
                 MATCH (c:RegistryClass {hash_id: $hash_id})-[:SUBCLASS_OF]->(p:RegistryClass)
-                RETURN p.class_uri
+                RETURN p.concept_uri
             """, {"hash_id": hash_id}).get_all() if r[0]
         ]
 
         align_rows = conn.execute("""
             MATCH (c:RegistryClass {hash_id: $hash_id})-[a:ALIGNED_TO]->(t:RegistryClass)
-            RETURN t.hash_id, t.name, t.class_uri,
+            RETURN t.hash_id, t.name, t.concept_uri,
                    a.distance, a.method,
                    a.score_iri, a.score_name, a.score_desc, a.score_slot
             ORDER BY a.distance
@@ -94,7 +94,7 @@ def export_snapshot(conn, registry_version: str) -> dict:
 
         classes.append({
             "hash_id":          hash_id,
-            "iri":              class_uri or "",
+            "iri":              concept_uri or "",
             "name":             name or "",
             "definition":       desc or "",
             "is_abstract":      bool(is_abstract),

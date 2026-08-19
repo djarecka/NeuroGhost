@@ -3,7 +3,9 @@ from pathlib import Path
 import pytest
 
 from ingest_linkml import parse_linkml, build_registry_entities
-from schema_registry_utils import RegistryProperty, RegistryClass, ValueSet
+from schema_registry_utils import (
+    RegistryProperty, RegistryClass, ValueSet, PermissibleValue, compute_hash_id_for,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -78,6 +80,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "is_a": None,
                 "is_abstract": False,
                 "slots": ["created_at"],
+                "aliases": [],
             },
             "Entity": {
                 "iri": "https://example.org/schema#Entity",
@@ -85,6 +88,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "is_a": None,
                 "is_abstract": True,
                 "slots": ["name"],
+                "aliases": [],
             },
             "Person": {
                 "iri": "https://schema.org/Person",
@@ -92,6 +96,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "is_a": "Entity",
                 "is_abstract": False,
                 "slots": ["orcid", "role", "created_at", "name"],
+                "aliases": ["Investigator"],
             },
         },
         "slots": {
@@ -103,6 +108,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": "",
+                "aliases": [],
             },
             "name": {
                 "iri": "https://schema.org/name",
@@ -112,6 +118,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": "",
+                "aliases": [],
             },
             "orcid": {
                 "iri": "https://example.org/schema#orcid",
@@ -121,6 +128,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": r"^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$",
+                "aliases": ["ORCID iD"],
             },
             "role": {
                 "iri": "",
@@ -130,6 +138,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": True,
                 "required": True,
                 "pattern": "^[A-Za-z ]+$",
+                "aliases": [],
             },
         },
         "enums": {},
@@ -149,6 +158,23 @@ def test_registry_property_does_not_retain_usage_constraints():
         assert field not in RegistryProperty.model_fields
 
 
+def test_aliases_do_not_affect_identity():
+    """
+    aliases isn't tagged in_subset: HashSubset in meta_model.yaml, so
+    it's excluded from hash_id — like class_uri/slot_uri, it's alternate-name
+    metadata a source happens to supply, not part of what the entity *is*.
+    Two otherwise-identical properties with different aliases must still
+    collapse to the same hash_id.
+    """
+    base = dict(
+        name="orcid", description="ORCID identifier.", property_range="xsd:string",
+        unit=None, concept_uri="https://example.org/schema#orcid", skos_mappings=[],
+    )
+    with_alias = compute_hash_id_for(RegistryProperty, dict(base, aliases=["ORCID iD"]))
+    without_alias = compute_hash_id_for(RegistryProperty, dict(base, aliases=[]))
+    assert with_alias == without_alias
+
+
 def test_build_registry_entities_produces_exactly_the_expected_objects():
     """
     Exact-equality check of build_registry_entities()'s output — the step
@@ -159,11 +185,14 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     changes, this fails.
 
     provenance is checked separately (excluded from the equality dump) since
-    ProvenanceEntry.uid/generated_at are non-deterministic per run.
+    ProvenanceEntry.id/generated_at_time are non-deterministic per run.
     """
     parsed = parse_linkml(FIXTURES / "comprehensive.yml")
-    properties, registry_classes, value_sets = build_registry_entities(parsed, "comprehensive", "tester")
+    properties, registry_classes, value_sets, permissible_values = build_registry_entities(
+        parsed, "comprehensive", "tester"
+    )
     assert value_sets == {}  # comprehensive.yml has no enums
+    assert permissible_values == {}
 
     assert set(properties) == {"name", "orcid", "role", "created_at"}
     assert set(registry_classes) == {"Timestamped", "Entity", "Person"}
@@ -171,50 +200,60 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     for entity in (*properties.values(), *registry_classes.values()):
         assert len(entity.provenance) == 1
         prov = entity.provenance[0]
-        assert prov.source == "comprehensive"
-        assert prov.attributed_to == "tester"
-        assert prov.activity == "ingestion"
-        assert prov.derived_from == []
+        assert prov.had_primary_source == "comprehensive"
+        assert prov.was_attributed_to == "tester"
+        assert prov.was_generated_by == "ingestion"
+        assert prov.was_derived_from == []
 
     assert {
         name: p.model_dump(exclude={"provenance"})
         for name, p in properties.items()
     } == {
         "name": {
-            "hash_id": "sha256:86057d0532a7584c9e69bd48e0129cc8bc37dfa78448e832d3373ed3ac404b43",
+            "hash_id": "sha256:7816ced135927c58f6ebc3f55668039ef2ab66e1549872b5b32b59ece0ce1e53",
             "name": "name",
             "description": "Full name.",
             "skos_mappings": [],
-            "slot_uri": "https://schema.org/name",
-            "range": "xsd:string",
-            "units": None,
+            "concept_uri": "https://schema.org/name",
+            "property_range": "xsd:string",
+            "unit": None,
+            "aliases": [],
         },
         "orcid": {
-            "hash_id": "sha256:8bddfe8f326dab2077cd95446fa63eb7708cab8c096adc2ad53979d91b73862d",
+            "hash_id": "sha256:617199b747e8730bed6ba1d2d08de02aba00907407391acebdc51ba1d58de6af",
             "name": "orcid",
             "description": "ORCID identifier.",
             "skos_mappings": [],
-            "slot_uri": "https://example.org/schema#orcid",
-            "range": "xsd:string",
-            "units": None,
+            "concept_uri": "https://example.org/schema#orcid",
+            "property_range": "xsd:string",
+            "unit": None,
+            "aliases": ["ORCID iD"],
         },
         "role": {
-            "hash_id": "sha256:b401d00ccb63e9accb3a1e2360a2f5d6997c21ae205324cf58ddd72712ce1538",
+            "hash_id": "sha256:de9b8ad17ae0108b3ad71f9d7cebf4fa3b7a955c71be65afe96a63c09ac8e254",
             "name": "role",
             "description": "Role on the study (units: FTE)",
             "skos_mappings": [],
-            "slot_uri": None,
-            "range": "xsd:string",
-            "units": "FTE",
+            "concept_uri": None,
+            "property_range": "xsd:string",
+            "unit": {
+                "ucum_code": "FTE",
+                "has_quantity_kind": None,
+                "symbol": None,
+                "abbreviation": None,
+                "descriptive_name": None,
+            },
+            "aliases": [],
         },
         "created_at": {
-            "hash_id": "sha256:cec09ed2e03b1e39519b3dffbc5444bebe5f36dc89dd17b3faf4f32cea00c289",
+            "hash_id": "sha256:5c74fcd14537ed64f8fb1649c2d9f7e414a0b4a3650a6c088c5c4e663d62845e",
             "name": "created_at",
             "description": "",
             "skos_mappings": [],
-            "slot_uri": None,
-            "range": "xsd:dateTime",
-            "units": None,
+            "concept_uri": None,
+            "property_range": "xsd:dateTime",
+            "unit": None,
+            "aliases": [],
         },
     }
 
@@ -223,45 +262,45 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
         for name, c in registry_classes.items()
     } == {
         "Timestamped": {
-            "hash_id": "sha256:fa51878510090a0a42be142fc4552fd5ce39b115646022aa5eb792e6667d2b47",
+            "hash_id": "sha256:9bfceb04ede599148a836303684503e09198894fa02fc78174825b21621935a9",
             "name": "Timestamped",
             "description": "Mixin providing a creation timestamp.",
             "skos_mappings": [],
-            "class_uri": None,
-            "abstract": False,
-            "properties": ["sha256:cec09ed2e03b1e39519b3dffbc5444bebe5f36dc89dd17b3faf4f32cea00c289"],
-            "relations": [],
-            "is_a": None,
-            "mixins": [],
+            "concept_uri": None,
+            "is_abstract": False,
+            "properties": ["sha256:5c74fcd14537ed64f8fb1649c2d9f7e414a0b4a3650a6c088c5c4e663d62845e"],
+            "parent_class": None,
+            "class_mixins": [],
+            "aliases": [],
         },
         "Entity": {
-            "hash_id": "sha256:a5f7bcf3d61d1b1bf7aaee30af3a77d52373a7267a6a40b739b1d8db7644453d",
+            "hash_id": "sha256:de6a525ca16c94d245fcd52076388be42d45deeed88c8309f414d823428d965f",
             "name": "Entity",
             "description": "Abstract base for all registry entities.",
             "skos_mappings": [],
-            "class_uri": "https://example.org/schema#Entity",
-            "abstract": True,
-            "properties": ["sha256:86057d0532a7584c9e69bd48e0129cc8bc37dfa78448e832d3373ed3ac404b43"],
-            "relations": [],
-            "is_a": None,
-            "mixins": [],
+            "concept_uri": "https://example.org/schema#Entity",
+            "is_abstract": True,
+            "properties": ["sha256:7816ced135927c58f6ebc3f55668039ef2ab66e1549872b5b32b59ece0ce1e53"],
+            "parent_class": None,
+            "class_mixins": [],
+            "aliases": [],
         },
         "Person": {
-            "hash_id": "sha256:7dbfa717e2624b881589e5beac94e176424b606e75d0f35763cf0faa55cfc588",
+            "hash_id": "sha256:b0c27b7b4017b09a6dfe2d75f66243fa0278a7464e5a721e7d8afdda36fe2c32",
             "name": "Person",
             "description": "A research investigator.",
             "skos_mappings": [],
-            "class_uri": "https://schema.org/Person",
-            "abstract": False,
+            "concept_uri": "https://schema.org/Person",
+            "is_abstract": False,
             "properties": [
-                "sha256:86057d0532a7584c9e69bd48e0129cc8bc37dfa78448e832d3373ed3ac404b43",
-                "sha256:8bddfe8f326dab2077cd95446fa63eb7708cab8c096adc2ad53979d91b73862d",
-                "sha256:b401d00ccb63e9accb3a1e2360a2f5d6997c21ae205324cf58ddd72712ce1538",
-                "sha256:cec09ed2e03b1e39519b3dffbc5444bebe5f36dc89dd17b3faf4f32cea00c289",
+                "sha256:5c74fcd14537ed64f8fb1649c2d9f7e414a0b4a3650a6c088c5c4e663d62845e",
+                "sha256:617199b747e8730bed6ba1d2d08de02aba00907407391acebdc51ba1d58de6af",
+                "sha256:7816ced135927c58f6ebc3f55668039ef2ab66e1549872b5b32b59ece0ce1e53",
+                "sha256:de9b8ad17ae0108b3ad71f9d7cebf4fa3b7a955c71be65afe96a63c09ac8e254",
             ],
-            "relations": [],
-            "is_a": "sha256:a5f7bcf3d61d1b1bf7aaee30af3a77d52373a7267a6a40b739b1d8db7644453d",
-            "mixins": [],
+            "parent_class": "sha256:de6a525ca16c94d245fcd52076388be42d45deeed88c8309f414d823428d965f",
+            "class_mixins": [],
+            "aliases": ["Investigator"],
         },
     }
 
@@ -283,9 +322,15 @@ def test_parse_linkml_extracts_enums():
 
 
 def test_build_registry_entities_produces_value_sets():
-    """build_registry_entities() third return value is a dict of ValueSet objects."""
+    """
+    build_registry_entities()'s 3rd/4th return values are ValueSet and
+    PermissibleValue dicts. PermissibleValue is a real RegistryEntity now
+    (not the old hand-rolled node) — it gets a real description and
+    provenance, keyed by hash_id since it's shared across enums/sources
+    rather than tied to one source name.
+    """
     parsed = parse_linkml(FIXTURES / "schema_with_enums.yml")
-    properties, registry_classes, value_sets = build_registry_entities(
+    properties, registry_classes, value_sets, permissible_values = build_registry_entities(
         parsed, "enum_test", "tester"
     )
 
@@ -300,4 +345,11 @@ def test_build_registry_entities_produces_value_sets():
         assert hid.startswith("sha256:")
     # Provenance from the ingestion
     assert len(vs.provenance) == 1
-    assert vs.provenance[0].source == "enum_test"
+    assert vs.provenance[0].had_primary_source == "enum_test"
+
+    assert set(vs.permissible_values) == set(permissible_values)
+    for pv in permissible_values.values():
+        assert isinstance(pv, PermissibleValue)
+        assert pv.name in ("active", "deprecated")
+        assert len(pv.provenance) == 1
+        assert pv.provenance[0].had_primary_source == "enum_test"
