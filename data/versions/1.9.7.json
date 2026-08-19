@@ -1,6 +1,6 @@
 {
-  "registry_version": "1.9.8",
-  "generated_at": "2026-08-16T03:26:22.737940+00:00",
+  "registry_version": "1.9.7",
+  "generated_at": "2026-08-09T03:39:50.308926+00:00",
   "sources": [
     {
       "label": "aind",
@@ -4195,7 +4195,7 @@
       "alignments": []
     },
     {
-      "hash_id": "sha256:2efb0a11a825e72bd626c25dba6a9476738e782fe83d8d1e94b4a70370553c12",
+      "hash_id": "sha256:d9e2741eb2f489248ab9a9405f85395ff4ff3dcc6b7f5dffbc6e5a47e4077006",
       "iri": "https://bids-specification.readthedocs.io/en/stable/",
       "name": "BIDSEntity",
       "definition": "BIDS filename entities (sub, ses, task, \u2026).",
@@ -4370,10 +4370,10 @@
           ]
         },
         {
-          "hash_id": "sha256:326cc294cf80c721fdfa516e3336930e68fe7610c8672564936961edfe11ec1e",
+          "hash_id": "sha256:53f72d3bbebb2fb32223fc6b817f8dd53e9933fd048e3c85b2f03c31f6294e95",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#nucleus",
           "name": "entities__nucleus",
-          "definition": "The `nuc-<label>` entity can be used to distinguish acquisitions tuned\nto detect different nuclei.\nThe label is the name of the nucleus or nuclei, which corresponds to DICOM Tag (0018,9100).\nIf present in the filename, `\"ResonantNucleus\"` MUST also be included in\nthe associated metadata.",
+          "definition": "The `nuc-<label>` entity can be used to distinguish acquisitions tuned\nto detect different nuclei.\nThe label is the name of the nucleus or nuclei, which corresponds to DICOM Tag `0018, 9100`.\nIf present in the filename, `\"ResonantNucleus\"` MUST also be included in\nthe associated metadata.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -4381,10 +4381,10 @@
           ]
         },
         {
-          "hash_id": "sha256:f8e81f85dc2bc9c582274391b68335c6a433bc3194667e1c51a7dadb69dbd30a",
+          "hash_id": "sha256:2a3b0ef50310fab548778443a07b69cd80b51a1d2e645ac0cbfe5ca796fcbb4d",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#part",
           "name": "entities__part",
-          "definition": "This entity is used to indicate which component of the complex\nrepresentation of the MRI signal is represented in voxel data.\nThe `part-<label>` entity is associated with the DICOM Tag\n(0008,9208).\nAllowed label values for this entity are `phase`, `mag`, `real` and `imag`,\nwhich are typically used in `part-mag`/`part-phase` or\n`part-real`/`part-imag` pairs of files.\n\nPhase images MAY be in radians or in arbitrary units.\nThe sidecar JSON file MUST include the `\"Units\"` of the `phase` image.\nThe possible options are `\"rad\"` or `\"arbitrary\"`.\n\nWhen there is only a magnitude image of a given type, the `part` entity MAY be\nomitted.",
+          "definition": "This entity is used to indicate which component of the complex\nrepresentation of the MRI signal is represented in voxel data.\nThe `part-<label>` entity is associated with the DICOM Tag\n`0008, 9208`.\nAllowed label values for this entity are `phase`, `mag`, `real` and `imag`,\nwhich are typically used in `part-mag`/`part-phase` or\n`part-real`/`part-imag` pairs of files.\n\nPhase images MAY be in radians or in arbitrary units.\nThe sidecar JSON file MUST include the `\"Units\"` of the `phase` image.\nThe possible options are `\"rad\"` or `\"arbitrary\"`.\n\nWhen there is only a magnitude image of a given type, the `part` entity MAY be\nomitted.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -4594,7 +4594,7 @@
       "alignments": []
     },
     {
-      "hash_id": "sha256:327669be6df3853e1145d777f1932f1a501a0197b68f4c13f2a03a9ac2137151",
+      "hash_id": "sha256:a18e953b3f970116506238b9c8450a841c1d4073229fa63ef1595b6bd0acf079",
       "iri": "https://bids-specification.readthedocs.io/en/stable/",
       "name": "BIDSMetadata",
       "definition": "BIDS sidecar JSON metadata fields.",
@@ -4637,10 +4637,10 @@
           ]
         },
         {
-          "hash_id": "sha256:e993ed3acc8057c28c81720fe4d79c2bdbd09b0ea6a50ada03a1a94299c32905",
+          "hash_id": "sha256:f41541ed7febf546c804eae5a543bf9269254c3348d6690b038f66c470ff22c8",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#AcquisitionDuration",
           "name": "metadata__AcquisitionDuration",
-          "definition": "Duration (in seconds) of scan acquisition, including all volumes for multi-volume scans.\nCorresponds to [DICOM Tag (0018,9073)](https://www.dicomlookup.com/dicomtags/(0018,9073))\n`Acquisition Duration`.",
+          "definition": "Duration (in seconds) of scan acquisition, including all volumes for multi-volume scans.\nCorresponds to [DICOM Tag 0018, 9073](http://www.dicomlookup.com/dicomtags/(0018,9073))\n`Acquisition Duration`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -4824,10 +4824,10 @@
           ]
         },
         {
-          "hash_id": "sha256:faf6e3fd78422e554042768a49383077acd47822cf81d4bb82c155c97e63e059",
+          "hash_id": "sha256:bbfab1de556d0fc82ab8a57357b6a2ac990ca83053def9792e626eeeb29c80f5",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#AttenuationCorrection",
           "name": "metadata__AttenuationCorrection",
-          "definition": "Short description of the attenuation correction method used.\nCorresponds to [DICOM Tag (0054,1101)](https://www.dicomlookup.com/dicomtags/(0054,1101))\n`Attenuation Correction Method`.",
+          "definition": "Short description of the attenuation correction method used.\nCorresponds to [DICOM Tag 0054, 1101](http://www.dicomlookup.com/dicomtags/(0054,1101))\n`Attenuation Correction Method`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -4868,10 +4868,10 @@
           ]
         },
         {
-          "hash_id": "sha256:26c07dae691b7ecce76e4d185903a24710c0803ce94a952c3eb1a16ea69dea60",
+          "hash_id": "sha256:790e96fda5dceb6abc8e570cc80bbb7a1329fa4f4b52959920cbe5557fa03909",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#B0FieldIdentifier",
           "name": "metadata__B0FieldIdentifier",
-          "definition": "The presence of this key states that this particular 3D or 4D image MAY be\nused for fieldmap estimation purposes.\nEach `\"B0FieldIdentifier\"` MUST be a unique string within one participant's tree,\nshared only by the images meant to be used as inputs for the estimation of a\nparticular instance of the *B<sub>0</sub> field* estimation.\nIt is RECOMMENDED to derive this identifier from DICOM Tags, for example,\nDICOM Tag (0018,1030) `Protocol Name`, or DICOM Tag (0018,0024) `Sequence Name`\nwhen the former is not defined (for example, on GE devices).",
+          "definition": "The presence of this key states that this particular 3D or 4D image MAY be\nused for fieldmap estimation purposes.\nEach `\"B0FieldIdentifier\"` MUST be a unique string within one participant's tree,\nshared only by the images meant to be used as inputs for the estimation of a\nparticular instance of the *B<sub>0</sub> field* estimation.\nIt is RECOMMENDED to derive this identifier from DICOM Tags, for example,\nDICOM tag 0018, 1030 `Protocol Name`, or DICOM tag 0018, 0024 `Sequence Name`\nwhen the former is not defined (for example, in GE devices.)",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -4978,10 +4978,10 @@
           ]
         },
         {
-          "hash_id": "sha256:6b311794061d5b96298f9e2ca8ae83221421070f7b1780e0939518b2292ae84d",
+          "hash_id": "sha256:c9b2b905cd08a0f94cdb544a582257d10033c019c46ef5935dcc2f041e7ab814",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#BodyPart",
           "name": "metadata__BodyPart",
-          "definition": "Body part of the organ / body region scanned.\nCorresponds to [DICOM Tag (0018,0015)](https://www.dicomlookup.com/dicomtags/(0018,0015)) `Body Part Examined`.",
+          "definition": "Body part of the organ / body region scanned.\nCorresponds to [DICOM Tag 0018, 0015](http://www.dicomlookup.com/dicomtags/(0018,0015)) `Body Part Examined`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5011,10 +5011,10 @@
           ]
         },
         {
-          "hash_id": "sha256:3670f0a1edc89ec890e8541df2cd782699716f13e9986c9a2bf71af8e1e8035d",
+          "hash_id": "sha256:b255b334f3a95ed9a6f62e97d44cf17293ace8c0d60a75290c7f8acd3ae2f65c",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#BolusCutOffDelayTime",
           "name": "metadata__BolusCutOffDelayTime",
-          "definition": "Duration between the end of the labeling and the start of the bolus cut-off\nsaturation pulse(s), in seconds.\nThis can be a number or array of numbers, of which the values must be\nnon-negative and monotonically increasing, depending on the number of bolus\ncut-off saturation pulses.\nFor Q2TIPS, only the values for the first and last bolus cut-off saturation\npulses are provided.\nBased on [DICOM Tag (0018,925F)](https://www.dicomlookup.com/dicomtags/(0018,925F))\n`ASL Bolus Cut-off Delay Time`.",
+          "definition": "Duration between the end of the labeling and the start of the bolus cut-off\nsaturation pulse(s), in seconds.\nThis can be a number or array of numbers, of which the values must be\nnon-negative and monotonically increasing, depending on the number of bolus\ncut-off saturation pulses.\nFor Q2TIPS, only the values for the first and last bolus cut-off saturation\npulses are provided.\nBased on [DICOM Tag 0018, 925F](http://www.dicomlookup.com/dicomtags/(0018,925F))\n`ASL Bolus Cut-off Delay Time`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -5022,10 +5022,10 @@
           ]
         },
         {
-          "hash_id": "sha256:70227e87db70eceda9afef1b4f2ab36049e9f24d4fc50ca9858c83c3b2baf887",
+          "hash_id": "sha256:c0f867419230b7e0e5296609df2efafc83f2fa151e6b5124b5a17905bd89b73c",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#BolusCutOffFlag",
           "name": "metadata__BolusCutOffFlag",
-          "definition": "Boolean indicating if a bolus cut-off technique is used.\nCorresponds to [DICOM Tag (0018,925C)](https://www.dicomlookup.com/dicomtags/(0018,925C))\n`ASL Bolus Cut-off Flag`.",
+          "definition": "Boolean indicating if a bolus cut-off technique is used.\nCorresponds to [DICOM Tag 0018, 925C](http://www.dicomlookup.com/dicomtags/(0018,925C))\n`ASL Bolus Cut-off Flag`.",
           "value_range": "xsd:boolean",
           "units": "",
           "sources": [
@@ -5033,10 +5033,10 @@
           ]
         },
         {
-          "hash_id": "sha256:9c70cfb086eab64e793455380915d84cf6433232727047a265447909dd23ff40",
+          "hash_id": "sha256:207a4ab32c70ec390eba100532286286747e90f4fb7d97942e6d2dd52a786a98",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#BolusCutOffTechnique",
           "name": "metadata__BolusCutOffTechnique",
-          "definition": "Name of the technique used, for example `\"Q2TIPS\"`, `\"QUIPSS\"`, `\"QUIPSSII\"`.\nCorresponds to [DICOM Tag (0018,925E)](https://www.dicomlookup.com/dicomtags/(0018,925E))\n`ASL Bolus Cut-off Technique`.",
+          "definition": "Name of the technique used, for example `\"Q2TIPS\"`, `\"QUIPSS\"`, `\"QUIPSSII\"`.\nCorresponds to [DICOM Tag 0018, 925E](http://www.dicomlookup.com/dicomtags/(0018,925E))\n`ASL Bolus Cut-off Technique`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5154,10 +5154,10 @@
           ]
         },
         {
-          "hash_id": "sha256:4e5c26b1a9f0c5e14f44383ea82ee913c8f2bf625a7cfeda298c2d0e53e6ca89",
+          "hash_id": "sha256:aa24fa5209c4873b521dbed1061aad466546b1f7f10c68a46d755e3f7c4a1173",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ChemicalShiftReference",
           "name": "metadata__ChemicalShiftReference",
-          "definition": "The chemical shift at the transmitter frequency, specified in ppm (for example, `2.68`).\nCorresponds to [DICOM Tag (0018,9053)](https://www.dicomlookup.com/dicomtags/(0018,9053))\n`Chemical Shift Reference`.",
+          "definition": "The chemical shift at the transmitter frequency, specified in ppm (for example, `2.68`).\nCorresponds to [DICOM Tag 0018, 9053](http://www.dicomlookup.com/dicomtags/(0018,9053))\n`Chemical Shift Reference`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -5198,10 +5198,10 @@
           ]
         },
         {
-          "hash_id": "sha256:673451167655c96cee8303c569e663f20063c690a2b418f81f099d89e4621628",
+          "hash_id": "sha256:4e0ea02867eedccfa98d3427a73787a9ce5f45887df9784e46521b65eff7fd37",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#CodeMeaning",
           "name": "metadata__CodeMeaning",
-          "definition": "Text that has meaning to a human and conveys the meaning of the term\nCorresponds to [DICOM Tag (0008,0104)](https://www.dicomlookup.com/dicomtags/(0008,0104))\n`Code Meaning`.",
+          "definition": "Text that has meaning to a human and conveys the meaning of the term\nCorresponds to [DICOM Tag 0008, 0104](http://www.dicomlookup.com/dicomtags/(0008,0104))\n`Code Meaning`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5220,10 +5220,10 @@
           ]
         },
         {
-          "hash_id": "sha256:119d49e912d9b0d2db90c685d3cabb6490d524a0f89f181c67c1e78c8a723fa0",
+          "hash_id": "sha256:c98da3cb7fae4cd5aec0ff183f3118ac12d133bc81a05103a17567962c49df75",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#CodeValue",
           "name": "metadata__CodeValue",
-          "definition": "An identifier that is unambiguous within the Coding Scheme\ndenoted by Coding Scheme Designator and Coding Scheme Version.\nCorresponds to [DICOM Tag (0008,0100)](https://www.dicomlookup.com/dicomtags/(0008,0100))\n`Code Value`.",
+          "definition": "An identifier that is unambiguous within the Coding Scheme\ndenoted by Coding Scheme Designator and Coding Scheme Version.\nCorresponds to [DICOM Tag 0008, 0100](http://www.dicomlookup.com/dicomtags/(0008,0100))\n`Code Value`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5231,10 +5231,10 @@
           ]
         },
         {
-          "hash_id": "sha256:eb74aaeb95fb117bb9d1bfcdb4b08123b39eb4c1ffe2e339f60b3aa4c405c9de",
+          "hash_id": "sha256:524c598f04dea2a7863f0f2816aa41305e089e1369223230c68ba9e7ca91f489",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#CodingSchemeDesignator",
           "name": "metadata__CodingSchemeDesignator",
-          "definition": "The identifier of the coding scheme in which the coded entry is defined.\nCorresponds to [DICOM Tag (0008,0102)](https://www.dicomlookup.com/dicomtags/(0008,0102))\n`Coding Scheme Designator`.",
+          "definition": "The identifier of the coding scheme in which the coded entry is defined.\nCorresponds to [DICOM Tag 0008, 0102](http://www.dicomlookup.com/dicomtags/(0008,0102))\n`Coding Scheme Designator`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5242,10 +5242,10 @@
           ]
         },
         {
-          "hash_id": "sha256:fbd4d6c4aa81587d1d026861c9c23374bd8f314df3dc621f99b99f8b51d35004",
+          "hash_id": "sha256:39406d2f03cb78921b502992522e47784c5288b34c8c3d959038c5a83679d306",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#CodingSchemeVersion",
           "name": "metadata__CodingSchemeVersion",
-          "definition": "An identifier of the version of the coding scheme if necessary to resolve ambiguity.\nCorresponds to [DICOM Tag (0008,0103)](https://www.dicomlookup.com/dicomtags/(0008,0103))\n`Coding Scheme Version`.",
+          "definition": "An identifier of the version of the coding scheme if necessary to resolve ambiguity.\nCorresponds to [DICOM Tag 0008, 0103](http://www.dicomlookup.com/dicomtags/(0008,0103))\n`Coding Scheme Version`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5352,10 +5352,10 @@
           ]
         },
         {
-          "hash_id": "sha256:0a50dd0c1e98aba64a1a0e802a3b833367c424be95b887536c65ab7b9cbf8f6d",
+          "hash_id": "sha256:6337169dbfd8643f6c07f7b54fcc550e6cd042c0a4990f15f53b269dfa966603",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ContrastBolusIngredient",
           "name": "metadata__ContrastBolusIngredient",
-          "definition": "Active ingredient of agent.\nCorresponds to [DICOM Tag (0018,1048)](https://www.dicomlookup.com/dicomtags/(0018,1048))\n`Contrast/Bolus Ingredient`.",
+          "definition": "Active ingredient of agent.\nCorresponds to [DICOM Tag 0018, 1048](http://www.dicomlookup.com/dicomtags/(0018,1048))\n`Contrast/Bolus Ingredient`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5462,10 +5462,10 @@
           ]
         },
         {
-          "hash_id": "sha256:abee02393c038cc6895eb4d16efb916dbbf17f7fdbfeea68daab0774ca7c60c8",
+          "hash_id": "sha256:22dc3cf16cf75952a696a675eebe00eff3a23348c093c338d7990ab2adab630b",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#DecayCorrectionFactor",
           "name": "metadata__DecayCorrectionFactor",
-          "definition": "Decay correction factor for each frame.\nCorresponds to [DICOM Tag (0054,1321)](https://www.dicomlookup.com/dicomtags/(0054,1321)) `Decay Factor`.",
+          "definition": "Decay correction factor for each frame.\nCorresponds to [DICOM Tag 0054, 1321](http://www.dicomlookup.com/dicomtags/(0054,1321)) `Decay Factor`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5473,10 +5473,10 @@
           ]
         },
         {
-          "hash_id": "sha256:573e8d11ee9b4686a517556cc533e4521f7a1db600708dfd5845f7f479fdd9af",
+          "hash_id": "sha256:c8d0fe81c5d07aec6c17f8bfe8d8974c17c4ad8e7edbffd8f93c90e83394f039",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#DeidentificationMethod",
           "name": "metadata__DeidentificationMethod",
-          "definition": "A description of the mechanism or method used to remove the Patient's identity.\nCorresponds to [DICOM Tag (0012,0063)](https://www.dicomlookup.com/dicomtags/(0012,0063))\n`De-identification Method`.",
+          "definition": "A description of the mechanism or method used to remove the Patient's identity.\nCorresponds to [DICOM Tag 0012, 0063](http://www.dicomlookup.com/dicomtags/(0012,0063))\n`De-identification Method`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5484,10 +5484,10 @@
           ]
         },
         {
-          "hash_id": "sha256:5c15a1572293f250f19c2b1fe7af910551162421a9b0326a9627989172ebbd8e",
+          "hash_id": "sha256:a1ea7e041fcb355ced7e424537a5f15b90392bb5950073f432ce772bab6f4aa8",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#DeidentificationMethodCodeSequence",
           "name": "metadata__DeidentificationMethodCodeSequence",
-          "definition": "A sequence of code objects describing the mechanism or method use to remove the Patient's identity.\nCorresponds to [DICOM Tag (0012,0064)](https://www.dicomlookup.com/dicomtags/(0012,0064))\n`De-identification Method Code Sequence`.",
+          "definition": "A sequence of code objects describing the mechanism or method use to remove the Patient's identity.\nCorresponds to [DICOM Tag 0012, 0064](http://www.dicomlookup.com/dicomtags/(0012,0064))\n`De-identification Method Code Sequence`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -5715,10 +5715,10 @@
           ]
         },
         {
-          "hash_id": "sha256:9c5673bd06e0a35676ec6610415808225cc91d8f6189fbeaa99b19fb2c239667",
+          "hash_id": "sha256:8d297087646fa5e14365a7e57cc7f0558c6d2c064483eaced5c284a77760c60a",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#DoseCalibrationFactor",
           "name": "metadata__DoseCalibrationFactor",
-          "definition": "Multiplication factor used to transform raw data (in counts/sec) to meaningful unit (Bq/ml).\nCorresponds to [DICOM Tag (0054,1322)](https://www.dicomlookup.com/dicomtags/(0054,1322))\n`Dose Calibration Factor`.",
+          "definition": "Multiplication factor used to transform raw data (in counts/sec) to meaningful unit (Bq/ml).\nCorresponds to [DICOM Tag 0054, 1322](http://www.dicomlookup.com/dicomtags/(0054,1322))\n`Dose Calibration Factor`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -5946,10 +5946,10 @@
           ]
         },
         {
-          "hash_id": "sha256:c44ba346f3b49b39f12bfa5ee31431db73dd94f01370b61ab06b2f24b69b0ec3",
+          "hash_id": "sha256:9b86f37d1a3db691b9c639456d239fe4536e45d85fc436a3faa7285f11506c3e",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#EchoTime",
           "name": "metadata__EchoTime",
-          "definition": "The echo time (TE) for the acquisition, specified in seconds.\nCorresponds to [DICOM Tag (0018,0081)](https://www.dicomlookup.com/dicomtags/(0018,0081))\n`Echo Time`\n(please note that the DICOM term is in milliseconds not seconds).\nThe data type number may apply to files from any MRI modality concerned with\na single value for this field, or to the files in a\n[file collection](SPEC_ROOT/appendices/file-collections.md)\nwhere the value of this field is iterated using the\n[`echo` entity](SPEC_ROOT/appendices/entities.md#echo).",
+          "definition": "The echo time (TE) for the acquisition, specified in seconds.\nCorresponds to [DICOM Tag 0018, 0081](http://www.dicomlookup.com/dicomtags/(0018,0081))\n`Echo Time`\n(please note that the DICOM term is in milliseconds not seconds).\nThe data type number may apply to files from any MRI modality concerned with\na single value for this field, or to the files in a\n[file collection](SPEC_ROOT/appendices/file-collections.md)\nwhere the value of this field is iterated using the\n[`echo` entity](SPEC_ROOT/appendices/entities.md#echo).",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -6232,10 +6232,10 @@
           ]
         },
         {
-          "hash_id": "sha256:054074c3c377c9bcedf16e08d55b72e37cd8d3cc8bcc92eeb7752c7b35f260a5",
+          "hash_id": "sha256:68760ee92db802868c020fcc568691b8f85528019c4c310ad4a7b9358cda977a",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#FlipAngle",
           "name": "metadata__FlipAngle",
-          "definition": "Flip angle (FA) for the acquisition, specified in degrees.\nCorresponds to: [DICOM Tag (0018,1314)](https://www.dicomlookup.com/dicomtags/(0018,1314))\n`Flip Angle`.\nThe data type number may apply to files from any MRI modality concerned with\na single value for this field, or to the files in a\n[file collection](SPEC_ROOT/appendices/file-collections.md)\nwhere the value of this field is iterated using the\n[`flip` entity](SPEC_ROOT/appendices/entities.md#flip).",
+          "definition": "Flip angle (FA) for the acquisition, specified in degrees.\nCorresponds to: [DICOM Tag 0018, 1314](http://www.dicomlookup.com/dicomtags/(0018,1314))\n`Flip Angle`.\nThe data type number may apply to files from any MRI modality concerned with\na single value for this field, or to the files in a\n[file collection](SPEC_ROOT/appendices/file-collections.md)\nwhere the value of this field is iterated using the\n[`flip` entity](SPEC_ROOT/appendices/entities.md#flip).",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -6254,10 +6254,10 @@
           ]
         },
         {
-          "hash_id": "sha256:96f948460432369010ee6ae44bd31753d83741ca8c525299467a98b2394330e0",
+          "hash_id": "sha256:5d51a7650204af253eb0c12e5fc45416cfce76801e5be7fc994973489464fa16",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#FrameAcquisitionDuration",
           "name": "metadata__FrameAcquisitionDuration",
-          "definition": "Duration (in seconds) of volume acquisition.\nCorresponds to DICOM Tag (0018,9220) `Frame Acquisition Duration`.",
+          "definition": "Duration (in seconds) of volume acquisition.\nCorresponds to DICOM Tag 0018, 9220 `Frame Acquisition Duration`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -6265,10 +6265,10 @@
           ]
         },
         {
-          "hash_id": "sha256:15c582d4c1e76805a288e4a081597c219df0b4741cd46f92d2cd1bdb47262ca9",
+          "hash_id": "sha256:efac6dbe503fff6aa259301393e6cb81cbc433268d55ab97240546bd0b471a21",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#FrameDuration",
           "name": "metadata__FrameDuration",
-          "definition": "Time duration of each frame in default unit seconds.\nThis corresponds to [DICOM Tag (0018,1242)](https://www.dicomlookup.com/dicomtags/(0018,1242))\n`Actual Frame Duration` converted to seconds.",
+          "definition": "Time duration of each frame in default unit seconds.\nThis corresponds to [DICOM Tag 0018, 1242](http://www.dicomlookup.com/dicomtags/(0018,1242))\n`Actual Frame Duration` converted to seconds.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -6408,10 +6408,10 @@
           ]
         },
         {
-          "hash_id": "sha256:25e4e7d1f72c49428b2877efacd3d7fd2265d56c4052c03fc94d9d4393ff7e61",
+          "hash_id": "sha256:cd3412321001a9e2cf741a4beef2f3ac56961f9023965085618ae44798636908",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#HardcopyDeviceSoftwareVersion",
           "name": "metadata__HardcopyDeviceSoftwareVersion",
-          "definition": "Manufacturer's designation of the software of the device that created this\nHardcopy Image (the printer).\nCorresponds to [DICOM Tag (0018,101A)](https://www.dicomlookup.com/dicomtags/(0018,101A))\n`Hardcopy Device Software Version`.",
+          "definition": "Manufacturer's designation of the software of the device that created this\nHardcopy Image (the printer).\nCorresponds to [DICOM Tag 0018, 101A](http://www.dicomlookup.com/dicomtags/(0018,101A))\n`Hardcopy Device Software Version`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -6650,10 +6650,10 @@
           ]
         },
         {
-          "hash_id": "sha256:49f3949abaab2fd2e686ffab77da1a5585001560ca915e33cfc5977784fb845c",
+          "hash_id": "sha256:c74d66c36793e4cceef0704febd38f197b6c4ad236f102b6b60d95ebe6271a9d",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#InjectedRadioactivity",
           "name": "metadata__InjectedRadioactivity",
-          "definition": "Total amount of radioactivity injected into the patient (for example, `400`).\nFor bolus-infusion experiments, this value should be the sum of all injected\nradioactivity originating from both bolus and infusion.\nCorresponds to [DICOM Tag (0018,1074)](https://www.dicomlookup.com/dicomtags/(0018,1074))\n`Radionuclide Total Dose`.",
+          "definition": "Total amount of radioactivity injected into the patient (for example, `400`).\nFor bolus-infusion experiments, this value should be the sum of all injected\nradioactivity originating from both bolus and infusion.\nCorresponds to [DICOM Tag 0018, 1074](http://www.dicomlookup.com/dicomtags/(0018,1074))\n`Radionuclide Total Dose`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -6683,10 +6683,10 @@
           ]
         },
         {
-          "hash_id": "sha256:3536d67f36dfa60678acb746a251bf9ec2921b1c5082174e7c82daf2dae88da6",
+          "hash_id": "sha256:28d5b04bbc2b736ddea488b749e08ba1eef3e1455925e727a6bc10c7835624bb",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#InjectionEnd",
           "name": "metadata__InjectionEnd",
-          "definition": "Time of end of injection with respect to `\"TimeZero\"`, in seconds.\nCorresponds to [DICOM Tag (0018,1073)](https://www.dicomlookup.com/dicomtags/(0018,1073))\n`Radiopharmaceutical Stop Time` converted to seconds relative to TimeZero.",
+          "definition": "Time of end of injection with respect to `\"TimeZero\"`, in seconds.\nCorresponds to [DICOM Tag 0018, 1073](http://www.dicomlookup.com/dicomtags/(0018,1073))\n`Radiopharmaceutical Stop Time` converted to seconds relative to TimeZero.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -6694,10 +6694,10 @@
           ]
         },
         {
-          "hash_id": "sha256:129f374d006e8ee2b466460e819f589a03161853aeac99f62a894b94302b37e0",
+          "hash_id": "sha256:27015c58ad6e4ad4524b3ed46d9f2164c072bbcb3618a1134f627dd602f951f5",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#InjectionStart",
           "name": "metadata__InjectionStart",
-          "definition": "Time of start of injection with respect to `\"TimeZero\"`, in seconds.\nThis corresponds to [DICOM Tag (0018,1072)](https://www.dicomlookup.com/dicomtags/(0018,1072))\n`Contrast/Bolus Start Time` converted to seconds relative to `\"TimeZero\"`.",
+          "definition": "Time of start of injection with respect to `\"TimeZero\"`, in seconds.\nThis corresponds to [DICOM Tag 0018, 1072](http://www.dicomlookup.com/dicomtags/(0018,1072))\n`Contrast/Bolus Start Time` converted to seconds relative to `\"TimeZero\"`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -6782,10 +6782,10 @@
           ]
         },
         {
-          "hash_id": "sha256:35c5ed69aa3549ff065b9de6abbd715670983860a082ca71deaac644dc0bcf9d",
+          "hash_id": "sha256:e6ccd105aa5661a8899b67213cb76f9e04505a10bf6892596b1f35a529578d56",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#InversionTime",
           "name": "metadata__InversionTime",
-          "definition": "The inversion time (TI) for the acquisition, specified in seconds.\nInversion time is the time after the middle of inverting RF pulse to middle\nof excitation pulse to detect the amount of longitudinal magnetization.\nCorresponds to [DICOM Tag (0018,0082)](https://www.dicomlookup.com/dicomtags/(0018,0082))\n`Inversion Time`\n(please note that the DICOM term is in milliseconds not seconds).",
+          "definition": "The inversion time (TI) for the acquisition, specified in seconds.\nInversion time is the time after the middle of inverting RF pulse to middle\nof excitation pulse to detect the amount of longitudinal magnetization.\nCorresponds to [DICOM Tag 0018, 0082](http://www.dicomlookup.com/dicomtags/(0018,0082))\n`Inversion Time`\n(please note that the DICOM term is in milliseconds not seconds).",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -6837,10 +6837,10 @@
           ]
         },
         {
-          "hash_id": "sha256:49f59987308ba84d6ae593a67dff699881eaf782d51c54cf3664ce3ff9e57292",
+          "hash_id": "sha256:5d7735794f276db1e38832f9fe84c7a00b001af1f102017df8fe53495e5478f2",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#LabelingDuration",
           "name": "metadata__LabelingDuration",
-          "definition": "Total duration of the labeling pulse train, in seconds,\ncorresponding to the temporal width of the labeling bolus for\n`\"PCASL\"` or `\"CASL\"`.\nIn case all control-label volumes (or deltam or CBF) have the same\n`LabelingDuration`, a scalar must be specified.\nIn case the control-label volumes (or deltam or cbf) have a different\n`\"LabelingDuration\"`, an array of numbers must be specified,\nfor which any `m0scan` in the timeseries has a `\"LabelingDuration\"` of zero.\nIn case an array of numbers is provided,\nits length should be equal to the number of volumes specified in\n`*_aslcontext.tsv`.\nCorresponds to [DICOM Tag (0018,9258)](https://www.dicomlookup.com/dicomtags/(0018,9258))\n`ASL Pulse Train Duration`.",
+          "definition": "Total duration of the labeling pulse train, in seconds,\ncorresponding to the temporal width of the labeling bolus for\n`\"PCASL\"` or `\"CASL\"`.\nIn case all control-label volumes (or deltam or CBF) have the same\n`LabelingDuration`, a scalar must be specified.\nIn case the control-label volumes (or deltam or cbf) have a different\n`\"LabelingDuration\"`, an array of numbers must be specified,\nfor which any `m0scan` in the timeseries has a `\"LabelingDuration\"` of zero.\nIn case an array of numbers is provided,\nits length should be equal to the number of volumes specified in\n`*_aslcontext.tsv`.\nCorresponds to [DICOM Tag 0018, 9258](http://www.dicomlookup.com/dicomtags/(0018,9258))\n`ASL Pulse Train Duration`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -6870,10 +6870,10 @@
           ]
         },
         {
-          "hash_id": "sha256:7617958dab8d1d6745ff04d5334cc8d3231accf781cc85da3ed3eb19d71f18b8",
+          "hash_id": "sha256:e79ccf7cd50f1e1ebb0090cd5f75511f30fa8d39deef31d349fc4081e49b20bd",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#LabelingOrientation",
           "name": "metadata__LabelingOrientation",
-          "definition": "Orientation of the labeling plane (`(P)CASL`) or slab (`PASL`).\nThe direction cosines of a normal vector perpendicular to the ASL labeling\nslab or plane with respect to the patient.\nCorresponds to [DICOM Tag (0018,9255)](https://www.dicomlookup.com/dicomtags/(0018,9255))\n`ASL Slab Orientation`.",
+          "definition": "Orientation of the labeling plane (`(P)CASL`) or slab (`PASL`).\nThe direction cosines of a normal vector perpendicular to the ASL labeling\nslab or plane with respect to the patient.\nCorresponds to [DICOM Tag 0018, 9255](http://www.dicomlookup.com/dicomtags/(0018,9255))\n`ASL Slab Orientation`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -6947,10 +6947,10 @@
           ]
         },
         {
-          "hash_id": "sha256:5f31642f6aaf406cc0125eb45456017aa80716ee9c6b8b66f6b4beaf3e386bfb",
+          "hash_id": "sha256:45209186415b6464f632d77a20bf11997ba70742e177a8c5eddd9a620599ab23",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#LabelingSlabThickness",
           "name": "metadata__LabelingSlabThickness",
-          "definition": "Thickness of the labeling slab in millimeters.\nFor non-selective FAIR a zero is entered.\nCorresponds to [DICOM Tag (0018,9254)](https://www.dicomlookup.com/dicomtags/(0018,9254))\n`ASL Slab Thickness`.",
+          "definition": "Thickness of the labeling slab in millimeters.\nFor non-selective FAIR a zero is entered.\nCorresponds to [DICOM Tag 0018, 9254](http://www.dicomlookup.com/dicomtags/(0018,9254))\n`ASL Slab Thickness`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -7112,10 +7112,10 @@
           ]
         },
         {
-          "hash_id": "sha256:d96fbf23f803ce92e462479ff2ea513090784199afb06f15617fa672060f3b78",
+          "hash_id": "sha256:dd6479453dad06736f726135599d7ef1a21b158c3a62a9f70887f2e318f07ade",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#MRAcquisitionType",
           "name": "metadata__MRAcquisitionType",
-          "definition": "Type of sequence readout.\nCorresponds to [DICOM Tag (0018,0023)](https://www.dicomlookup.com/dicomtags/(0018,0023))\n`MR Acquisition Type`.",
+          "definition": "Type of sequence readout.\nCorresponds to [DICOM Tag 0018, 0023](http://www.dicomlookup.com/dicomtags/(0018,0023))\n`MR Acquisition Type`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -7123,10 +7123,10 @@
           ]
         },
         {
-          "hash_id": "sha256:a6f34a6eba5e0337febe321e3f11f6fe68e09be392bd38d6076f2f4749aca92e",
+          "hash_id": "sha256:5d3f11305009958f31d8f106ef346abe7b2b46affbac5124335443b3a3b4d824",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#MRTransmitCoilSequence",
           "name": "metadata__MRTransmitCoilSequence",
-          "definition": "This is a relevant field if a non-standard transmit coil is used.\nCorresponds to [DICOM Tag (0018,9049)](https://www.dicomlookup.com/dicomtags/(0018,9049))\n`MR Transmit Coil Sequence`.",
+          "definition": "This is a relevant field if a non-standard transmit coil is used.\nCorresponds to [DICOM Tag 0018, 9049](http://www.dicomlookup.com/dicomtags/(0018,9049))\n`MR Transmit Coil Sequence`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -7189,10 +7189,10 @@
           ]
         },
         {
-          "hash_id": "sha256:e1e3b6105b4c630adbde68b7f1f052c4c86b8f6ddca3c44518b93d3fab397f9c",
+          "hash_id": "sha256:87da0dee2909fca89b1682ba1936c95e7aeec783af0c276c8f37db9c651ec6f1",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#MTState",
           "name": "metadata__MTState",
-          "definition": "Boolean stating whether the magnetization transfer pulse is applied.\nCorresponds to [DICOM Tag (0018,9020)](https://www.dicomlookup.com/dicomtags/(0018,9020))\n`Magnetization Transfer`.",
+          "definition": "Boolean stating whether the magnetization transfer pulse is applied.\nCorresponds to [DICOM Tag 0018, 9020](http://www.dicomlookup.com/dicomtags/(0018,9020))\n`Magnetization Transfer`.",
           "value_range": "xsd:boolean",
           "units": "",
           "sources": [
@@ -7200,10 +7200,10 @@
           ]
         },
         {
-          "hash_id": "sha256:b7b6ae8fc9c82dad46136b2416adc0732f4bbcbce33352b392f3ad9563fa083f",
+          "hash_id": "sha256:a258dd715c305bfb217b3a7e0481f08a3f1c4aea7ec65bf979c38e8386f33480",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#MagneticFieldStrength",
           "name": "metadata__MagneticFieldStrength",
-          "definition": "Nominal field strength of MR magnet in Tesla.\nCorresponds to [DICOM Tag (0018,0087)](https://www.dicomlookup.com/dicomtags/(0018,0087))\n`Magnetic Field Strength`.",
+          "definition": "Nominal field strength of MR magnet in Tesla.\nCorresponds to [DICOM Tag 0018, 0087](http://www.dicomlookup.com/dicomtags/(0018,0087))\n`Magnetic Field Strength`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -7409,10 +7409,10 @@
           ]
         },
         {
-          "hash_id": "sha256:cab34bdf7dc356d451a2cbc6a456b27388a07cb50610c4c585b92684c2ab480f",
+          "hash_id": "sha256:04e900a347c87afac9d925e37d8b10f4722d3d0aee3bc96a9743b5fe096e2acd",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#MolarActivity",
           "name": "metadata__MolarActivity",
-          "definition": "Molar activity of compound injected.\nCorresponds to [DICOM Tag (0018,1077)](https://www.dicomlookup.com/dicomtags/(0018,1077))\n`Radiopharmaceutical Specific Activity`.",
+          "definition": "Molar activity of compound injected.\nCorresponds to [DICOM Tag 0018, 1077](http://www.dicomlookup.com/dicomtags/(0018,1077))\n`Radiopharmaceutical Specific Activity`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -7783,10 +7783,10 @@
           ]
         },
         {
-          "hash_id": "sha256:abc1440832f762024f08ae1ae71b743e15d0d38f255d373a3d7c9b246e3f20a0",
+          "hash_id": "sha256:3eb0121cf150287d0dd89fe4028187d539b6907ce9bdb81192fcfcb8ef625f2b",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ParallelAcquisitionTechnique",
           "name": "metadata__ParallelAcquisitionTechnique",
-          "definition": "The type of parallel imaging used (for example `\"GRAPPA\"`, `\"SENSE\"`).\nCorresponds to [DICOM Tag (0018,9078)](https://www.dicomlookup.com/dicomtags/(0018,9078))\n`Parallel Acquisition Technique`.",
+          "definition": "The type of parallel imaging used (for example `\"GRAPPA\"`, `\"SENSE\"`).\nCorresponds to [DICOM Tag 0018, 9078](http://www.dicomlookup.com/dicomtags/(0018,9078))\n`Parallel Acquisition Technique`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -7794,10 +7794,10 @@
           ]
         },
         {
-          "hash_id": "sha256:96a7d48e7c11232098875caf0320ded9a18dabfd7f06e2d762d92703c533cf1e",
+          "hash_id": "sha256:dd787c935c82339f932ac9644d474a148cd46fdf98ace709fc92c34946393899",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ParallelReductionFactorInPlane",
           "name": "metadata__ParallelReductionFactorInPlane",
-          "definition": "The parallel imaging (for instance, GRAPPA) factor in plane.\nUse the denominator of the fraction of k-space encoded for each slice.\nFor example, 2 means half of k-space is encoded.\nCorresponds to [DICOM Tag (0018,9069)](https://www.dicomlookup.com/dicomtags/(0018,9069))\n`Parallel Reduction Factor In-plane`.",
+          "definition": "The parallel imaging (for instance, GRAPPA) factor in plane.\nUse the denominator of the fraction of k-space encoded for each slice.\nFor example, 2 means half of k-space is encoded.\nCorresponds to [DICOM Tag 0018, 9069](http://www.dicomlookup.com/dicomtags/(0018,9069))\n`Parallel Reduction Factor In-plane`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -7805,10 +7805,10 @@
           ]
         },
         {
-          "hash_id": "sha256:81c140301d9969ae95beaf9e803c87869fd4b895fcab2dcd055b29342f01e82f",
+          "hash_id": "sha256:424e1c1fe1647a0370a5a9102fca425b406419df5aa114e2bebaabe7cdd38b18",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ParallelReductionFactorOutOfPlane",
           "name": "metadata__ParallelReductionFactorOutOfPlane",
-          "definition": "The parallel imaging (for instance, GRAPPA) factor in the second phase encoding dimension of 3D sequences.\nUse the denominator of the fraction of k-space encoded in the second phase encoding dimension.\nFor example, 2 means half of k-space is encoded.\nWill typically be 1 for 2D sequences, as each slice in a 2D acquisition is usually fully encoded.\n`ParallelReductionFactorOutOfPlane` should not be confused with `MultibandAccelerationFactor`,\nas they imply different methods of accelerating the acquisition.\nCorresponds to [DICOM Tag (0018,9155)](https://www.dicomlookup.com/dicomtags/(0018,9155))\n`Parallel Reduction Factor out-of-plane`.",
+          "definition": "The parallel imaging (for instance, GRAPPA) factor in the second phase encoding dimension of 3D sequences.\nUse the denominator of the fraction of k-space encoded in the second phase encoding dimension.\nFor example, 2 means half of k-space is encoded.\nWill typically be 1 for 2D sequences, as each slice in a 2D acquisition is usually fully encoded.\n`ParallelReductionFactorOutOfPlane` should not be confused with `MultibandAccelerationFactor`,\nas they imply different methods of accelerating the acquisition.\nCorresponds to [DICOM Tag 0018, 9155](http://www.dicomlookup.com/dicomtags/(0018,9155))\n`Parallel Reduction Factor out-of-plane`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -7838,10 +7838,10 @@
           ]
         },
         {
-          "hash_id": "sha256:d9bfbd2812ec738c384fc48b83ace099fbaaea6b07ff112a38c10b69e319c526",
+          "hash_id": "sha256:8ccd859b71907e1a29ac09d372c7d9efd335618277690b79f55e7515a13e75b4",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#PartialFourierDirection",
           "name": "metadata__PartialFourierDirection",
-          "definition": "The direction where only partial Fourier information was collected.\nCorresponds to [DICOM Tag (0018,9036)](https://www.dicomlookup.com/dicomtags/(0018,9036))\n`Partial Fourier Direction`.",
+          "definition": "The direction where only partial Fourier information was collected.\nCorresponds to [DICOM Tag 0018, 9036](http://www.dicomlookup.com/dicomtags/(0018,9036))\n`Partial Fourier Direction`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -7849,10 +7849,10 @@
           ]
         },
         {
-          "hash_id": "sha256:b02ac6eee8f777b95a4f389e05ec5337011faea3274249f3c81e057333be415f",
+          "hash_id": "sha256:ddcbfc563668e21123823a34fc37b6a0f197a1f0202a0a57f634e7751d8ed945",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#PharmaceuticalDoseAmount",
           "name": "metadata__PharmaceuticalDoseAmount",
-          "definition": "Dose amount of administered pharmaceutical.\nCorresponds to [DICOM Tag (0018,0028)](https://www.dicomlookup.com/dicomtags/(0018,0028)) `Intervention Drug Dose`.",
+          "definition": "Dose amount of administered pharmaceutical.\nCorresponds to [DICOM Tag 0018, 0028](http://www.dicomlookup.com/dicomtags/(0018,0028)) `Intervention Drug Dose`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -7871,10 +7871,10 @@
           ]
         },
         {
-          "hash_id": "sha256:78ffa133f1c8d43748045d9d8ff8e917d4878260789f08b062840f377f301688",
+          "hash_id": "sha256:eee4317f5a065b9c1a0051ec91996ca0ecdefa52465b3da23f723b613b754f1d",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#PharmaceuticalDoseTime",
           "name": "metadata__PharmaceuticalDoseTime",
-          "definition": "Time of administration of pharmaceutical dose, relative to time zero.\nFor an infusion, this should be a vector with two elements specifying the\nstart and end of the infusion period. For more complex dose regimens,\nthe regimen description should be complete enough to enable unambiguous\ninterpretation of `\"PharmaceuticalDoseTime\"`.\nUnit format of the specified pharmaceutical dose time MUST be seconds.\nCorresponds to a combination of\n[DICOM Tag (0018,0027)](https://www.dicomlookup.com/dicomtags/(0018,0027)) `Intervention Drug Stop Time` and\n[DICOM Tag (0018,0035)](https://www.dicomlookup.com/dicomtags/(0018,0035)) `Intervention Drug Start Time`.",
+          "definition": "Time of administration of pharmaceutical dose, relative to time zero.\nFor an infusion, this should be a vector with two elements specifying the\nstart and end of the infusion period. For more complex dose regimens,\nthe regimen description should be complete enough to enable unambiguous\ninterpretation of `\"PharmaceuticalDoseTime\"`.\nUnit format of the specified pharmaceutical dose time MUST be seconds.\nCorresponds to a combination of DICOM Tags\n[0018, 0027](http://www.dicomlookup.com/dicomtags/(0018,0027)) `Intervention Drug Stop Time` and\n[0018, 0035](http://www.dicomlookup.com/dicomtags/(0018,0035)) `Intervention Drug Start Time`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -7893,10 +7893,10 @@
           ]
         },
         {
-          "hash_id": "sha256:959aec1b7dcd6b582fdf2911e0e7c59c4860af926c76bb50c2ecac732375e825",
+          "hash_id": "sha256:cb54dcc7558c382fc45e15a93a7cf6a301d4e810b00f1305d908337cc9885ab6",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#PharmaceuticalName",
           "name": "metadata__PharmaceuticalName",
-          "definition": "Name of administered pharmaceutical.\nNote that this is distinct from any radiotracer or contrast agent used in the scan protocol.\nThis partly matches [DICOM Tag (0018,0034)](https://www.dicomlookup.com/dicomtags/(0018,0034))\n`Intervention Drug Name`.",
+          "definition": "Name of administered pharmaceutical.\nNote that this is distinct from any radiotracer or contrast agent used in the scan protocol.\nThis partly matches [DICOM Tag 0018, 0034](http://www.dicomlookup.com/dicomtags/(0018,0034))\n`Intervention Drug Name`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -7992,10 +7992,10 @@
           ]
         },
         {
-          "hash_id": "sha256:0c59828cf38da901a9585c7aa94ed8cd6087444c3d74cc108eca244dde191c60",
+          "hash_id": "sha256:d7af45a4e911fcdecf08a492186cdd34b726dc760278bddbc66d51e8f93a0b42",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#PostLabelingDelay",
           "name": "metadata__PostLabelingDelay",
-          "definition": "This is the postlabeling delay (PLD) time, in seconds, after the end of the\nlabeling (for `\"CASL\"` or `\"PCASL\"`) or middle of the labeling pulse\n(for `\"PASL\"`) until the middle of the excitation pulse applied to the\nimaging slab (for 3D acquisition) or first slice (for 2D acquisition).\nCan be a number (for a single-PLD time series) or an array of numbers\n(for multi-PLD and Look-Locker).\nIn the latter case, the array of numbers contains the PLD of each volume,\nnamely each `control` and `label`, in the acquisition order.\nAny image within the time-series without a PLD, for example an `m0scan`,\nis indicated by a zero.\nBased on DICOM Tags (0018,9079) `Inversion Times` and (0018,0082)\n`Inversion Time`.",
+          "definition": "This is the postlabeling delay (PLD) time, in seconds, after the end of the\nlabeling (for `\"CASL\"` or `\"PCASL\"`) or middle of the labeling pulse\n(for `\"PASL\"`) until the middle of the excitation pulse applied to the\nimaging slab (for 3D acquisition) or first slice (for 2D acquisition).\nCan be a number (for a single-PLD time series) or an array of numbers\n(for multi-PLD and Look-Locker).\nIn the latter case, the array of numbers contains the PLD of each volume,\nnamely each `control` and `label`, in the acquisition order.\nAny image within the time-series without a PLD, for example an `m0scan`,\nis indicated by a zero.\nBased on DICOM Tags 0018, 9079 `Inversion Times` and 0018, 0082\n`InversionTime`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -8168,10 +8168,10 @@
           ]
         },
         {
-          "hash_id": "sha256:7e442c7ec57d51de2fa3f81afd50dee0487759faff22481e0f3840b0e15820ad",
+          "hash_id": "sha256:28f26857511e12eecfda707e88751bced508c03cf3517a814994931a47348527",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ReceiveCoilName",
           "name": "metadata__ReceiveCoilName",
-          "definition": "Information describing the receiver coil.\nCorresponds to [DICOM Tag (0018,1250)](https://www.dicomlookup.com/dicomtags/(0018,1250))\n`Receive Coil Name`,\nalthough not all vendors populate that DICOM Tag,\nin which case this field can be derived from an appropriate\nprivate DICOM field.",
+          "definition": "Information describing the receiver coil.\nCorresponds to [DICOM Tag 0018, 1250](http://www.dicomlookup.com/dicomtags/(0018,1250))\n`Receive Coil Name`,\nalthough not all vendors populate that DICOM Tag,\nin which case this field can be derived from an appropriate\nprivate DICOM field.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8190,10 +8190,10 @@
           ]
         },
         {
-          "hash_id": "sha256:64f4d05e56c1caf56a24df60a3ea4d2ab4bfe77e633f011864b96405119af00a",
+          "hash_id": "sha256:71fbda3102d2df5a625565294d8d3e8376e0a5c9587de9b6d6789ad327a8cc7b",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ReconFilterSize",
           "name": "metadata__ReconFilterSize",
-          "definition": "Kernel size of post-recon filter (FWHM) in default units `\"mm\"`.\nThis partly matches the [DICOM Tag (0018,1210)](https://www.dicomlookup.com/dicomtags/(0018,1210))\n`Convolution Kernel`.",
+          "definition": "Kernel size of post-recon filter (FWHM) in default units `\"mm\"`.\nThis partly matches the [DICOM Tag 0018, 1210](http://www.dicomlookup.com/dicomtags/(0018,1210))\n`Convolution Kernel`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -8201,10 +8201,10 @@
           ]
         },
         {
-          "hash_id": "sha256:a2e5d4f1e1e268894b7cdf993d0c0fc437d82105764249c08a357df92cdb7c17",
+          "hash_id": "sha256:bee713649f94796d06105d5dbc3177d838b704e9cf6d86bf53af950e0b17b5f2",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ReconFilterType",
           "name": "metadata__ReconFilterType",
-          "definition": "Type of post-recon smoothing (for example, `[\"Shepp\"]`).\nThis partly matches the [DICOM Tag (0018,1210)](https://www.dicomlookup.com/dicomtags/(0018,1210))\n`Convolution Kernel`.",
+          "definition": "Type of post-recon smoothing (for example, `[\"Shepp\"]`).\nThis partly matches the [DICOM Tag 0018, 1210](http://www.dicomlookup.com/dicomtags/(0018,1210))\n`Convolution Kernel`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8223,10 +8223,10 @@
           ]
         },
         {
-          "hash_id": "sha256:599bf28312db6d9623b4fe8e12e96d99ad19e3d3d54d464722005ad058a38b2a",
+          "hash_id": "sha256:c0b834b7ad0e22efb5862e81f3c398694f89df065d69452e467a4b64db0523af",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ReconMethodName",
           "name": "metadata__ReconMethodName",
-          "definition": "Reconstruction method or algorithm (for example, `\"3d-op-osem\"`).\nThis partly matches the [DICOM Tag (0054,1103)](https://www.dicomlookup.com/dicomtags/(0054,1103))\n`Reconstruction Method`.",
+          "definition": "Reconstruction method or algorithm (for example, `\"3d-op-osem\"`).\nThis partly matches the [DICOM Tag 0054, 1103](http://www.dicomlookup.com/dicomtags/(0054,1103))\n`Reconstruction Method`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8234,10 +8234,10 @@
           ]
         },
         {
-          "hash_id": "sha256:301d9d78aad8fc038d94a7d206b4fc962d47676573159bb8d17f28bb27420bd7",
+          "hash_id": "sha256:68e73b50d131506bc772f1ea94d1353b749b8aa0eb80bdfa607d70e6df44fad4",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ReconMethodParameterLabels",
           "name": "metadata__ReconMethodParameterLabels",
-          "definition": "Names of reconstruction parameters (for example, `[\"subsets\", \"iterations\"]`).\nThis partly matches the [DICOM Tag (0054,1103)](https://www.dicomlookup.com/dicomtags/(0054,1103))\n`Reconstruction Method`.",
+          "definition": "Names of reconstruction parameters (for example, `[\"subsets\", \"iterations\"]`).\nThis partly matches the [DICOM Tag 0054, 1103](http://www.dicomlookup.com/dicomtags/(0054,1103))\n`Reconstruction Method`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8245,10 +8245,10 @@
           ]
         },
         {
-          "hash_id": "sha256:95f7319e26095c5fa5036c5fc7b929e0282a04705b4b72109e6b0442fc27db16",
+          "hash_id": "sha256:b40f3f6be249d52febcb1b1369b0f87df3b75fef1dc4e02224678b0c2644e006",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ReconMethodParameterUnits",
           "name": "metadata__ReconMethodParameterUnits",
-          "definition": "Unit of reconstruction parameters (for example, `[\"none\", \"none\"]`).\nThis partly matches the [DICOM Tag (0054,1103)](https://www.dicomlookup.com/dicomtags/(0054,1103))\n`Reconstruction Method`.",
+          "definition": "Unit of reconstruction parameters (for example, `[\"none\", \"none\"]`).\nThis partly matches the [DICOM Tag 0054, 1103](http://www.dicomlookup.com/dicomtags/(0054,1103))\n`Reconstruction Method`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8256,10 +8256,10 @@
           ]
         },
         {
-          "hash_id": "sha256:ce87dfd5bc8361ba584245105b7a38257ac35ae8d3eda09cbf470bc631736cb8",
+          "hash_id": "sha256:eef872571aff662e3909ae60080ef869b311b333184cb08a93b5d3363c9f8485",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ReconMethodParameterValues",
           "name": "metadata__ReconMethodParameterValues",
-          "definition": "Values of reconstruction parameters (for example, `[21, 3]`).\nThis partly matches the [DICOM Tag (0054,1103)](https://www.dicomlookup.com/dicomtags/(0054,1103))\n`Reconstruction Method`.",
+          "definition": "Values of reconstruction parameters (for example, `[21, 3]`).\nThis partly matches the [DICOM Tag 0054, 1103](http://www.dicomlookup.com/dicomtags/(0054,1103))\n`Reconstruction Method`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8322,10 +8322,10 @@
           ]
         },
         {
-          "hash_id": "sha256:356de4569abfbee72d3094728fb27faa0bdfe2db9000c8845f4f86d43ff479f7",
+          "hash_id": "sha256:2a9796566e11fb00e90d6eaa1d379390845b48a168b8c96a244bcf8d2532a8c7",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#RepetitionTime",
           "name": "metadata__RepetitionTime",
-          "definition": "The time in seconds between the beginning of an acquisition of one volume\nand the beginning of acquisition of the volume following it (TR).\nWhen used in the context of functional acquisitions this parameter best\ncorresponds to\n[DICOM Tag (0020,0110)](https://www.dicomlookup.com/dicomtags/(0020,0110)):\nthe \"time delta between images in a\ndynamic of functional set of images\" but may also be found in\n[DICOM Tag (0018,0080)](https://www.dicomlookup.com/dicomtags/(0018,0080)):\n\"the period of time in msec between the beginning\nof a pulse sequence and the beginning of the succeeding\n(essentially identical) pulse sequence\".\nThis definition includes time between scans (when no data has been acquired)\nin case of sparse acquisition schemes.\nThis value MUST be consistent with the 'pixdim[4]' field (after accounting\nfor units stored in 'xyzt_units' field) in the NIfTI header.\nThis field is mutually exclusive with VolumeTiming.",
+          "definition": "The time in seconds between the beginning of an acquisition of one volume\nand the beginning of acquisition of the volume following it (TR).\nWhen used in the context of functional acquisitions this parameter best\ncorresponds to\n[DICOM Tag 0020, 0110](http://www.dicomlookup.com/dicomtags/(0020,0110)):\nthe \"time delta between images in a\ndynamic of functional set of images\" but may also be found in\n[DICOM Tag 0018, 0080](http://www.dicomlookup.com/dicomtags/(0018,0080)):\n\"the period of time in msec between the beginning\nof a pulse sequence and the beginning of the succeeding\n(essentially identical) pulse sequence\".\nThis definition includes time between scans (when no data has been acquired)\nin case of sparse acquisition schemes.\nThis value MUST be consistent with the 'pixdim[4]' field (after accounting\nfor units stored in 'xyzt_units' field) in the NIfTI header.\nThis field is mutually exclusive with VolumeTiming.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -8333,10 +8333,10 @@
           ]
         },
         {
-          "hash_id": "sha256:c73ad3cd0728f728b78f2bbc6d70960f24ce7a4f3562d555e15b6d37af5b6399",
+          "hash_id": "sha256:344f871ae7eb34f269b3215fabdadd08f81ba3794a39b287c5b2ebe2f42ef8a7",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#RepetitionTimeExcitation",
           "name": "metadata__RepetitionTimeExcitation",
-          "definition": "The interval, in seconds, between two successive excitations.\n[DICOM Tag (0018,0080)](https://www.dicomlookup.com/dicomtags/(0018,0080))\nbest refers to this parameter.\nThis field may be used together with the `\"RepetitionTimePreparation\"` for\ncertain use cases, such as\n[MP2RAGE](https://doi.org/10.1016/j.neuroimage.2009.10.002).\nUse `RepetitionTimeExcitation` (in combination with\n`\"RepetitionTimePreparation\"` if needed) for anatomy imaging data rather than\n`\"RepetitionTime\"` as it is already defined as the amount of time that it takes\nto acquire a single volume in the\n[task imaging data](SPEC_ROOT/modality-specific-files/magnetic-resonance-\\\nimaging-data.md#task-including-resting-state-imaging-data)\nsection.",
+          "definition": "The interval, in seconds, between two successive excitations.\n[DICOM Tag 0018, 0080](http://www.dicomlookup.com/dicomtags/(0018,0080))\nbest refers to this parameter.\nThis field may be used together with the `\"RepetitionTimePreparation\"` for\ncertain use cases, such as\n[MP2RAGE](https://doi.org/10.1016/j.neuroimage.2009.10.002).\nUse `RepetitionTimeExcitation` (in combination with\n`\"RepetitionTimePreparation\"` if needed) for anatomy imaging data rather than\n`\"RepetitionTime\"` as it is already defined as the amount of time that it takes\nto acquire a single volume in the\n[task imaging data](SPEC_ROOT/modality-specific-files/magnetic-resonance-\\\nimaging-data.md#task-including-resting-state-imaging-data)\nsection.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -8366,10 +8366,10 @@
           ]
         },
         {
-          "hash_id": "sha256:287af1dc800d658412c5512012a44d30ff07dbc84c497caab4bfbec2c18d271e",
+          "hash_id": "sha256:277978b6b469cd6b641f7322a6373558bc471d1fe43bf0ce1bf498ee12ab3a18",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ResonantNucleus",
           "name": "metadata__ResonantNucleus",
-          "definition": "The isotope of interest of an MR experiment (for example, `\"1H\"`, `\"13C\"`, `\"31P\"`).\nFor multi-nuclei experiments such as <sup>1</sup>H-[<sup>13</sup>C] MR,\nan array can be used: `[\"1H\", \"13C\"]`.\nCorresponds to [DICOM Tag (0018,9100)](https://www.dicomlookup.com/dicomtags/(0018,9100))\n`Resonant Nucleus`.",
+          "definition": "The isotope of interest of an MR experiment (for example, `\"1H\"`, `\"13C\"`, `\"31P\"`).\nFor multi-nuclei experiments such as <sup>1</sup>H-[<sup>13</sup>C] MR,\nan array can be used: `[\"1H\", \"13C\"]`.\nCorresponds to [DICOM Tag 0018, 9100](http://www.dicomlookup.com/dicomtags/(0018,9100))\n`Resonant Nucleus`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8564,10 +8564,10 @@
           ]
         },
         {
-          "hash_id": "sha256:cd5bc5680e5cd536b6446f68f984748f08a9486cde8c002711eabf5623a62e16",
+          "hash_id": "sha256:a46b6c46c1a72b4e153c6b9e3881c9ff424b2daea9b2870aa339347a510eac0f",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ScanDate",
           "name": "metadata__ScanDate",
-          "definition": "Date of scan in the format `\"YYYY-MM-DD[Z]\"`.\nCorresponds to [DICOM Tag (0008,0022)](https://www.dicomlookup.com/dicomtags/(0008,0022)) `Acquisition Date`.\nThis field is DEPRECATED, and this metadata SHOULD be recorded in the `acq_time` column of the\ncorresponding [Scans file](SPEC_ROOT/modality-agnostic-files/data-summary-files.md#scans-file).",
+          "definition": "Date of scan in the format `\"YYYY-MM-DD[Z]\"`.\nCorresponds to [DICOM Tag 0008, 0022](http://www.dicomlookup.com/dicomtags/(0008,0022)) `Acquisition Date`.\nThis field is DEPRECATED, and this metadata SHOULD be recorded in the `acq_time` column of the\ncorresponding [Scans file](SPEC_ROOT/modality-agnostic-files/data-summary-files.md#scans-file).",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8575,10 +8575,10 @@
           ]
         },
         {
-          "hash_id": "sha256:dc0bc6db521c13088f3a3baeb40564be512ff1ce268578854e3ec8ea121dc1e5",
+          "hash_id": "sha256:c3e69e2147749bf32d829a0f2d277f8dd5f2dc73f2c4f12a849cdec0f593aae7",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ScanOptions",
           "name": "metadata__ScanOptions",
-          "definition": "Parameters of ScanningSequence.\nCorresponds to [DICOM Tag (0018,0022)](https://www.dicomlookup.com/dicomtags/(0018,0022))\n`Scan Options`.",
+          "definition": "Parameters of ScanningSequence.\nCorresponds to [DICOM Tag 0018, 0022](http://www.dicomlookup.com/dicomtags/(0018,0022))\n`Scan Options`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8597,10 +8597,10 @@
           ]
         },
         {
-          "hash_id": "sha256:f4d619df44f8358adc880c35a5f5661ff12bca1ca4843287dd34e638739a8a24",
+          "hash_id": "sha256:ede051263cf7aaffe1db9f25390110e532ca92ce2ced71c68ec072f4d99eb85c",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ScanningSequence",
           "name": "metadata__ScanningSequence",
-          "definition": "Description of the type of data acquired.\nCorresponds to [DICOM Tag (0018,0020)](https://www.dicomlookup.com/dicomtags/(0018,0020))\n`Scanning Sequence`.",
+          "definition": "Description of the type of data acquired.\nCorresponds to [DICOM Tag 0018, 0020](http://www.dicomlookup.com/dicomtags/(0018,0020))\n`Scanning Sequence`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8619,10 +8619,10 @@
           ]
         },
         {
-          "hash_id": "sha256:136efdd9ad65c1b6004197ce2e780b7c0a036d217f4f731a7cecc881bdf437cf",
+          "hash_id": "sha256:7e7f614765797edbf79c8fe74e988f83aaaeece7b7a49fce063ade4931c07aa5",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#ScatterFraction",
           "name": "metadata__ScatterFraction",
-          "definition": "Scatter fraction for each frame (Units: 0-100%).\nCorresponds to [DICOM Tag (0054,1323)](https://www.dicomlookup.com/dicomtags/(0054,1323))\n`Scatter Fraction Factor`.",
+          "definition": "Scatter fraction for each frame (Units: 0-100%).\nCorresponds to [DICOM Tag 0054, 1323](http://www.dicomlookup.com/dicomtags/(0054,1323))\n`Scatter Fraction Factor`.",
           "value_range": "xsd:string",
           "units": "0-100%",
           "sources": [
@@ -8685,10 +8685,10 @@
           ]
         },
         {
-          "hash_id": "sha256:d3a9d83a27c5b99e7e089feaf4f16fe8a65f8e7978f6be05c3de5852302dc053",
+          "hash_id": "sha256:d9553195ca17036ee0fb39f6adfa51fd559cca7c98126b325afe15dc9aa47999",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#SequenceName",
           "name": "metadata__SequenceName",
-          "definition": "Manufacturer's designation of the sequence name.\nCorresponds to [DICOM Tag (0018,0024)](https://www.dicomlookup.com/dicomtags/(0018,0024))\n`Sequence Name`.",
+          "definition": "Manufacturer's designation of the sequence name.\nCorresponds to [DICOM Tag 0018, 0024](http://www.dicomlookup.com/dicomtags/(0018,0024))\n`Sequence Name`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8696,10 +8696,10 @@
           ]
         },
         {
-          "hash_id": "sha256:edafc4fd018b0a6d7420e8327aeb8a5a942e3f3ca8c16f1fc88d3c21fe531797",
+          "hash_id": "sha256:42cec8d83e0ad8bbd145d3665c79a870e04adb2c28a1409fba215d6b22b28de4",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#SequenceVariant",
           "name": "metadata__SequenceVariant",
-          "definition": "Variant of the ScanningSequence.\nCorresponds to [DICOM Tag (0018,0021)](https://www.dicomlookup.com/dicomtags/(0018,0021))\n`Sequence Variant`.",
+          "definition": "Variant of the ScanningSequence.\nCorresponds to [DICOM Tag 0018, 0021](http://www.dicomlookup.com/dicomtags/(0018,0021))\n`Sequence Variant`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -8938,10 +8938,10 @@
           ]
         },
         {
-          "hash_id": "sha256:cef0694b7e39f22b1411128e0d184b5672486df97217064a5ab93ac555c20150",
+          "hash_id": "sha256:b3d1ab443c481a62efc8229b2c7408a0f8416df63e24ff122806d32bbd0b7c18",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#SpectralWidth",
           "name": "metadata__SpectralWidth",
-          "definition": "The spectral bandwidth of the MR signal that is sampled, specified in Hz.\nCorresponds to [DICOM Tag (0018,9052)](https://www.dicomlookup.com/dicomtags/(0018,9052))\n`Spectral Width`.",
+          "definition": "The spectral bandwidth of the MR signal that is sampled, specified in Hz.\nCorresponds to [DICOM Tag 0018, 9052](http://www.dicomlookup.com/dicomtags/(0018,9052))\n`Spectral Width`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -9180,10 +9180,10 @@
           ]
         },
         {
-          "hash_id": "sha256:179977f38441061759e26cac5bfee04d386ccd56d422a402c0556e33b38b255a",
+          "hash_id": "sha256:953af6a23a5dda5ba96d8953314c462aa0ac5d77ec2a239972c11910cd660218",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#TracerName",
           "name": "metadata__TracerName",
-          "definition": "Name of the tracer compound used (for example, `\"CIMBI-36\"`)\nCorresponds to [DICOM Tag (0054,0300)](https://www.dicomlookup.com/dicomtags/(0054,0300))\n`Radionuclide Code Sequence`,\nextracted from the fields [(0008,0122)](https://www.dicomlookup.com/dicomtags/(0008,0122))\n`Mapping Resource Name`\nand/or [(0008,0105)](https://www.dicomlookup.com/dicomtags/(0008,0105)) `Mapping Resource`.",
+          "definition": "Name of the tracer compound used (for example, `\"CIMBI-36\"`)\nCorresponds to [DICOM Tag 0054, 0300](http://www.dicomlookup.com/dicomtags/(0054,0300))\n`Radionuclide Code Sequence`,\nextracted from the fields [0008, 0122](http://www.dicomlookup.com/dicomtags/(0008,0122))\n`Mapping Resource Name`\nand/or [0008, 0105](http://www.dicomlookup.com/dicomtags/(0008,0105)) `Mapping Resource`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -9202,10 +9202,10 @@
           ]
         },
         {
-          "hash_id": "sha256:1d10e0c567386e3d34fa03240797744a4eb86deed4edf3862b61481e50dfbcd3",
+          "hash_id": "sha256:93129a4dea9f9e9d6ea47ac1a2ac821f2845c07b37eec4ca0e6a8dea784d0935",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#TracerRadionuclide",
           "name": "metadata__TracerRadionuclide",
-          "definition": "Radioisotope labeling tracer (for example, `\"C11\"`).\nCorresponds to [DICOM Tag (0054,0300)](https://www.dicomlookup.com/dicomtags/(0054,0300))\n`Radionuclide Code Sequence`,\nextracted from the fields\n[(0008,0100)](https://www.dicomlookup.com/dicomtags/(0008,0100)) `Code Value`\nand/or [(0008,0104)](https://www.dicomlookup.com/dicomtags/(0008,0104)) `Code Meaning`.",
+          "definition": "Radioisotope labeling tracer (for example, `\"C11\"`).\nCorresponds to [DICOM Tag 0054, 0300](http://www.dicomlookup.com/dicomtags/(0054,0300))\n`Radionuclide Code Sequence`,\nextracted from the fields [0008, 0100](http://www.dicomlookup.com/dicomtags/(0008,0100)) `Code Value`\nand/or [0008, 0104](http://www.dicomlookup.com/dicomtags/(0008,0104)) `Code Meaning`.",
           "value_range": "xsd:string",
           "units": "",
           "sources": [
@@ -9323,10 +9323,10 @@
           ]
         },
         {
-          "hash_id": "sha256:f954ff830bfe0bdb602113715292a0667c4c7c303673e6ae706515afc3383a2b",
+          "hash_id": "sha256:9e882e0cb2128da2db6ba8e3c25441fca372da39e63fa1e0856e0b0b1945ad78",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#VascularCrushing",
           "name": "metadata__VascularCrushing",
-          "definition": "Boolean indicating if Vascular Crushing is used.\nCorresponds to [DICOM Tag (0018,9259)](https://www.dicomlookup.com/dicomtags/(0018,9259))\n`ASL Crusher Flag`.",
+          "definition": "Boolean indicating if Vascular Crushing is used.\nCorresponds to [DICOM Tag 0018, 9259](http://www.dicomlookup.com/dicomtags/(0018,9259))\n`ASL Crusher Flag`.",
           "value_range": "xsd:boolean",
           "units": "",
           "sources": [
@@ -9334,10 +9334,10 @@
           ]
         },
         {
-          "hash_id": "sha256:3958d1e38524b7f72d7620acffc6309033152e523d9ddb8d990a4fc210c22ad0",
+          "hash_id": "sha256:7041602f206bd5e0c3203ef47a4aec62886f3ab72dab621c1b0e453c88d16900",
           "iri": "https://bids-specification.readthedocs.io/en/stable/glossary.html#VascularCrushingVENC",
           "name": "metadata__VascularCrushingVENC",
-          "definition": "The crusher gradient strength, in centimeters per second.\nSpecify either one number for the total time-series, or provide an array of\nnumbers, for example when using QUASAR, using the value zero to identify\nvolumes for which `VascularCrushing` was turned off.\nCorresponds to [DICOM Tag (0018,925A)](https://www.dicomlookup.com/dicomtags/(0018,925A))\n`ASL Crusher Flow Limit`.",
+          "definition": "The crusher gradient strength, in centimeters per second.\nSpecify either one number for the total time-series, or provide an array of\nnumbers, for example when using QUASAR, using the value zero to identify\nvolumes for which `VascularCrushing` was turned off.\nCorresponds to [DICOM Tag 0018, 925A](http://www.dicomlookup.com/dicomtags/(0018,925A))\n`ASL Crusher Flow Limit`.",
           "value_range": "xsd:float",
           "units": "",
           "sources": [
@@ -15417,19 +15417,6 @@
           }
         },
         {
-          "target_hash_id": "sha256:5436b5965612bf654c5b9a37d657e43c7ce5fcab7cb297aadd51c41fe84f2be4",
-          "target_name": "SoftwareApplication",
-          "target_iri": "https://schema.org/SoftwareApplication",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.36363636363636365,
-            "desc": 0.36967104909058557,
-            "slot": 0.0
-          }
-        },
-        {
           "target_hash_id": "sha256:3471a965bbb3f7b9625ca2d4e64fe3e9108948484ebd496722484a775a003ca9",
           "target_name": "Dataset",
           "target_iri": "https://schema.org/Dataset",
@@ -15452,6 +15439,19 @@
             "iri": 0.0,
             "name": 0.4,
             "desc": 0.35255919404828795,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:5436b5965612bf654c5b9a37d657e43c7ce5fcab7cb297aadd51c41fe84f2be4",
+          "target_name": "SoftwareApplication",
+          "target_iri": "https://schema.org/SoftwareApplication",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.36363636363636365,
+            "desc": 0.36967104909058557,
             "slot": 0.0
           }
         }
@@ -21214,19 +21214,6 @@
           }
         },
         {
-          "target_hash_id": "sha256:093884b000b2ae958e8a74a6b2bc78bb439a2410bde694d206f8c42d76b23973",
-          "target_name": "EducationEvent",
-          "target_iri": "https://schema.org/EducationEvent",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.5,
-            "desc": 0.5253377130005752,
-            "slot": 0.0
-          }
-        },
-        {
           "target_hash_id": "sha256:aa32c2beb20e55789a8b8ed0d9992569c84271324033ce98b9719b44ee07c4c0",
           "target_name": "ConferenceEvent",
           "target_iri": "https://schema.org/ConferenceEvent",
@@ -21236,6 +21223,19 @@
             "iri": 0.0,
             "name": 0.5,
             "desc": 0.5433126392906755,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:093884b000b2ae958e8a74a6b2bc78bb439a2410bde694d206f8c42d76b23973",
+          "target_name": "EducationEvent",
+          "target_iri": "https://schema.org/EducationEvent",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.5,
+            "desc": 0.5253377130005752,
             "slot": 0.0
           }
         }
@@ -48384,19 +48384,6 @@
           }
         },
         {
-          "target_hash_id": "sha256:cddbec7a9fa1f1b5cf68d7fd293db35867b92e501c636ae635633cf118c6808b",
-          "target_name": "Place",
-          "target_iri": "https://schema.org/Place",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.0,
-            "desc": 0.43415649928446975,
-            "slot": 0.0
-          }
-        },
-        {
           "target_hash_id": "sha256:f36b4e14aa18742c7b3fbf2069f7df09748ecf582608b1c6c7f3c9c02aecd59f",
           "target_name": "Person",
           "target_iri": "https://schema.org/Person",
@@ -48406,6 +48393,19 @@
             "iri": 0.0,
             "name": 0.18181818181818182,
             "desc": 0.1381564936216879,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:cddbec7a9fa1f1b5cf68d7fd293db35867b92e501c636ae635633cf118c6808b",
+          "target_name": "Place",
+          "target_iri": "https://schema.org/Place",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.0,
+            "desc": 0.43415649928446975,
             "slot": 0.0
           }
         }
@@ -50556,19 +50556,6 @@
           }
         },
         {
-          "target_hash_id": "sha256:093884b000b2ae958e8a74a6b2bc78bb439a2410bde694d206f8c42d76b23973",
-          "target_name": "EducationEvent",
-          "target_iri": "https://schema.org/EducationEvent",
-          "distance": 0.15,
-          "method": "anchored-iri",
-          "scores": {
-            "iri": 0.0,
-            "name": 0.4827586206896552,
-            "desc": 0.2670638976030655,
-            "slot": 0.0
-          }
-        },
-        {
           "target_hash_id": "sha256:aa32c2beb20e55789a8b8ed0d9992569c84271324033ce98b9719b44ee07c4c0",
           "target_name": "ConferenceEvent",
           "target_iri": "https://schema.org/ConferenceEvent",
@@ -50578,6 +50565,19 @@
             "iri": 0.0,
             "name": 0.5333333333333333,
             "desc": 0.3148760121561828,
+            "slot": 0.0
+          }
+        },
+        {
+          "target_hash_id": "sha256:093884b000b2ae958e8a74a6b2bc78bb439a2410bde694d206f8c42d76b23973",
+          "target_name": "EducationEvent",
+          "target_iri": "https://schema.org/EducationEvent",
+          "distance": 0.15,
+          "method": "anchored-iri",
+          "scores": {
+            "iri": 0.0,
+            "name": 0.4827586206896552,
+            "desc": 0.2670638976030655,
             "slot": 0.0
           }
         }

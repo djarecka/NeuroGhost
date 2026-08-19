@@ -12,97 +12,36 @@
 
 ---
 
+## By the Numbers
+
+| Stat | Value |
+|------|-------|
+| Schemas registered | **7** — aind · bids · nwb · bbqs · dandi · openminds · personinfo |
+| Classes catalogued | **671** across all schemas |
+| Properties indexed | **~3,800** content-addressed nodes |
+| Alignment edges | **56** across 28 classes · mean distance **0.17** |
+| Alignment methods | IRI anchor 77% · semantic-name 14% · composite 9% |
+| Confidence floor | **0.45** — pairs below this threshold are dropped |
+| `skos:exactMatch` threshold | **0.95** — IRI anchor + unit compatibility required |
+
+---
+
+## Roadmap
+
+**MVP (Sep 29):** BBQS and DANDI aligned, transform API live, users can sign up. Full public launch with BrainKB on Oct 23.
+
+| # | Date | Milestone | Owners | Issue |
+|---|------|-----------|--------|-------|
+| M1 | Aug 28 | Foundation — modules, meta-model v1, BICAN ingested, cloud deploy | @neurovium · @puja-trivedi · @djarecka · @Sulstice | [#56](https://github.com/sensein/NeuroGhost/issues/56) |
+| M2 | Sep 11 | Alignment consolidated, DANDI ingested, schema strategy | @neurovium · @djarecka · @Sulstice | [#57](https://github.com/sensein/NeuroGhost/issues/57) |
+| M3 | Sep 29 | **MVP soft launch** — users can sign up | @Sulstice + team | [#58](https://github.com/sensein/NeuroGhost/issues/58) |
+| M4 | Oct 23 | Full public launch with BrainKB | @Sulstice + team | [#59](https://github.com/sensein/NeuroGhost/issues/59) |
+
+---
+
 ## Website
 
 **[sensein.group/NeuroGhost](https://sensein.group/NeuroGhost/)** — seven tabs: **Concepts**, **Diff**, **Graph Schema**, **Transform**, **Query**, **Provenance**, **Register**. Every view has download buttons.
-
----
-
-## API
-
-Static JSON via GitHub Pages — no auth, no rate limits, CORS open.
-
-| Method | URL | Status |
-|--------|-----|--------|
-| `GET` | [`/data/registry.json`](https://sensein.group/NeuroGhost/data/registry.json) | ✅ Live |
-| `GET` | [`/data/versions/{version}.json`](https://sensein.group/NeuroGhost/data/versions/1.7.0.json) | ✅ Live |
-| `GET` | [`/data/provenance.json`](https://sensein.group/NeuroGhost/data/provenance.json) | ✅ Live |
-| `GET` | `/api/transform?from={schema}&to={schema}` | 🔜 Planned |
-| `POST` | `/api/transform` | 🔜 Planned |
-
-`distance`: **0.0** = identical · **1.0** = unrelated.
-
-<details>
-<summary>Response shapes</summary>
-
-**`GET /data/registry.json`**
-```json
-{
-  "registry_version": "1.7.0",
-  "generated_at": "2026-07-23T12:40:24Z",
-  "sources": [{ "label": "bbqs", "version": "1.0.0", "class_count": 29 }],
-  "classes": [{
-    "hash_id": "sha256:abc123...",
-    "iri": "https://registry.sensein.io/obj/Subject",
-    "name": "Subject",
-    "definition": "A research participant.",
-    "sources": ["bbqs"],
-    "properties": [{ "hash_id": "sha256:def456...", "name": "age", "value_range": "xsd:integer" }],
-    "alignments": [{ "target_name": "Participant", "distance": 0.12, "method": "composite" }]
-  }]
-}
-```
-
-**`GET /api/transform?from=bbqs&to=bids`** *(planned)*
-```json
-{
-  "from": "bbqs", "to": "bids",
-  "mappings": [{
-    "from_class": "Subject", "to_class": "Participant", "distance": 0.12,
-    "field_mappings": [
-      { "from_field": "subject_id", "to_field": "participant_id", "confidence": 0.85 }
-    ]
-  }]
-}
-```
-
-**`POST /api/transform`** *(planned — needs serverless layer)*
-```bash
-curl -X POST https://sensein.group/NeuroGhost/api/transform \
-  -H "Content-Type: application/json" \
-  -d '{ "from": "bbqs", "to": "bids", "data": { "subject_id": "sub-01", "age": 24 } }'
-```
-</details>
-
----
-
-## How alignment works
-
-The pipeline below is the **Proteus alignment design** ([github.com/neurovium/Proteus](https://github.com/neurovium/Proteus)) — it describes how alignment is meant to work, not what currently runs inline. [`neuro_ghost/align.py`](neuro_ghost/align.py) itself is a **minimal placeholder**: it writes `ALIGNED_TO` (`skos:exactMatch`) edges only between classes that share an exact `class_uri`. The full pipeline — multi-signal scoring, embeddings, unit compatibility, structural repair — is meant to be sourced from Proteus's own `proteus-align` package (tracked below) rather than kept as an inline copy that needs updating every time the meta-model changes.
-
-```mermaid
-flowchart TD
-    A["<b>0 · Load</b><br/>Read every class from LadybugDB<br/>into a MatchingProfile<br/><i>name · aliases · IRI · units · definition</i>"]
-    B["<b>1 · Block + Unit Veto</b><br/>Generate candidate pairs across schema pairs<br/>Hard-veto incompatible SI dimensions<br/><i>e.g. Hz vs V</i>"]
-    C["<b>2 · SignalVector</b><br/>Freeze an evidence bundle per pair<br/><i>name sim · token Jaccard · alias overlap<br/>definition cosine · unit compat · IRI anchor</i><br/>Absent signals → None, never 0.0"]
-    D["<b>3 · Calibrate</b><br/>Weight signals into a confidence score<br/><i>name 0.45 · Jaccard 0.35 · alias 0.20</i><br/>+0.05 unit bonus · 25% definition blend"]
-    E{{"<b>4 · Predicate</b><br/>IRI anchor present?"}}
-    F["<b>Anchored path</b><br/>skos:exactMatch<br/>skos:broadMatch<br/>skos:narrowMatch"]
-    G["<b>Statistical path</b><br/>max skos:closeMatch"]
-    DROP(["drop pair"])
-    H["<b>5 · Repair</b><br/>Demote duplicate exactMatch → closeMatch<br/>Never deletes edges"]
-    I["<b>6 · Write</b><br/>ALIGNED_TO edges in LadybugDB<br/><i>distance · skos_relation · method · subscores</i>"]
-
-    A --> B
-    B --> C
-    C --> D
-    D -- "confidence < 0.45" --> DROP
-    D -- "IRI match" --> F
-    D -- "no IRI anchor" --> G
-    F --> H
-    G --> H
-    H --> I
-```
 
 ---
 
@@ -157,14 +96,14 @@ See [docs/GOVERNANCE.md](docs/GOVERNANCE.md) for the full spec.
 ### Module sync status
 
 > **Proteus**: commits ahead of the version pinned into `neuro_ghost/align.py` (see `.proteus-pin`).
-> **Dorada**: commits behind `sensein/NeuroGhost` main.
+> **search_hybrid**: commits behind `sensein/NeuroGhost` main.
 > Updated automatically by CI on every push to main.
 
 <!-- MODULE_SYNC_START -->
 | Module | Maintainer | Repository | Behind main | Compare |
 |--------|-----------|------------|-------------|---------|
 | Proteus | @neurovium (Nema) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | ⚠ pin unset | [compare ↗](https://github.com/neurovium/Proteus/commits/main) |
-| Dorada | @djarecka | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) | 64 commits | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...djarecka:NeuroGhost:main) |
+| Dorada | @djarecka | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) | 42 commits | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...djarecka:NeuroGhost:main) |
 <!-- MODULE_SYNC_END -->
 
 ---
