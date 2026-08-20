@@ -169,16 +169,45 @@ classes:
       to have parsed it.
 
       Identity is content-addressed like any RegistryEntity: same rule_type
-      + same parameters + same targets + same defined_in_schema hash to the
-      same Rule; a schema that changes only the human-readable
-      `error_message` keeps its hash_id (see the HashSubset membership on
-      each slot). Rules are attached to RegistryClass/RegistryProperty
-      through the `applies_to` slot — not inlined on the entity itself,
-      because the same property can carry different constraints in
-      different sources' usage (a stance already made explicit in
-      RegistryProperty's own description).
+      + same parameters + same targets + same defined_in_schema +
+      same defined_in_class hash to the same Rule; a schema that changes
+      only the human-readable `error_message` keeps its hash_id (see the
+      HashSubset membership on each slot). Rules are attached to
+      RegistryClass/RegistryProperty through the `applies_to` slot — not
+      inlined on the entity itself, because the same property can carry
+      different constraints in different sources' usage (a stance already
+      made explicit in RegistryProperty's own description).
+
+      LinkML slot_usage (and equivalent per-class refinements in other
+      schema languages) is modeled through the optional
+      `defined_in_class` slot rather than a separate override entity or
+      an inheritance chain. A Rule with `defined_in_class` unset is a
+      schema-level default — effective wherever its `applies_to` property
+      is used, unless a more specific Rule takes precedence. A Rule with
+      `defined_in_class = ClassB` is a class-level refinement — effective
+      only when the property is used inside ClassB, and it overrides the
+      schema-level Rule of the *same rule_type* on the *same
+      applies_to* property (rule_type-by-rule_type, matching LinkML's
+      slot_usage semantics: overriding `pattern` in one class does not
+      also drop the schema-level `required`). Class-level rules that
+      aren't slot refinements at all — dandi-schema's cross-field
+      `@model_validator` for "identifier or url must be present" — use
+      the same mechanism: `defined_in_class = ContactCard`,
+      `applies_to = [identifier_property, url_property]`,
+      `rule_type = EXPRESSION`; no special-casing.
+
+      Effective-rule resolution for property P used inside class C is
+      therefore: for each rule_type, prefer the Rule with
+      `defined_in_class = C and applies_to contains P` if one exists;
+      otherwise fall back to the Rule with `defined_in_class` unset. The
+      registry does not currently execute this resolution — it stores
+      both the schema-level and class-level Rules as data — but the
+      model is shaped so a downstream validator (or an alignment pass
+      that wants to compare "the effective pattern on this slot in this
+      class") can do so with a single graph walk.
     slots:
       - defined_in_schema
+      - defined_in_class
       - rule_type
       - applies_to
       - severity
@@ -620,23 +649,51 @@ slots:
     required: true
     in_subset:
       - HashSubset
-    # Multivalued so a class-level rule can name the several properties it
-    # constrains — dandi-schema's "ContactPerson requires email" targets
-    # both the Contributor class (for the validator's scope) and the
-    # `roleName`/`email` properties it inspects. For a plain
-    # property-level constraint (pattern on `identifier`), applies_to is a
-    # singleton list of one RegistryProperty.
+    # Multivalued so a rule that inspects several properties (a
+    # cross-field validator) can name all of them. The *class scope*
+    # of a class-level rule is NOT expressed here — it goes on the
+    # separate `defined_in_class` slot, which cleanly splits "what does
+    # this rule constrain" (applies_to) from "in what class-scope does
+    # it apply" (defined_in_class).
     description: >-
       The registry entities this rule constrains — typically one
       RegistryProperty for a property-level constraint (a pattern on
-      `identifier`, a min_length on `description`), or a RegistryClass
-      plus the RegistryProperty(ies) it references for a class-level
-      cross-field constraint (dandi-schema's `@model_validator` on
-      Contributor names Contributor plus `roleName` and `email`).
-      Range is RegistryEntity because a rule may apply to a class, a
-      property, or both; ingestion should only ever populate this with
-      RegistryClass or RegistryProperty targets (PermissibleValue,
-      ValueSet, Rule itself are not valid targets).
+      `identifier`, a min_length on `description`), or several
+      RegistryProperty entities for a cross-field validator
+      (dandi-schema's `@model_validator` for "identifier or url must be
+      present" names both properties here). The class this rule is
+      scoped to, if any, goes on `defined_in_class`, not here — so
+      applies_to stays purely about the constrained targets.
+      Range is RegistryEntity for flexibility; ingestion should only
+      ever populate this with RegistryClass or RegistryProperty
+      targets (PermissibleValue, ValueSet, Rule itself are not valid
+      targets).
+
+  defined_in_class:
+    range: RegistryClass
+    in_subset:
+      - HashSubset
+    # In the hash so a class-level refinement and the schema-level
+    # default it overrides are distinct entities: unsetting
+    # defined_in_class from a Rule and re-hashing would collapse the
+    # override into the default, which is exactly the collision the
+    # override-resolution rule is designed to keep separate.
+    description: >-
+      The RegistryClass this rule is scoped to, if any — populated for
+      class-level refinements that ingest from LinkML `slot_usage`
+      blocks (or equivalent per-class overrides in other schema
+      languages), and for standalone class-level constraints
+      (cross-field validators, class invariants) that aren't slot
+      refinements at all. Unset means the rule is a schema-level
+      default: effective wherever `applies_to` matches. Set means the
+      rule is effective *only* when the target property is used inside
+      this class, and it overrides the schema-level rule of the same
+      rule_type on the same applies_to property (rule_type-by-rule_type
+      override, matching LinkML's slot_usage: refining `pattern` for a
+      class does not drop the schema-level `required`).
+      Range is RegistryClass rather than RegistryEntity because a
+      class-scope override is meaningful only against a class — a
+      property doesn't have a "slot_usage" of its own.
 
   severity:
     range: RuleSeverityEnum
