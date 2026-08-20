@@ -36,8 +36,8 @@ subsets:
 # ProvenanceEntry is a standalone node (one per source attestation) — an
 # entity accumulates a ProvenanceEntry per source rather than being tied to
 # a single source, which is how identity stays separate from provenance.
-# Rule, Transform, and ValueSet are stubs: present so the model shape is
-# visible, slots intentionally left minimal until that work is scoped.
+# Transform is still a stub: present so the model shape is visible, slots
+# intentionally left minimal until that work is scoped.
 
 classes:
 
@@ -143,14 +143,61 @@ classes:
         range: MappingProvenanceEntry
 
   Rule:
+    is_a: RegistryEntity
     description: >-
-      STUB — a validation or business rule applicable to one or more registry
-      entities (e.g. min/max value, pattern, required, multivalued constraints
-      on a RegistryProperty). Slots intentionally minimal; scope TBD.
+      A validation or business rule that constrains one or more registry
+      entities. Covers both the declarative property-level constraints a
+      source schema states directly (regex pattern, min/max value,
+      length/cardinality bounds, required, multivalued, enum membership —
+      dandi-schema's `Field(pattern=..., min_length=..., max_length=...)`,
+      LinkML's slot facets, JSON Schema's keyword set) and the class-level
+      cross-field constraints those schemas express as model validators
+      (dandi-schema's `@model_validator` — e.g. "ContactPerson requires
+      email", "datePublished implies publishedBy and doi", "identifier or
+      url must be present"). Both surface in the same registry so alignment
+      can compare them: two schemas that state "identifier matches ORCID"
+      about the same-hash property should recognize the equivalence.
+
+      A single Rule instance carries only the slots relevant to its
+      `rule_type` — the constraint-parameter slots (pattern, min_value,
+      min_length, allowed_value_set, expression, etc.) are all optional and
+      populated by rule_type. Rules that a source states declaratively
+      populate the typed slots; imperative validators the registry cannot
+      decompose (dandi-schema's Python `@model_validator` bodies, JSON
+      Schema `if/then/else`) are captured via `expression` +
+      `expression_language`, preserving the source form without pretending
+      to have parsed it.
+
+      Identity is content-addressed like any RegistryEntity: same rule_type
+      + same parameters + same targets + same defined_in_schema hash to the
+      same Rule; a schema that changes only the human-readable
+      `error_message` keeps its hash_id (see the HashSubset membership on
+      each slot). Rules are attached to RegistryClass/RegistryProperty
+      through the `applies_to` slot — not inlined on the entity itself,
+      because the same property can carry different constraints in
+      different sources' usage (a stance already made explicit in
+      RegistryProperty's own description).
     slots:
-      - hash_id
-      - name
-      - description
+      - defined_in_schema
+      - rule_type
+      - applies_to
+      - severity
+      - error_message
+      - pattern
+      - min_value
+      - max_value
+      - exclusive_minimum
+      - exclusive_maximum
+      - min_length
+      - max_length
+      - min_cardinality
+      - max_cardinality
+      - is_required
+      - is_multivalued
+      - allowed_value_set
+      - referenced_entities
+      - expression
+      - expression_language
 
   Transform:
     description: >-
@@ -545,6 +592,248 @@ slots:
       standards-conformant (SSSOM/Proteus), not because anything sets it
       to ACCEPTED/REJECTED today.
 
+  # --- Rule slots ------------------------------------------------------------
+
+  rule_type:
+    range: RuleTypeEnum
+    required: true
+    in_subset:
+      - HashSubset
+    description: >-
+      What kind of constraint this Rule expresses. Determines which of the
+      typed parameter slots below are populated: PATTERN populates
+      `pattern`, VALUE_RANGE populates min_value/max_value (and optionally
+      the exclusive_* flags), LENGTH_RANGE populates min_length/max_length,
+      CARDINALITY populates min_cardinality/max_cardinality, REQUIRED
+      populates is_required, MULTIVALUED populates is_multivalued,
+      ENUM_MEMBERSHIP populates allowed_value_set, and EXPRESSION populates
+      `expression` + `expression_language` for imperative rules the
+      registry ingested but does not decompose (dandi-schema's
+      `@model_validator` bodies, JSON Schema `if/then/else`,
+      SHACL/ShEx snippets). Identity-defining — a rule of type PATTERN
+      with pattern "^\\d+$" is a different Rule from a rule of type
+      EXPRESSION whose expression happens to embed the same regex.
+
+  applies_to:
+    range: RegistryEntity
+    multivalued: true
+    required: true
+    in_subset:
+      - HashSubset
+    # Multivalued so a class-level rule can name the several properties it
+    # constrains — dandi-schema's "ContactPerson requires email" targets
+    # both the Contributor class (for the validator's scope) and the
+    # `roleName`/`email` properties it inspects. For a plain
+    # property-level constraint (pattern on `identifier`), applies_to is a
+    # singleton list of one RegistryProperty.
+    description: >-
+      The registry entities this rule constrains — typically one
+      RegistryProperty for a property-level constraint (a pattern on
+      `identifier`, a min_length on `description`), or a RegistryClass
+      plus the RegistryProperty(ies) it references for a class-level
+      cross-field constraint (dandi-schema's `@model_validator` on
+      Contributor names Contributor plus `roleName` and `email`).
+      Range is RegistryEntity because a rule may apply to a class, a
+      property, or both; ingestion should only ever populate this with
+      RegistryClass or RegistryProperty targets (PermissibleValue,
+      ValueSet, Rule itself are not valid targets).
+
+  severity:
+    range: RuleSeverityEnum
+    ifabsent: 'ERROR'
+    in_subset:
+      - HashSubset
+    # In the hash because a rule that fails-as-warning is a different
+    # constraint from one that fails-as-error, even with identical
+    # parameters: downstream validators treat them differently, and a
+    # source that softened its own rule from ERROR to WARNING has issued a
+    # different assertion.
+    description: >-
+      How a failure of this rule should be reported. Defaults to ERROR
+      (the source-schema default: dandi-schema's Pydantic constraints and
+      `@model_validator` bodies all raise). WARNING is for
+      recommendation-style rules a source encodes but does not want to
+      hard-fail on; INFO is for advisory/metadata rules used only to
+      surface hints.
+
+  error_message:
+    range: string
+    # Not in HashSubset — identity is the constraint, not the message the
+    # source wrote next to it. Two ingestions of the same rule with
+    # slightly different phrasing should collapse to one Rule; a schema
+    # editor tweaking the wording should not mint a new hash_id.
+    description: >-
+      Human-readable message describing what the rule requires, shown when
+      it fails. Preserved verbatim from the source schema where one is
+      supplied (dandi-schema's `ValueError` strings inside
+      `@model_validator`, LinkML's `constraint_message`); otherwise
+      populated by ingestion with a canned message derived from
+      rule_type + parameters.
+
+  pattern:
+    range: string
+    in_subset:
+      - HashSubset
+    description: >-
+      Regex the constrained value must match, populated for
+      rule_type=PATTERN. ECMA-262 syntax (JSON Schema / Pydantic /
+      LinkML share this), preserved verbatim from the source; no
+      dialect translation on ingest, because a "same regex" recognition
+      across sources is exactly what alignment needs to see.
+
+  min_value:
+    range: float
+    in_subset:
+      - HashSubset
+    description: >-
+      Lower bound for the constrained value, populated for
+      rule_type=VALUE_RANGE. Inclusive unless exclusive_minimum is true.
+
+  max_value:
+    range: float
+    in_subset:
+      - HashSubset
+    description: >-
+      Upper bound for the constrained value, populated for
+      rule_type=VALUE_RANGE. Inclusive unless exclusive_maximum is true.
+
+  exclusive_minimum:
+    range: boolean
+    ifabsent: 'false'
+    in_subset:
+      - HashSubset
+    description: >-
+      If true, min_value is a strict lower bound (value > min_value
+      rather than value >= min_value). Follows JSON Schema draft-07+
+      semantics (a boolean flag on the numeric bound, not a separate
+      numeric field as in draft-04).
+
+  exclusive_maximum:
+    range: boolean
+    ifabsent: 'false'
+    in_subset:
+      - HashSubset
+    description: >-
+      If true, max_value is a strict upper bound (value < max_value
+      rather than value <= max_value).
+
+  min_length:
+    range: integer
+    minimum_value: 0
+    in_subset:
+      - HashSubset
+    description: >-
+      Minimum string length, populated for rule_type=LENGTH_RANGE
+      (dandi-schema's `Field(max_length=...)` on `description`, ORCID
+      identifier length constraints).
+
+  max_length:
+    range: integer
+    minimum_value: 0
+    in_subset:
+      - HashSubset
+    description: Maximum string length, populated for rule_type=LENGTH_RANGE.
+
+  min_cardinality:
+    range: integer
+    minimum_value: 0
+    in_subset:
+      - HashSubset
+    description: >-
+      Minimum number of items for a multivalued property, populated for
+      rule_type=CARDINALITY (dandi-schema's `List[LicenseType] =
+      Field(min_length=1)` — same keyword `min_length`, but on a list,
+      not a string; kept as a separate slot so string-length and
+      list-cardinality constraints don't collide on the hash).
+
+  max_cardinality:
+    range: integer
+    minimum_value: 0
+    in_subset:
+      - HashSubset
+    description: >-
+      Maximum number of items for a multivalued property, populated for
+      rule_type=CARDINALITY (dandi-schema's `List[AccessRequirements] =
+      Field(max_length=1)`, exact-one enforced as
+      min_cardinality=max_cardinality=1).
+
+  is_required:
+    range: boolean
+    in_subset:
+      - HashSubset
+    description: >-
+      Whether the constrained property must be present, populated for
+      rule_type=REQUIRED. Left nullable rather than ifabsent-false: a
+      Rule of another rule_type does not implicitly assert "not
+      required", and the boolean-required convention (RegistryProperty
+      is not itself required-by-default) is a Rule-level concern.
+
+  is_multivalued:
+    range: boolean
+    in_subset:
+      - HashSubset
+    description: >-
+      Whether the constrained property may carry multiple values,
+      populated for rule_type=MULTIVALUED. Also left nullable — a Rule
+      of type PATTERN says nothing about multivaluedness.
+
+  allowed_value_set:
+    range: ValueSet
+    in_subset:
+      - HashSubset
+    description: >-
+      ValueSet the constrained value must be drawn from, populated for
+      rule_type=ENUM_MEMBERSHIP. Stored as a ValueSet hash_id FK so the
+      permissible values live once, shared across every rule that
+      restricts to them; the range-level ValueSet on RegistryProperty
+      (via property_range) is the type declaration, while this Rule is
+      the enforceable constraint — a property whose range is a ValueSet
+      typically also has a Rule of type ENUM_MEMBERSHIP pointing at the
+      same ValueSet.
+
+  referenced_entities:
+    range: RegistryEntity
+    multivalued: true
+    in_subset:
+      - HashSubset
+    description: >-
+      Additional entities an EXPRESSION-type rule mentions but does not
+      apply to as its direct target — e.g. a dandi-schema
+      `@model_validator` that reads `roleName` and `email` on
+      Contributor would list Contributor in `applies_to` and both
+      RegistryProperties here. Lets alignment find rules that touch a
+      given property without conflating direct constraints with
+      incidental references. Empty/omitted for the declarative
+      rule_types.
+
+  expression:
+    range: string
+    in_subset:
+      - HashSubset
+    description: >-
+      Free-form constraint text, populated for rule_type=EXPRESSION when
+      the source's rule cannot be decomposed into the typed parameter
+      slots above — dandi-schema's `@model_validator` bodies ("if
+      RoleType.ContactPerson in self.roleName and self.email is None:
+      raise ValueError(...)"), JSON Schema `if/then/else` blocks,
+      SHACL/ShEx shapes, SPARQL ASK queries. Stored verbatim; the
+      registry does not currently execute these, but preserving the
+      source form keeps the door open (a Proteus validator, an external
+      SHACL engine) and makes alignment able to spot near-duplicates
+      across schemas.
+
+  expression_language:
+    range: RuleExpressionLanguageEnum
+    in_subset:
+      - HashSubset
+    description: >-
+      Which formalism the `expression` string is written in — required
+      when `expression` is set, so a downstream tool that consumes
+      rules knows how (or whether) it can execute them. Two rules with
+      the same expression text but different declared languages are
+      different Rules (SHACL vs. ShEx text can look alike but mean
+      different things).
+
   # --- SchemaSource / SchemaVersionSnapshot slots --------------------------
 
   label:
@@ -722,3 +1011,109 @@ enums:
         description: Reviewed and refuted; retained as negative evidence.
       SUPERSEDED:
         description: Replaced by a newer mapping.
+
+  RuleTypeEnum:
+    description: >-
+      The kind of constraint a Rule expresses. Each value indicates which
+      of Rule's typed parameter slots should be populated (see Rule and
+      rule_type for the mapping). The declarative types (PATTERN through
+      ENUM_MEMBERSHIP) cover the field-level constraints source schemas
+      state directly (dandi-schema `Field(...)` args, LinkML slot facets,
+      JSON Schema keywords); EXPRESSION is the escape hatch for
+      class-level or imperative rules preserved verbatim
+      (dandi-schema `@model_validator`, JSON Schema `if/then/else`,
+      SHACL shapes).
+    permissible_values:
+      PATTERN:
+        description: >-
+          Value must match a regex (`pattern` slot). dandi-schema's
+          `Field(pattern=NAME_PATTERN)`, LinkML's `pattern:` facet.
+      VALUE_RANGE:
+        description: >-
+          Numeric value must lie within [min_value, max_value], with
+          exclusive_minimum/exclusive_maximum flags controlling
+          inclusivity. Populates min_value/max_value and, when set, the
+          exclusive_* flags.
+      LENGTH_RANGE:
+        description: >-
+          String length must lie within [min_length, max_length].
+          dandi-schema's `Field(max_length=10000)` on `description`.
+      CARDINALITY:
+        description: >-
+          Multivalued property's item count must lie within
+          [min_cardinality, max_cardinality]. Distinct from LENGTH_RANGE
+          so a Rule bounding a list's size and a Rule bounding a string
+          field's characters never accidentally hash the same.
+      REQUIRED:
+        description: >-
+          Property must be present. is_required carries the boolean
+          (true asserts required; false explicitly asserts optional,
+          which some sources state).
+      MULTIVALUED:
+        description: >-
+          Property may (is_multivalued=true) or may not
+          (is_multivalued=false) carry multiple values.
+      ENUM_MEMBERSHIP:
+        description: >-
+          Value must be drawn from a ValueSet (`allowed_value_set`).
+          Distinct from setting property_range to a ValueSet — that is
+          a type declaration; this is the enforceable check.
+      EXPRESSION:
+        description: >-
+          Constraint expressed as free-form text in a specified
+          language (`expression` + `expression_language`) — used for
+          rules the registry ingested but cannot decompose into the
+          typed parameter slots above (imperative validators,
+          conditional cross-field logic, SHACL/ShEx shapes).
+
+  RuleSeverityEnum:
+    description: >-
+      How a Rule failure is to be reported by a downstream validator.
+      Mirrors SHACL's sh:severity levels; a source schema that does not
+      state a severity ingests as ERROR (see Rule.severity ifabsent).
+    permissible_values:
+      ERROR:
+        meaning: sh:Violation
+        description: Failure is a hard violation.
+      WARNING:
+        meaning: sh:Warning
+        description: >-
+          Failure is a recommendation the source encodes but does not
+          hard-fail on.
+      INFO:
+        meaning: sh:Info
+        description: Failure is advisory only — a hint, not a defect.
+
+  RuleExpressionLanguageEnum:
+    description: >-
+      Formalism used by a Rule's `expression` string. Named so a
+      downstream tool can dispatch on the value (or refuse to execute
+      what it does not understand); two rules with identical expression
+      text but different languages are different Rules.
+    permissible_values:
+      SHACL:
+        description: W3C SHACL shape (Turtle or JSON-LD).
+      SHEX:
+        description: ShEx shape expression.
+      JSON_SCHEMA:
+        description: >-
+          JSON Schema fragment — typically the `if/then/else` or
+          `allOf`/`anyOf`/`oneOf` composition that could not be
+          expressed as a declarative rule_type.
+      SPARQL_ASK:
+        description: >-
+          SPARQL ASK query — the constraint holds iff the query
+          returns true.
+      PYTHON:
+        description: >-
+          Python source (dandi-schema's `@model_validator` bodies,
+          Pydantic `@field_validator` bodies). Preserved for record
+          only — the registry does not execute these.
+      LINKML_RULES:
+        description: >-
+          A LinkML `rules:` block (preconditions/postconditions
+          expressed in LinkML's own rule language).
+      PLAIN_TEXT:
+        description: >-
+          Natural-language description — the source stated a
+          constraint prose-only, with no machine-checkable form.
