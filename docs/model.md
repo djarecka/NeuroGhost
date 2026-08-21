@@ -41,7 +41,6 @@ PermissibleValue {
     stringList aliases
     uriorcurie concept_uri
     uriorcurie hash_id
-    string source_native_id
 }
 ProvenanceEntry {
     string id
@@ -59,7 +58,6 @@ RegistryClass {
     stringList aliases
     uriorcurie concept_uri
     uriorcurie hash_id
-    string source_native_id
 }
 RegistryEntity {
     string name
@@ -67,7 +65,6 @@ RegistryEntity {
     stringList aliases
     uriorcurie concept_uri
     uriorcurie hash_id
-    string source_native_id
 }
 RegistryProperty {
     string property_range
@@ -76,7 +73,6 @@ RegistryProperty {
     stringList aliases
     uriorcurie concept_uri
     uriorcurie hash_id
-    string source_native_id
 }
 Rule {
     string name
@@ -126,7 +122,6 @@ ValueSet {
     stringList aliases
     uriorcurie concept_uri
     uriorcurie hash_id
-    string source_native_id
 }
 
 Mapping ||--}| MappingProvenanceEntry : "provenance"
