@@ -395,7 +395,6 @@ def build_registry_entities(
             # _DIMS dimension lookup already expects.
             unit={"ucum_code": unit_text} if unit_text else None,
             concept_uri=slot["iri"] or None,
-            defined_in_schema=schema_source_id,
             skos_mappings=[],
             aliases=slot.get("aliases") or [],
         )
@@ -431,7 +430,6 @@ def build_registry_entities(
             parent_class=parent_hash_id,
             properties=prop_hash_ids,
             class_mixins=[],
-            defined_in_schema=schema_source_id,
             skos_mappings=[],
             aliases=cls.get("aliases") or [],
         )

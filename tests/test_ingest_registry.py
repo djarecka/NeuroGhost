@@ -10,14 +10,14 @@ def _conn(tmp_path):
     return get_connection(str(tmp_path / "test.lbug"))
 
 
-def test_identical_property_from_two_sources_produces_distinct_hash_ids(tmp_path):
+def test_identical_property_from_two_sources_collapses_to_one_hash_id(tmp_path):
     """
-    Identity is source-anchored: defined_in_schema is in HashSubset, so
-    identical content ingested from two different schemas produces two
-    RegistryProperty nodes with distinct hash_ids, each attesting to only
-    its own source. Cross-source correspondence is expressed as an explicit
-    Mapping, never as silent hash collapse — nothing must disappear from
-    the alignment problem without a record.
+    Identity is content-derived only — no source-anchoring field is part of
+    the hash — so identical content ingested from two different schemas
+    collapses to one RegistryProperty node, which accumulates one
+    ProvenanceEntry per attesting source. This is how identity stays
+    separate from provenance: nothing about the entity's hash_id depends on
+    where it came from.
     """
     conn = _conn(tmp_path)
 
@@ -26,19 +26,13 @@ def test_identical_property_from_two_sources_produces_distinct_hash_ids(tmp_path
 
     rows = conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.hash_id").get_all()
     hash_ids = {r[0] for r in rows}
-    assert len(hash_ids) == 2
+    assert len(hash_ids) == 1
 
-    per_source = conn.execute("""
+    labels = conn.execute("""
         MATCH (p:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
-        RETURN p.hash_id, ss.label
+        RETURN ss.label
     """).get_all()
-    labels_by_hash: dict[str, set[str]] = {}
-    for hash_id, label in per_source:
-        labels_by_hash.setdefault(hash_id, set()).add(label)
-    assert {frozenset(v) for v in labels_by_hash.values()} == {
-        frozenset({"source_a"}),
-        frozenset({"source_b"}),
-    }
+    assert {r[0] for r in labels} == {"source_a", "source_b"}
 
 
 def test_aliases_round_trip_through_the_graph(tmp_path):
@@ -107,12 +101,9 @@ def test_required_does_not_affect_property_identity(tmp_path):
     usage_constraints in test_ingest_linkml.py), so within a single source
     this must not create a second node: same hash_id, one node.
 
-    Both YAMLs are ingested under the same source label so defined_in_schema
-    (in HashSubset) is held constant — this isolates the `required` flag as
-    the only differing input, which is what the test asserts is irrelevant
-    to identity. Cross-source identity is source-anchored by design and is
-    covered separately by
-    test_identical_property_from_two_sources_produces_distinct_hash_ids.
+    Both YAMLs are ingested under the same source label, isolating the
+    `required` flag as the only differing input, which is what the test
+    asserts is irrelevant to identity.
     """
     conn = _conn(tmp_path)
 
@@ -130,8 +121,8 @@ def test_required_does_not_affect_property_identity(tmp_path):
 def test_content_change_produces_different_hash_id(tmp_path):
     """
     Same source, edited content → new hash. Both ingests use the same
-    source label ("source_a") so defined_in_schema is held constant, which
-    isolates the value_range edit as the sole driver of the hash change.
+    source label ("source_a"), isolating the value_range edit as the sole
+    driver of the hash change.
     """
     conn = _conn(tmp_path)
     insert_schema(conn, parse_linkml(FIXTURES / "source_a.yml"), "source_a", agent="tester")

@@ -188,8 +188,6 @@ class RegistryClass(RegistryEntity):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    defined_in_schema: str = Field(default=..., description="""The SchemaSource this class/property belongs to (stored as id FK, like had_primary_source). IN the hash — this is the mechanical form of \"users add a new class, and the mapping between them is added\": identical content in two schemas is two entities, and their correspondence is always an explicit Mapping record that can be proposed, reviewed, rejected, and exported. Nothing is ever implicitly identified across sources, so nothing disappears from the alignment problem without a record. Deliberately the schema, not a version: content unchanged across versions of one schema keeps its hash_id, so existing mappings survive re-ingestion. Attached to RegistryClass and RegistryProperty only — the entities alignment compares; PermissibleValue keeps its cross-source sharing semantics unchanged.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass', 'RegistryProperty'],
-         'in_subset': ['HashSubset']} })
     properties: Optional[list[str]] = Field(default=None, description="""The set of properties that belong to this class.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass'], 'in_subset': ['HashSubset']} })
     parent_class: Optional[str] = Field(default=None, description="""The class this class inherits from (stored as hash_id FK).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass'],
          'in_subset': ['HashSubset'],
@@ -218,8 +216,6 @@ class RegistryProperty(RegistryEntity):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    defined_in_schema: str = Field(default=..., description="""The SchemaSource this class/property belongs to (stored as id FK, like had_primary_source). IN the hash — this is the mechanical form of \"users add a new class, and the mapping between them is added\": identical content in two schemas is two entities, and their correspondence is always an explicit Mapping record that can be proposed, reviewed, rejected, and exported. Nothing is ever implicitly identified across sources, so nothing disappears from the alignment problem without a record. Deliberately the schema, not a version: content unchanged across versions of one schema keeps its hash_id, so existing mappings survive re-ingestion. Attached to RegistryClass and RegistryProperty only — the entities alignment compares; PermissibleValue keeps its cross-source sharing semantics unchanged.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass', 'RegistryProperty'],
-         'in_subset': ['HashSubset']} })
     property_range: str = Field(default=..., description="""The data type or value range for this property: a canonical XSD CURIE for primitives (e.g. \"xsd:string\", \"xsd:integer\"), or the hash_id of a ValueSet for enumerated values. Bare primitive names (\"string\", \"float\") are deprecated: datatype compatibility is an alignment signal and an incompatibility veto, so \"float\", \"xsd:float\" and \"double\" must not read as three unrelated types. Ingestion normalizes source-native type names to XSD CURIEs; the declared range stays string until that lands.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty'],
          'in_subset': ['HashSubset'],
          'slot_uri': 'linkml:range'} })

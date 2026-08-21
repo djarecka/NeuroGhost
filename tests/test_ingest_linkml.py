@@ -164,14 +164,12 @@ def test_aliases_do_not_affect_identity():
     it's excluded from hash_id — like class_uri/slot_uri, it's alternate-name
     metadata a source happens to supply, not part of what the entity *is*.
     Two otherwise-identical properties with different aliases must still
-    collapse to the same hash_id (within one source: defined_in_schema is in
-    the hash, so identity is source-anchored — see
-    test_identical_property_from_two_sources_produces_distinct_hash_ids).
+    collapse to the same hash_id.
     """
     base = dict(
         name="orcid", description="ORCID identifier.", property_range="xsd:string",
         unit=None, concept_uri="https://example.org/schema#orcid",
-        defined_in_schema="source_a", skos_mappings=[],
+        skos_mappings=[],
     )
     with_alias = compute_hash_id_for(RegistryProperty, dict(base, aliases=["ORCID iD"]))
     without_alias = compute_hash_id_for(RegistryProperty, dict(base, aliases=[]))
@@ -213,37 +211,34 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
         for name, p in properties.items()
     } == {
         "name": {
-            "hash_id": "sha256:a9d78a17053b0f3b42078d25a81cd04d0f7145db96638846e998c415bc5053ab",
+            "hash_id": "sha256:7816ced135927c58f6ebc3f55668039ef2ab66e1549872b5b32b59ece0ce1e53",
             "name": "name",
             "description": "Full name.",
             "skos_mappings": [],
             "concept_uri": "https://schema.org/name",
             "source_native_id": None,
-            "defined_in_schema": "comprehensive",
             "property_range": "xsd:string",
             "unit": None,
             "aliases": [],
         },
         "orcid": {
-            "hash_id": "sha256:d27e546a325cc73b61c4faff2e4d95f3a4dac4ef5e609ea470f7268871edfb53",
+            "hash_id": "sha256:617199b747e8730bed6ba1d2d08de02aba00907407391acebdc51ba1d58de6af",
             "name": "orcid",
             "description": "ORCID identifier.",
             "skos_mappings": [],
             "concept_uri": "https://example.org/schema#orcid",
             "source_native_id": None,
-            "defined_in_schema": "comprehensive",
             "property_range": "xsd:string",
             "unit": None,
             "aliases": ["ORCID iD"],
         },
         "role": {
-            "hash_id": "sha256:570586cb49eae5d55d35683580dce4a76d5665975252cab23a402e574854ea56",
+            "hash_id": "sha256:de9b8ad17ae0108b3ad71f9d7cebf4fa3b7a955c71be65afe96a63c09ac8e254",
             "name": "role",
             "description": "Role on the study (units: FTE)",
             "skos_mappings": [],
             "concept_uri": None,
             "source_native_id": None,
-            "defined_in_schema": "comprehensive",
             "property_range": "xsd:string",
             "unit": {
                 "ucum_code": "FTE",
@@ -255,13 +250,12 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "aliases": [],
         },
         "created_at": {
-            "hash_id": "sha256:8a88c0c203de9613673c2b368e9e423b992c3896cd8f13631e2599c9a1326ab3",
+            "hash_id": "sha256:5c74fcd14537ed64f8fb1649c2d9f7e414a0b4a3650a6c088c5c4e663d62845e",
             "name": "created_at",
             "description": "",
             "skos_mappings": [],
             "concept_uri": None,
             "source_native_id": None,
-            "defined_in_schema": "comprehensive",
             "property_range": "xsd:dateTime",
             "unit": None,
             "aliases": [],
@@ -273,49 +267,46 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
         for name, c in registry_classes.items()
     } == {
         "Timestamped": {
-            "hash_id": "sha256:227dc9aac0a55a2ee62e6d98c7948dda9b288494823eef66a6b85612d0209b39",
+            "hash_id": "sha256:9bfceb04ede599148a836303684503e09198894fa02fc78174825b21621935a9",
             "name": "Timestamped",
             "description": "Mixin providing a creation timestamp.",
             "skos_mappings": [],
             "concept_uri": None,
             "source_native_id": None,
-            "defined_in_schema": "comprehensive",
             "is_abstract": False,
-            "properties": ["sha256:8a88c0c203de9613673c2b368e9e423b992c3896cd8f13631e2599c9a1326ab3"],
+            "properties": ["sha256:5c74fcd14537ed64f8fb1649c2d9f7e414a0b4a3650a6c088c5c4e663d62845e"],
             "parent_class": None,
             "class_mixins": [],
             "aliases": [],
         },
         "Entity": {
-            "hash_id": "sha256:b9dd5b96fe123dc7ebeb97b5bb67afec0d48c9109196f9089f6e26ee08594b1b",
+            "hash_id": "sha256:de6a525ca16c94d245fcd52076388be42d45deeed88c8309f414d823428d965f",
             "name": "Entity",
             "description": "Abstract base for all registry entities.",
             "skos_mappings": [],
             "concept_uri": "https://example.org/schema#Entity",
             "source_native_id": None,
-            "defined_in_schema": "comprehensive",
             "is_abstract": True,
-            "properties": ["sha256:a9d78a17053b0f3b42078d25a81cd04d0f7145db96638846e998c415bc5053ab"],
+            "properties": ["sha256:7816ced135927c58f6ebc3f55668039ef2ab66e1549872b5b32b59ece0ce1e53"],
             "parent_class": None,
             "class_mixins": [],
             "aliases": [],
         },
         "Person": {
-            "hash_id": "sha256:fbb719a3ed9a446b0f4e82bacf5f0dbae6c50eadc3c8ab5c26fd6cdd2d033124",
+            "hash_id": "sha256:b0c27b7b4017b09a6dfe2d75f66243fa0278a7464e5a721e7d8afdda36fe2c32",
             "name": "Person",
             "description": "A research investigator.",
             "skos_mappings": [],
             "concept_uri": "https://schema.org/Person",
             "source_native_id": None,
-            "defined_in_schema": "comprehensive",
             "is_abstract": False,
             "properties": [
-                "sha256:570586cb49eae5d55d35683580dce4a76d5665975252cab23a402e574854ea56",
-                "sha256:8a88c0c203de9613673c2b368e9e423b992c3896cd8f13631e2599c9a1326ab3",
-                "sha256:a9d78a17053b0f3b42078d25a81cd04d0f7145db96638846e998c415bc5053ab",
-                "sha256:d27e546a325cc73b61c4faff2e4d95f3a4dac4ef5e609ea470f7268871edfb53",
+                "sha256:5c74fcd14537ed64f8fb1649c2d9f7e414a0b4a3650a6c088c5c4e663d62845e",
+                "sha256:617199b747e8730bed6ba1d2d08de02aba00907407391acebdc51ba1d58de6af",
+                "sha256:7816ced135927c58f6ebc3f55668039ef2ab66e1549872b5b32b59ece0ce1e53",
+                "sha256:de9b8ad17ae0108b3ad71f9d7cebf4fa3b7a955c71be65afe96a63c09ac8e254",
             ],
-            "parent_class": "sha256:b9dd5b96fe123dc7ebeb97b5bb67afec0d48c9109196f9089f6e26ee08594b1b",
+            "parent_class": "sha256:de6a525ca16c94d245fcd52076388be42d45deeed88c8309f414d823428d965f",
             "class_mixins": [],
             "aliases": ["Investigator"],
         },
