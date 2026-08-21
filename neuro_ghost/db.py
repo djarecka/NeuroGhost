@@ -80,7 +80,7 @@ def bump_version(ver: str, bump: str = "patch") -> str:
 # it. This is how "identity is separate from provenance" plays out on disk.
 #
 # Duck-typed on purpose (entity just needs .model_dump(); prov just needs
-# .id/.had_primary_source/.source_description/.generated_at_time/
+# .id/.had_primary_source/.source_version/.generated_at_time/
 # .was_attributed_to/.was_generated_by/.was_derived_from) so this module
 # doesn't need to import schema_registry_utils.
 
@@ -162,7 +162,7 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
     pe_id = prov.id or make_id()
     conn.execute("""
         CREATE (:ProvenanceEntry {
-            id: $id, had_primary_source: $had_primary_source, source_description: $source_description,
+            id: $id, had_primary_source: $had_primary_source, source_version: $source_version,
             registry_version: $registry_version,
             generated_at_time: $generated_at_time, was_attributed_to: $was_attributed_to,
             was_generated_by: $was_generated_by, was_derived_from: $was_derived_from
@@ -170,7 +170,7 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
     """, {
         "id":                  pe_id,
         "had_primary_source": prov.had_primary_source,
-        "source_description": prov.source_description,
+        "source_version":     prov.source_version,
         "registry_version":   prov.registry_version,
         "generated_at_time":  prov.generated_at_time.isoformat(),
         "was_attributed_to":  prov.was_attributed_to,
