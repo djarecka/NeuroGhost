@@ -226,6 +226,7 @@ classes:
       - max_cardinality
       - is_required
       - is_multivalued
+      - range_expression
       - allowed_value_set
       - referenced_entities
       - expression
@@ -614,8 +615,9 @@ slots:
       optionally `exclusive_maximum`); MIN_LENGTH/MAX_LENGTH populate
       `min_length`/`max_length`; MIN_CARDINALITY/MAX_CARDINALITY
       populate `min_cardinality`/`max_cardinality`; REQUIRED populates
-      `is_required`; MULTIVALUED populates `is_multivalued`;
-      ENUM_MEMBERSHIP populates `allowed_value_set`; EXPRESSION
+      `is_required`; MULTIVALUED populates `is_multivalued`; RANGE
+      populates `range_expression`; ENUM_MEMBERSHIP populates
+      `allowed_value_set`; EXPRESSION
       populates `expression` + `expression_language` for imperative
       rules the registry ingested but does not decompose (dandi-schema's
       `@model_validator` bodies, JSON Schema `if/then/else`,
@@ -818,6 +820,22 @@ slots:
       Whether the constrained property may carry multiple values,
       populated for rule_type=MULTIVALUED. Also left nullable — a Rule
       of type PATTERN says nothing about multivaluedness.
+
+  range_expression:
+    range: string
+    in_subset:
+      - HashSubset
+    description: >-
+      The type/range the constrained property's values must satisfy,
+      populated for rule_type=RANGE. Same shape as RegistryProperty's
+      `property_range`: an XSD CURIE for primitives (e.g. "xsd:string",
+      "xsd:integer") or the hash_id of a ValueSet for enumerated types.
+      Used only when a schema refines a property's declared range in a
+      specific class context — LinkML `slot_usage` narrowing a slot's
+      range to a subtype, or a JSON Schema `if/then` that switches the
+      value's type based on another field. The property's own default
+      range still lives on RegistryProperty.property_range; this Rule
+      is the class-scoped refinement of it.
 
   allowed_value_set:
     range: ValueSet
@@ -1113,6 +1131,16 @@ enums:
         description: >-
           Property may (is_multivalued=true) or may not
           (is_multivalued=false) carry multiple values.
+      RANGE:
+        description: >-
+          Property's value type is refined to a specific range
+          (`range_expression` — XSD CURIE or ValueSet hash_id) in the
+          scope of the enclosing class. Distinct from the property's
+          own declared range on RegistryProperty.property_range: that
+          is the default type; a RANGE Rule with `defined_in_class`
+          set is a per-class narrowing (LinkML `slot_usage` narrowing
+          a slot's range to a subtype, JSON Schema `if/then` type
+          switches).
       ENUM_MEMBERSHIP:
         description: >-
           Value must be drawn from a ValueSet (`allowed_value_set`).
