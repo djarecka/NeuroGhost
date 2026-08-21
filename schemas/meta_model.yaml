@@ -64,7 +64,6 @@ classes:
       A registered class (object class) representing a concept or entity type
       in the registry, e.g. "Patient".
     slots:
-      - defined_in_schema
       - properties
       - parent_class
       - class_mixins
@@ -80,7 +79,6 @@ classes:
       in one source's usage and optional in another's without being a
       different concept.
     slots:
-      - defined_in_schema
       - property_range
       - unit
 
@@ -313,10 +311,10 @@ slots:
     multivalued: true
     slot_uri: skos:altLabel
     # Not in_subset: HashSubset — alternate names a source happens to
-    # supply, not part of what the entity *is*. (Classes and properties are
-    # per-source via defined_in_schema, so alias differences never decide
-    # whether entities collapse; keeping aliases out of the hash means an
-    # alias edit doesn't mint a new identity.)
+    # supply, not part of what the entity *is*. Keeping aliases out of the
+    # hash means an alias edit doesn't mint a new identity, and two sources'
+    # otherwise-identical entities still collapse even if their alias lists
+    # differ.
     description: >-
       Alternate names/synonyms/abbreviations for this entity (e.g. "lfp" for
       "local field potential"), preserved from the source schema. Used as
@@ -390,26 +388,6 @@ slots:
     # must pass them explicitly, and compute_hash_id_for() enforces that.
     ifabsent: 'false'
     description: Whether this registered class is itself declared abstract.
-
-  defined_in_schema:
-    range: SchemaSource
-    required: true
-    in_subset:
-      - HashSubset
-    description: >-
-      The SchemaSource this class/property belongs to (stored as id FK,
-      like had_primary_source). IN the hash — this is the mechanical form
-      of "users add a new class, and the mapping between them is added":
-      identical content in two schemas is two entities, and their
-      correspondence is always an explicit Mapping record that can be
-      proposed, reviewed, rejected, and exported. Nothing is ever
-      implicitly identified across sources, so nothing disappears from
-      the alignment problem without a record. Deliberately the schema,
-      not a version: content unchanged across versions of one schema
-      keeps its hash_id, so existing mappings survive re-ingestion.
-      Attached to RegistryClass and RegistryProperty only — the entities
-      alignment compares; PermissibleValue keeps its cross-source
-      sharing semantics unchanged.
 
   source_native_id:
     range: string
