@@ -56,7 +56,6 @@ classes:
       - skos_mappings
       - aliases
       - concept_uri
-      - source_native_id
 
   RegistryClass:
     is_a: RegistryEntity
@@ -388,16 +387,6 @@ slots:
     # must pass them explicitly, and compute_hash_id_for() enforces that.
     ifabsent: 'false'
     description: Whether this registered class is itself declared abstract.
-
-  source_native_id:
-    range: string
-    description: >-
-      The verbatim identifier of this element in its source schema (the
-      raw column/field/key name, e.g. "z_spec", "sub-01"), preserved
-      exactly as written. Alignment's lexical channel matches on this —
-      `name` alone loses the source's own spelling, abbreviations and
-      casing, which is often the strongest cheap signal. Optional; not
-      part of the content hash.
 
   # --- Plain (non-content-hashed) identifier, shared by every class that
   # --- isn't part of the RegistryEntity family -------------------------------
