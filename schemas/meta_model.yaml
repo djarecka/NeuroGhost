@@ -155,15 +155,20 @@ classes:
       can compare them: two schemas that state "identifier matches ORCID"
       about the same-hash property should recognize the equivalence.
 
-      A single Rule instance carries only the slots relevant to its
-      `rule_type` — the constraint-parameter slots (pattern, min_value,
-      min_length, allowed_value_set, expression, etc.) are all optional and
-      populated by rule_type. Rules that a source states declaratively
-      populate the typed slots; imperative validators the registry cannot
-      decompose (dandi-schema's Python `@model_validator` bodies, JSON
-      Schema `if/then/else`) are captured via `expression` +
-      `expression_language`, preserving the source form without pretending
-      to have parsed it.
+      Each declarative constraint is one Rule — one facet, one node.
+      A property with a lower bound of 0 and an upper bound of 120
+      ingests as two Rules (MIN_VALUE and MAX_VALUE), not one, so a
+      source that only sets a lower bound isn't implicitly asserting
+      anything about an upper bound, and a class-level refinement of
+      `min_value` doesn't sweep up `max_value` with it (matching
+      LinkML slot_usage, which refines facets independently). A single
+      Rule instance carries only the slot relevant to its `rule_type`.
+      Rules that a source states declaratively populate the typed
+      slots; imperative validators the registry cannot decompose
+      (dandi-schema's Python `@model_validator` bodies, JSON Schema
+      `if/then/else`) stay bundled — one Rule per validator body — via
+      `expression` + `expression_language`, preserving the source form
+      without pretending to have parsed it.
 
       Identity is content-addressed like any RegistryEntity and collapses
       across schemas: same rule_type + same parameters + same targets +
@@ -597,19 +602,28 @@ slots:
     in_subset:
       - HashSubset
     description: >-
-      What kind of constraint this Rule expresses. Determines which of the
-      typed parameter slots below are populated: PATTERN populates
-      `pattern`, VALUE_RANGE populates min_value/max_value (and optionally
-      the exclusive_* flags), LENGTH_RANGE populates min_length/max_length,
-      CARDINALITY populates min_cardinality/max_cardinality, REQUIRED
-      populates is_required, MULTIVALUED populates is_multivalued,
-      ENUM_MEMBERSHIP populates allowed_value_set, and EXPRESSION populates
-      `expression` + `expression_language` for imperative rules the
-      registry ingested but does not decompose (dandi-schema's
+      What kind of constraint this Rule expresses. Each declarative
+      rule_type is atomic — one facet, one Rule — so that a source
+      setting only a lower bound doesn't imply anything about an upper
+      bound, and a class-level refinement of `min_value` doesn't sweep
+      up `max_value` at the same time (matching LinkML slot_usage,
+      which refines facets independently). Determines which typed
+      parameter slot is populated: PATTERN populates `pattern`;
+      MIN_VALUE populates `min_value` (and optionally
+      `exclusive_minimum`); MAX_VALUE populates `max_value` (and
+      optionally `exclusive_maximum`); MIN_LENGTH/MAX_LENGTH populate
+      `min_length`/`max_length`; MIN_CARDINALITY/MAX_CARDINALITY
+      populate `min_cardinality`/`max_cardinality`; REQUIRED populates
+      `is_required`; MULTIVALUED populates `is_multivalued`;
+      ENUM_MEMBERSHIP populates `allowed_value_set`; EXPRESSION
+      populates `expression` + `expression_language` for imperative
+      rules the registry ingested but does not decompose (dandi-schema's
       `@model_validator` bodies, JSON Schema `if/then/else`,
-      SHACL/ShEx snippets). Identity-defining — a rule of type PATTERN
-      with pattern "^\\d+$" is a different Rule from a rule of type
-      EXPRESSION whose expression happens to embed the same regex.
+      SHACL/ShEx snippets — one whole validator body per Rule, since
+      those aren't decomposable into per-facet parts). Identity-defining
+      — a rule of type PATTERN with pattern "^\\d+$" is a different
+      Rule from a rule of type EXPRESSION whose expression happens to
+      embed the same regex.
 
   applies_to:
     range: RegistryEntity
@@ -712,7 +726,7 @@ slots:
       - HashSubset
     description: >-
       Lower bound for the constrained value, populated for
-      rule_type=VALUE_RANGE. Inclusive unless exclusive_minimum is true.
+      rule_type=MIN_VALUE. Inclusive unless exclusive_minimum is true.
 
   max_value:
     range: float
@@ -720,7 +734,7 @@ slots:
       - HashSubset
     description: >-
       Upper bound for the constrained value, populated for
-      rule_type=VALUE_RANGE. Inclusive unless exclusive_maximum is true.
+      rule_type=MAX_VALUE. Inclusive unless exclusive_maximum is true.
 
   exclusive_minimum:
     range: boolean
@@ -748,16 +762,17 @@ slots:
     in_subset:
       - HashSubset
     description: >-
-      Minimum string length, populated for rule_type=LENGTH_RANGE
-      (dandi-schema's `Field(max_length=...)` on `description`, ORCID
-      identifier length constraints).
+      Minimum string length, populated for rule_type=MIN_LENGTH
+      (ORCID identifier length constraints, for example).
 
   max_length:
     range: integer
     minimum_value: 0
     in_subset:
       - HashSubset
-    description: Maximum string length, populated for rule_type=LENGTH_RANGE.
+    description: >-
+      Maximum string length, populated for rule_type=MAX_LENGTH
+      (dandi-schema's `Field(max_length=10000)` on `description`).
 
   min_cardinality:
     range: integer
@@ -766,10 +781,11 @@ slots:
       - HashSubset
     description: >-
       Minimum number of items for a multivalued property, populated for
-      rule_type=CARDINALITY (dandi-schema's `List[LicenseType] =
+      rule_type=MIN_CARDINALITY (dandi-schema's `List[LicenseType] =
       Field(min_length=1)` — same keyword `min_length`, but on a list,
-      not a string; kept as a separate slot so string-length and
-      list-cardinality constraints don't collide on the hash).
+      not a string; kept as a separate slot from min_length so
+      string-length and list-cardinality constraints don't collide on
+      the hash).
 
   max_cardinality:
     range: integer
@@ -778,9 +794,10 @@ slots:
       - HashSubset
     description: >-
       Maximum number of items for a multivalued property, populated for
-      rule_type=CARDINALITY (dandi-schema's `List[AccessRequirements] =
-      Field(max_length=1)`, exact-one enforced as
-      min_cardinality=max_cardinality=1).
+      rule_type=MAX_CARDINALITY (dandi-schema's `List[AccessRequirements] =
+      Field(max_length=1)`; exact-one is enforced as a MIN_CARDINALITY
+      Rule and a MAX_CARDINALITY Rule both set to 1 — two Rules, one
+      per bound).
 
   is_required:
     range: boolean
@@ -1040,35 +1057,53 @@ enums:
   RuleTypeEnum:
     description: >-
       The kind of constraint a Rule expresses. Each value indicates which
-      of Rule's typed parameter slots should be populated (see Rule and
-      rule_type for the mapping). The declarative types (PATTERN through
-      ENUM_MEMBERSHIP) cover the field-level constraints source schemas
-      state directly (dandi-schema `Field(...)` args, LinkML slot facets,
-      JSON Schema keywords); EXPRESSION is the escape hatch for
-      class-level or imperative rules preserved verbatim
-      (dandi-schema `@model_validator`, JSON Schema `if/then/else`,
-      SHACL shapes).
+      one of Rule's typed parameter slots should be populated (see Rule
+      and rule_type for the mapping). The declarative types are per-facet
+      and atomic — one Rule per facet — so cross-schema alignment and
+      class-level slot_usage refinement both work facet-by-facet without
+      the redundant restatement a bundled type would force. EXPRESSION is
+      the escape hatch for imperative or class-level rules preserved
+      verbatim (dandi-schema `@model_validator`, JSON Schema
+      `if/then/else`, SHACL shapes), which aren't decomposable into
+      independent facets and stay one Rule per whole validator body.
     permissible_values:
       PATTERN:
         description: >-
           Value must match a regex (`pattern` slot). dandi-schema's
           `Field(pattern=NAME_PATTERN)`, LinkML's `pattern:` facet.
-      VALUE_RANGE:
+      MIN_VALUE:
         description: >-
-          Numeric value must lie within [min_value, max_value], with
-          exclusive_minimum/exclusive_maximum flags controlling
-          inclusivity. Populates min_value/max_value and, when set, the
-          exclusive_* flags.
-      LENGTH_RANGE:
+          Numeric value must satisfy a lower bound (`min_value`,
+          inclusive by default; `exclusive_minimum: true` makes it
+          strict). Independent of MAX_VALUE — a schema stating only a
+          lower bound produces just this Rule.
+      MAX_VALUE:
         description: >-
-          String length must lie within [min_length, max_length].
+          Numeric value must satisfy an upper bound (`max_value`,
+          inclusive by default; `exclusive_maximum: true` makes it
+          strict). Independent of MIN_VALUE — a schema stating only an
+          upper bound produces just this Rule.
+      MIN_LENGTH:
+        description: >-
+          String length must satisfy a lower bound (`min_length`).
+          Distinct from MIN_CARDINALITY so a bound on a string's
+          characters and a bound on a list's item count never hash to
+          the same Rule.
+      MAX_LENGTH:
+        description: >-
+          String length must satisfy an upper bound (`max_length`).
           dandi-schema's `Field(max_length=10000)` on `description`.
-      CARDINALITY:
+      MIN_CARDINALITY:
         description: >-
-          Multivalued property's item count must lie within
-          [min_cardinality, max_cardinality]. Distinct from LENGTH_RANGE
-          so a Rule bounding a list's size and a Rule bounding a string
-          field's characters never accidentally hash the same.
+          Multivalued property must carry at least `min_cardinality`
+          items. Distinct from MIN_LENGTH to keep list-count and
+          string-length constraints separable.
+      MAX_CARDINALITY:
+        description: >-
+          Multivalued property must carry at most `max_cardinality`
+          items. dandi-schema's `List[AccessRequirements] =
+          Field(max_length=1)` — exact-one enforced as MIN_CARDINALITY=1
+          plus MAX_CARDINALITY=1, two Rules.
       REQUIRED:
         description: >-
           Property must be present. is_required carries the boolean
