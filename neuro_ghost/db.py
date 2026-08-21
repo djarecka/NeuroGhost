@@ -88,6 +88,7 @@ LIST_FIELDS = {"provenance", "skos_mappings", "properties", "class_mixins", "per
 HAS_PROVENANCE_REL = {
     "RegistryClass":    "HAS_PROVENANCE",
     "RegistryProperty": "HAS_PROVENANCE_P",
+    "Rule":             "HAS_PROVENANCE_R",
     "ValueSet":         "HAS_PROVENANCE_VS",
     "PermissibleValue": "HAS_PROVENANCE_PV",
 }
@@ -523,8 +524,21 @@ _REL_DDL: list[str] = [
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_PV     (FROM PermissibleValue TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_PV   (FROM PermissibleValue TO Mapping)",
 
-    # --- Infrastructure edges ---
+    # --- Rule ---
+    # Rule.applies_to has range RegistryEntity, so ingestion may target either
+    # a class (a class-scoped or cross-field rule) or a property (a plain
+    # property-level constraint). Two REL tables so a query can filter by
+    # target kind without matching both.
+    # Rule inherits provenance and skos_mappings from RegistryEntity — the
+    # HAS_PROVENANCE_R / HAS_SKOS_MAPPING_R edges are the same pattern as the
+    # RegistryClass / RegistryProperty / ValueSet / PermissibleValue variants.
     "CREATE REL TABLE IF NOT EXISTS APPLIES_TO         (FROM Rule             TO RegistryClass)",
+    "CREATE REL TABLE IF NOT EXISTS APPLIES_TO_P       (FROM Rule             TO RegistryProperty)",
+    "CREATE REL TABLE IF NOT EXISTS DEFINED_IN_CLASS   (FROM Rule             TO RegistryClass)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_R   (FROM Rule             TO ProvenanceEntry)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_R (FROM Rule             TO Mapping)",
+
+    # --- Infrastructure edges ---
     "CREATE REL TABLE IF NOT EXISTS PROV_GENERATED     (FROM RegistryClass    TO SchemaActivity)",
     "CREATE REL TABLE IF NOT EXISTS PROV_GENERATED_P   (FROM RegistryProperty TO SchemaActivity)",
     "CREATE REL TABLE IF NOT EXISTS PROV_GENERATED_R   (FROM Rule             TO SchemaActivity)",
