@@ -168,7 +168,8 @@ def test_aliases_do_not_affect_identity():
     """
     base = dict(
         name="orcid", description="ORCID identifier.", property_range="xsd:string",
-        unit=None, concept_uri="https://example.org/schema#orcid", skos_mappings=[],
+        unit=None, concept_uri="https://example.org/schema#orcid",
+        skos_mappings=[],
     )
     with_alias = compute_hash_id_for(RegistryProperty, dict(base, aliases=["ORCID iD"]))
     without_alias = compute_hash_id_for(RegistryProperty, dict(base, aliases=[]))

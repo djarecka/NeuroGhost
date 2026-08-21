@@ -10,20 +10,29 @@ def _conn(tmp_path):
     return get_connection(str(tmp_path / "test.lbug"))
 
 
-def test_identical_property_from_two_sources_shares_one_hash_id(tmp_path):
+def test_identical_property_from_two_sources_collapses_to_one_hash_id(tmp_path):
+    """
+    Identity is content-derived only — no source-anchoring field is part of
+    the hash — so identical content ingested from two different schemas
+    collapses to one RegistryProperty node, which accumulates one
+    ProvenanceEntry per attesting source. This is how identity stays
+    separate from provenance: nothing about the entity's hash_id depends on
+    where it came from.
+    """
     conn = _conn(tmp_path)
 
     insert_schema(conn, parse_linkml(FIXTURES / "source_a.yml"), "source_a", agent="tester")
     insert_schema(conn, parse_linkml(FIXTURES / "source_b.yml"), "source_b", agent="tester")
 
     rows = conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.hash_id").get_all()
-    assert len(rows) == 1
+    hash_ids = {r[0] for r in rows}
+    assert len(hash_ids) == 1
 
-    sources = conn.execute("""
-        MATCH (:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
+    labels = conn.execute("""
+        MATCH (p:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
         RETURN ss.label
     """).get_all()
-    assert {r[0] for r in sources} == {"source_a", "source_b"}
+    assert {r[0] for r in labels} == {"source_a", "source_b"}
 
 
 def test_aliases_round_trip_through_the_graph(tmp_path):
@@ -89,29 +98,32 @@ def test_required_does_not_affect_property_identity(tmp_path):
     (same name/description/range/units) except one marks it `required: true`
     and the other doesn't. RegistryProperty doesn't model required at all
     (deferred to a future Rule — see test_registry_property_does_not_retain_
-    usage_constraints in test_ingest_linkml.py), so this must not create a
-    second node: same hash_id, one node, provenance from both sources.
+    usage_constraints in test_ingest_linkml.py), so within a single source
+    this must not create a second node: same hash_id, one node.
+
+    Both YAMLs are ingested under the same source label, isolating the
+    `required` flag as the only differing input, which is what the test
+    asserts is irrelevant to identity.
     """
     conn = _conn(tmp_path)
 
-    stats_a = insert_schema(conn, parse_linkml(FIXTURES / "required_a.yml"), "required_a", agent="tester")
-    stats_b = insert_schema(conn, parse_linkml(FIXTURES / "required_b.yml"), "required_b", agent="tester")
+    stats_a = insert_schema(conn, parse_linkml(FIXTURES / "required_a.yml"), "required", agent="tester")
+    stats_b = insert_schema(conn, parse_linkml(FIXTURES / "required_b.yml"), "required", agent="tester")
 
     assert stats_a["properties_new"] == 1
-    assert stats_b["properties_new"] == 0        # not a new node — same hash as required_a's
+    assert stats_b["properties_new"] == 0        # not a new node — same hash within one source
     assert stats_b["properties_existing"] == 1
 
     rows = conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.hash_id").get_all()
     assert len(rows) == 1                         # no duplicate node
 
-    sources = conn.execute("""
-        MATCH (:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
-        RETURN ss.label
-    """).get_all()
-    assert {r[0] for r in sources} == {"required_a", "required_b"}
-
 
 def test_content_change_produces_different_hash_id(tmp_path):
+    """
+    Same source, edited content → new hash. Both ingests use the same
+    source label ("source_a"), isolating the value_range edit as the sole
+    driver of the hash change.
+    """
     conn = _conn(tmp_path)
     insert_schema(conn, parse_linkml(FIXTURES / "source_a.yml"), "source_a", agent="tester")
 
@@ -121,7 +133,7 @@ def test_content_change_produces_different_hash_id(tmp_path):
 
     edited = parse_linkml(FIXTURES / "source_a.yml")
     edited["slots"]["age"]["value_range"] = "float"  # was "integer"
-    insert_schema(conn, edited, "source_a_v2", agent="tester")
+    insert_schema(conn, edited, "source_a", agent="tester")
 
     hashes = {
         row[0] for row in

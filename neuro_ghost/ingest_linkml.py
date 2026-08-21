@@ -329,12 +329,13 @@ def parse_linkml(path: Path) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def _make_provenance(schema_source_id: str, agent: str, issue: str = "",
-                     registry_version: str = "",
+                     registry_version: str = "", source_version: str = "",
                      activity: str = "ingestion") -> ProvenanceEntry:
     attributed_to = f"{agent} (issue #{issue})" if issue else agent
     return ProvenanceEntry(
         id=make_id(),
         had_primary_source=schema_source_id,
+        source_version=source_version or None,
         registry_version=registry_version or None,
         generated_at_time=now_iso(),
         was_attributed_to=attributed_to,
@@ -368,10 +369,16 @@ def build_registry_entities(
     """
     slots   = parsed["slots"]
     classes = parsed["classes"]
+    source_version = parsed.get("meta", {}).get("version") or ""
 
     used_slots: set[str] = set()
     for cls in classes.values():
         used_slots.update(cls["slots"])
+
+    def make_prov() -> ProvenanceEntry:
+        return _make_provenance(
+            schema_source_id, agent, issue, registry_version, source_version,
+        )
 
     properties: dict[str, RegistryProperty] = {}
     for slot_name in used_slots:
@@ -393,7 +400,7 @@ def build_registry_entities(
         )
         prop = RegistryProperty(
             hash_id=compute_hash_id_for(RegistryProperty, fields),
-            provenance=[_make_provenance(schema_source_id, agent, issue, registry_version)],
+            provenance=[make_prov()],
             **fields,
         )
         properties[slot_name] = prop
@@ -428,7 +435,7 @@ def build_registry_entities(
         )
         rc = RegistryClass(
             hash_id=compute_hash_id_for(RegistryClass, fields),
-            provenance=[_make_provenance(schema_source_id, agent, issue, registry_version)],
+            provenance=[make_prov()],
             **fields,
         )
         registry_classes[cls_name] = rc
@@ -442,7 +449,7 @@ def build_registry_entities(
     # name/description/meaning), so — like properties/classes above — it
     # gets a real ProvenanceEntry, not the hand-rolled node the old
     # non-RegistryEntity version used.
-    prov_factory = lambda: _make_provenance(schema_source_id, agent, issue, registry_version)
+    prov_factory = make_prov
     value_sets: dict[str, ValueSet] = {}
     permissible_values: dict[str, PermissibleValue] = {}
 

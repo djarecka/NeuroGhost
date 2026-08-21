@@ -17,6 +17,7 @@ erDiagram
 Mapping {
     string id
     float confidence
+    string mapping_set_id
     SkosMappingTypeEnum mapping_type
     ReviewStatusEnum review_status
     uriorcurie target
@@ -28,7 +29,7 @@ MappingProvenanceEntry {
     string id
     datetime generated_at_time
     string registry_version
-    string source_description
+    string source_version
     string was_attributed_to
     stringList was_derived_from
     string was_generated_by
@@ -38,37 +39,39 @@ PermissibleValue {
     string name
     string description
     stringList aliases
+    uriorcurie concept_uri
     uriorcurie hash_id
 }
 ProvenanceEntry {
     string id
     datetime generated_at_time
     string registry_version
-    string source_description
+    string source_version
     string was_attributed_to
     stringList was_derived_from
     string was_generated_by
 }
 RegistryClass {
-    boolean abstract
-    uriorcurie class_uri
+    boolean is_abstract
     string name
     string description
     stringList aliases
+    uriorcurie concept_uri
     uriorcurie hash_id
 }
 RegistryEntity {
     string name
     string description
     stringList aliases
+    uriorcurie concept_uri
     uriorcurie hash_id
 }
 RegistryProperty {
-    string range
-    uriorcurie slot_uri
+    string property_range
     string name
     string description
     stringList aliases
+    uriorcurie concept_uri
     uriorcurie hash_id
 }
 Rule {
@@ -117,6 +120,7 @@ ValueSet {
     string name
     string description
     stringList aliases
+    uriorcurie concept_uri
     uriorcurie hash_id
 }
 
@@ -125,9 +129,9 @@ MappingProvenanceEntry ||--|o SchemaSource : "had_primary_source"
 PermissibleValue ||--}o Mapping : "skos_mappings"
 PermissibleValue ||--}| ProvenanceEntry : "provenance"
 ProvenanceEntry ||--|| SchemaSource : "had_primary_source"
-RegistryClass ||--|o RegistryClass : "is_a"
+RegistryClass ||--|o RegistryClass : "parent_class"
 RegistryClass ||--}o Mapping : "skos_mappings"
-RegistryClass ||--}o RegistryClass : "mixins"
+RegistryClass ||--}o RegistryClass : "class_mixins"
 RegistryClass ||--}o RegistryProperty : "properties"
 RegistryClass ||--}| ProvenanceEntry : "provenance"
 RegistryEntity ||--}o Mapping : "skos_mappings"
