@@ -227,7 +227,9 @@ classes:
       - is_required
       - is_multivalued
       - range_expression
+      - format_name
       - allowed_value_set
+      - default_value
       - referenced_entities
       - expression
       - expression_language
@@ -616,8 +618,11 @@ slots:
       `min_length`/`max_length`; MIN_CARDINALITY/MAX_CARDINALITY
       populate `min_cardinality`/`max_cardinality`; REQUIRED populates
       `is_required`; MULTIVALUED populates `is_multivalued`; RANGE
-      populates `range_expression`; ENUM_MEMBERSHIP populates
-      `allowed_value_set`; EXPRESSION
+      populates `range_expression`; FORMAT populates `format_name`;
+      ENUM_MEMBERSHIP populates `allowed_value_set`; DEFAULT populates
+      `default_value` (a "fill-in" rule, not a check — retained
+      because sources declare them alongside checks and downstream
+      tools consume them the same way); EXPRESSION
       populates `expression` + `expression_language` for imperative
       rules the registry ingested but does not decompose (dandi-schema's
       `@model_validator` bodies, JSON Schema `if/then/else`,
@@ -837,6 +842,24 @@ slots:
       range still lives on RegistryProperty.property_range; this Rule
       is the class-scoped refinement of it.
 
+  format_name:
+    range: string
+    in_subset:
+      - HashSubset
+    description: >-
+      Named semantic format for a string value, populated for
+      rule_type=FORMAT. Holds a JSON Schema `format` keyword
+      ("email", "uri", "uuid", "date-time", "ipv4", …) or an
+      equivalent named type from another source. Distinct from
+      PATTERN so two schemas that both declare `"format": "email"`
+      collapse to the same Rule even when their underlying regex
+      enforcement differs — alignment on the named format is more
+      meaningful than alignment on any one schema's ad-hoc email
+      regex. Kept as a string rather than an enum because the JSON
+      Schema format registry is open (implementations may define
+      custom formats), so a closed enum would drop values on
+      ingest.
+
   allowed_value_set:
     range: ValueSet
     in_subset:
@@ -850,6 +873,25 @@ slots:
       the enforceable constraint — a property whose range is a ValueSet
       typically also has a Rule of type ENUM_MEMBERSHIP pointing at the
       same ValueSet.
+
+  default_value:
+    range: string
+    in_subset:
+      - HashSubset
+    description: >-
+      Value to assume when the property is absent, populated for
+      rule_type=DEFAULT. A "fill-in" fact, not a check — but sources
+      declare defaults alongside constraints (LinkML `ifabsent`, JSON
+      Schema `default`, Pydantic `Field(default=...)`) and downstream
+      tools consume them the same way, so they live in the same Rule
+      graph rather than a parallel one. Stored as a string preserving
+      the source form verbatim: LinkML `ifabsent` accepts a mini-
+      expression language ('false', 'default_value("[]")', function
+      calls), and JSON Schema `default` is any JSON value; both round-
+      trip cleanly as text and downstream consumers parse per-source
+      as needed. Class-scopeable via `defined_in_class` like any other
+      Rule — a slot_usage that changes only the default in one class
+      is exactly the case the override mechanism was designed for.
 
   referenced_entities:
     range: RegistryEntity
@@ -1141,11 +1183,29 @@ enums:
           set is a per-class narrowing (LinkML `slot_usage` narrowing
           a slot's range to a subtype, JSON Schema `if/then` type
           switches).
+      FORMAT:
+        description: >-
+          String value must be a named semantic format
+          (`format_name` — "email", "uri", "uuid", "date-time",
+          "ipv4", …). Distinct from PATTERN: two schemas that both
+          declare `"format": "email"` collapse to the same Rule
+          even if their fallback regex enforcement differs;
+          alignment on the named format is stronger than alignment
+          on any one schema's ad-hoc regex.
       ENUM_MEMBERSHIP:
         description: >-
           Value must be drawn from a ValueSet (`allowed_value_set`).
           Distinct from setting property_range to a ValueSet — that is
           a type declaration; this is the enforceable check.
+      DEFAULT:
+        description: >-
+          Property takes `default_value` when absent. A "fill-in"
+          rule, not a validator — retained in RuleTypeEnum because
+          sources declare defaults alongside constraints (LinkML
+          `ifabsent`, JSON Schema `default`, Pydantic
+          `Field(default=...)`) and consumers read them from the
+          same Rule graph. Class-scopeable via `defined_in_class`
+          when a slot_usage changes only the default in one class.
       EXPRESSION:
         description: >-
           Constraint expressed as free-form text in a specified
