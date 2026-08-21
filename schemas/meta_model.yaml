@@ -91,8 +91,17 @@ classes:
       edges (multivalued — cannot be inlined into the parent's node table).
       Identified by id, not hash_id — a ProvenanceEntry is a per-attestation
       record, not a deduplicated, content-addressed registry entity.
+
+      Carries `attests_to` (the reverse of `RegistryEntity.provenance`) so
+      the entry is standalone-readable: schema regeneration can start from
+      "every ProvenanceEntry whose had_primary_source is this schema" and
+      walk `attests_to` in one hop instead of scanning every entity's
+      provenance list. The forward edge (entity → provenance) and the
+      reverse slot (provenance → entity) express the same fact and must
+      be kept in sync at ingest.
     slots:
       - id
+      - attests_to
       - had_primary_source
       - source_version
       - registry_version
@@ -115,6 +124,8 @@ classes:
     slot_usage:
       had_primary_source:
         required: false
+      attests_to:
+        range: Mapping
     slots:
       - mapping_justification
       - match_string
@@ -369,6 +380,7 @@ slots:
     range: ProvenanceEntry
     multivalued: true
     required: true
+    inverse: attests_to
     # Inlined so generated code carries ProvenanceEntry objects rather than id
     # references: the pipeline builds entries in memory and hands them to the
     # graph writers, which split them into their own nodes on write.
@@ -376,7 +388,34 @@ slots:
     inlined_as_list: true
     description: >-
       One ProvenanceEntry per source attesting to this entity. Accumulates
-      as more sources are ingested — never affects hash_id.
+      as more sources are ingested — never affects hash_id. Mirrored by
+      ProvenanceEntry.attests_to so the relationship round-trips in either
+      direction — the entity owns the list, and each entry names the
+      entity it belongs to.
+
+  attests_to:
+    range: RegistryEntity
+    required: true
+    inverse: provenance
+    # Reverse pointer to the entity this ProvenanceEntry belongs to.
+    # Not in HashSubset — ProvenanceEntry is not content-addressed;
+    # identity is the plain `id` slot. The relationship is also
+    # materialized as a HAS_PROVENANCE edge by the graph writer; this
+    # slot is what makes a serialized ProvenanceEntry standalone
+    # (schema regeneration from JSON, SSSOM-style exports, standalone
+    # audit logs — anything that reads provenance without also
+    # holding the owning entity in the same query).
+    description: >-
+      The RegistryEntity (or Mapping, on MappingProvenanceEntry) this
+      attestation is about. Singular — one ProvenanceEntry belongs to
+      exactly one entity; a schema that attested to N entities produces
+      N separate ProvenanceEntry nodes, each with its own attests_to
+      pointer. Redundant with the parent's `provenance` list, kept in
+      sync at ingest — the two directions serve different consumers
+      (top-down: `entity.provenance` for reading an entity's history;
+      bottom-up: `attests_to` for regenerating a schema by starting
+      from every ProvenanceEntry whose had_primary_source is that
+      schema).
 
   skos_mappings:
     range: Mapping
