@@ -74,7 +74,7 @@ from linkml_runtime.utils.schemaview import SchemaView
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from schema_registry_utils import (
-    RegistryClass, RegistryProperty, PermissibleValue, ValueSet,
+    RegistryClass, RegistryProperty, PermissibleValue, RegistryValueSet,
     ProvenanceEntry, compute_hash_id_for,
 )
 
@@ -349,7 +349,7 @@ def _make_provenance(schema_source_id: str, attests_to: str, agent: str,
 def build_registry_entities(
     parsed: dict, schema_source_id: str, agent: str, issue: str = "",
     registry_version: str = "",
-) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass], dict[str, ValueSet], dict[str, PermissibleValue]]:
+) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass], dict[str, RegistryValueSet], dict[str, PermissibleValue]]:
     """
     Convert parse_linkml()'s intermediate dict into content-hashed
     RegistryProperty/RegistryClass instances, keyed by their original
@@ -449,13 +449,13 @@ def build_registry_entities(
     for cls_name in classes:
         resolve_class(cls_name)
 
-    # Build PermissibleValue + ValueSet instances from parsed enums.
+    # Build PermissibleValue + RegistryValueSet instances from parsed enums.
     # PermissibleValue is a real RegistryEntity (content-addressed on
     # name/description/meaning), so — like properties/classes above — it
     # gets a real ProvenanceEntry, not the hand-rolled node the old
     # non-RegistryEntity version used.
     prov_factory = make_prov
-    value_sets: dict[str, ValueSet] = {}
+    value_sets: dict[str, RegistryValueSet] = {}
     permissible_values: dict[str, PermissibleValue] = {}
 
     for enum_name, enum_data in parsed.get("enums", {}).items():
@@ -483,8 +483,8 @@ def build_registry_entities(
             permissible_values=sorted(pv_hash_ids),
             skos_mappings=[],
         )
-        vs_hash_id = compute_hash_id_for(ValueSet, vs_fields)
-        vs = ValueSet(
+        vs_hash_id = compute_hash_id_for(RegistryValueSet, vs_fields)
+        vs = RegistryValueSet(
             hash_id=vs_hash_id,
             provenance=[prov_factory(vs_hash_id)],
             **vs_fields,
@@ -503,13 +503,13 @@ def build_registry_entities(
 
 
 # ---------------------------------------------------------------------------
-# ValueSet / PermissibleValue graph writers
+# RegistryValueSet / PermissibleValue graph writers
 # ---------------------------------------------------------------------------
 
-def _write_value_sets(conn, value_sets: dict[str, "ValueSet"],
+def _write_value_sets(conn, value_sets: dict[str, "RegistryValueSet"],
                       permissible_values: dict[str, "PermissibleValue"]) -> int:
     """
-    Write ValueSet and PermissibleValue nodes + edges. Returns edge count.
+    Write RegistryValueSet and PermissibleValue nodes + edges. Returns edge count.
 
     PermissibleValue is a real RegistryEntity now, so it's written through
     the same entity_exists/create_entity_node/write_provenance pattern as
@@ -519,11 +519,11 @@ def _write_value_sets(conn, value_sets: dict[str, "ValueSet"],
 
     rels = 0
     for enum_name, vs in value_sets.items():
-        is_new = not entity_exists(conn, "ValueSet", vs.hash_id)
+        is_new = not entity_exists(conn, "RegistryValueSet", vs.hash_id)
         if is_new:
-            create_entity_node(conn, "ValueSet", vs)
+            create_entity_node(conn, "RegistryValueSet", vs)
         for prov in vs.provenance:
-            write_provenance(conn, "ValueSet", vs.hash_id, prov)
+            write_provenance(conn, "RegistryValueSet", vs.hash_id, prov)
 
         # Write each PermissibleValue node and link it.
         for pv_hash_id in vs.permissible_values:
@@ -535,12 +535,12 @@ def _write_value_sets(conn, value_sets: dict[str, "ValueSet"],
                 write_provenance(conn, "PermissibleValue", pv.hash_id, prov)
 
             edge_exists = conn.execute("""
-                MATCH (vs:ValueSet {hash_id: $vs})-[:HAS_PERMISSIBLE_VALUE]->(pv:PermissibleValue {hash_id: $pv})
+                MATCH (vs:RegistryValueSet {hash_id: $vs})-[:HAS_PERMISSIBLE_VALUE]->(pv:PermissibleValue {hash_id: $pv})
                 RETURN vs.hash_id LIMIT 1
             """, {"vs": vs.hash_id, "pv": pv.hash_id}).has_next()
             if not edge_exists:
                 conn.execute("""
-                    MATCH (vs:ValueSet {hash_id: $vs}), (pv:PermissibleValue {hash_id: $pv})
+                    MATCH (vs:RegistryValueSet {hash_id: $vs}), (pv:PermissibleValue {hash_id: $pv})
                     CREATE (vs)-[:HAS_PERMISSIBLE_VALUE]->(pv)
                 """, {"vs": vs.hash_id, "pv": pv.hash_id})
                 rels += 1

@@ -74,7 +74,7 @@ classes:
       A registered property (data element) representing a characteristic or
       attribute that can be attached to a RegistryClass, e.g. "age". Usage
       constraints (required, multivalued, min/max, pattern) are deliberately
-      not here — they belong on Rule, since the same property can be required
+      not here — they belong on RegistryRule, since the same property can be required
       in one source's usage and optional in another's without being a
       different concept.
     slots:
@@ -150,7 +150,7 @@ classes:
       provenance:
         range: MappingProvenanceEntry
 
-  Rule:
+  RegistryRule:
     is_a: RegistryEntity
     description: >-
       A validation or business rule that constrains one or more registry
@@ -166,9 +166,9 @@ classes:
       can compare them: two schemas that state "identifier matches ORCID"
       about the same-hash property should recognize the equivalence.
 
-      Each declarative constraint is one Rule — one facet, one node. A
+      Each declarative constraint is one RegistryRule — one facet, one node. A
       property with a lower bound of 0 and an upper bound of 120 ingests
-      as two Rules (rule_type=MIN_VALUE with rule_value="0", and
+      as two RegistryRules (rule_type=MIN_VALUE with rule_value="0", and
       rule_type=MAX_VALUE with rule_value="120"), not one, so a source
       that only sets a lower bound isn't implicitly asserting anything
       about an upper bound, and a class-level refinement of the lower
@@ -180,7 +180,7 @@ classes:
       string, interpreted per rule_type — a regex for PATTERN, a
       numeric literal for MIN_VALUE/MAX_VALUE, a length for
       MIN_LENGTH/MAX_LENGTH, "true"/"false" for REQUIRED/MULTIVALUED, a
-      ValueSet hash_id for ENUM_MEMBERSHIP, an XSD CURIE for RANGE, the
+      RegistryValueSet hash_id for ENUM_MEMBERSHIP, an XSD CURIE for RANGE, the
       literal default for DEFAULT, the whole validator body for
       EXPRESSION_*, and so on. This single-value shape is why exclusive
       bounds and expression languages are encoded as rule_type variants
@@ -189,26 +189,26 @@ classes:
 
       Identity is content-addressed like any RegistryEntity and collapses
       across schemas: same rule_type + same rule_value + same applies_to
-      + same used_in_class hash to the same Rule, so two source schemas
+      + same used_in_class hash to the same RegistryRule, so two source schemas
       that state "identifier matches ORCID" on the same-hash property
-      collapse to one Rule node with both schemas attesting to it via
+      collapse to one RegistryRule node with both schemas attesting to it via
       `provenance` — matching the cross-schema identity behavior main
       restored in 534ee4b. A schema that changes only the human-readable
       `error_message` keeps its hash_id (see the HashSubset membership on
-      each slot). Rules are attached to RegistryClass/RegistryProperty
+      each slot). RegistryRules are attached to RegistryClass/RegistryProperty
       through the `applies_to` slot — not inlined on the entity itself,
-      so a Rule's targets are visible as edges in the graph.
+      so a RegistryRule's targets are visible as edges in the graph.
 
       LinkML slot_usage (and equivalent per-class refinements in other
       schema languages) is modeled through the optional `used_in_class`
       slot — mirroring LinkML's own `slot_usage` vocabulary — rather
-      than a separate override entity or an inheritance chain. A Rule
+      than a separate override entity or an inheritance chain. A RegistryRule
       with `used_in_class` unset is a schema-level default — effective
       wherever its `applies_to` property is used, unless a more
-      specific Rule takes precedence. A Rule with
+      specific RegistryRule takes precedence. A RegistryRule with
       `used_in_class = ClassB` is a class-level refinement — effective
       only when the property is used inside ClassB, and it overrides
-      the schema-level Rule of the *same rule_type* on the *same
+      the schema-level RegistryRule of the *same rule_type* on the *same
       applies_to* property (rule_type-by-rule_type, matching LinkML's
       slot_usage semantics: overriding PATTERN in one class does not
       also drop the schema-level REQUIRED). Class-level rules that
@@ -219,11 +219,11 @@ classes:
       `rule_type = EXPRESSION_PYTHON`; no special-casing.
 
       Effective-rule resolution for property P used inside class C is
-      therefore: for each rule_type, prefer the Rule with
+      therefore: for each rule_type, prefer the RegistryRule with
       `used_in_class = C and applies_to contains P` if one exists;
-      otherwise fall back to the Rule with `used_in_class` unset. The
+      otherwise fall back to the RegistryRule with `used_in_class` unset. The
       registry does not currently execute this resolution — it stores
-      both the schema-level and class-level Rules as data — but the
+      both the schema-level and class-level RegistryRules as data — but the
       model is shaped so a downstream validator (or an alignment pass
       that wants to compare "the effective pattern on this slot in this
       class") can do so with a single graph walk.
@@ -248,7 +248,7 @@ classes:
   PermissibleValue:
     is_a: RegistryEntity
     description: >-
-      A single permissible value within a ValueSet enumeration. The `name`
+      A single permissible value within a RegistryValueSet enumeration. The `name`
       field holds the value text (e.g. "EXACT_MATCH"); `meaning` optionally
       maps it to an external ontology IRI. Identity is content-addressed on
       (name, description, meaning) — identical values across sources share
@@ -256,11 +256,11 @@ classes:
     slots:
       - meaning
 
-  ValueSet:
+  RegistryValueSet:
     is_a: RegistryEntity
     description: >-
       A controlled set of permissible values, usable as a RegistryProperty
-      range. LinkML enums ingest as ValueSet nodes; each permissible value
+      range. LinkML enums ingest as RegistryValueSet nodes; each permissible value
       becomes a separate PermissibleValue node linked via
       HAS_PERMISSIBLE_VALUE edges.
     slots:
@@ -341,6 +341,40 @@ classes:
       - changes_summary
       - created_at
       - registry_version
+
+  RegistrySchema:
+    description: >-
+      A schema composed from existing registry content — a named, curated
+      subset of RegistryClasses/RegistryProperties/RegistryRules/RegistryValueSets that can
+      be exported as a standalone schema file (LinkML today; other output
+      formats are a serialization concern, not modeled here). Unlike
+      SchemaSource, which records where an *ingested* schema came from,
+      membership here is an explicit curatorial selection — there is no
+      attestation trail to derive it from, since composing this schema is
+      the act that creates the selection in the first place.
+
+      Exported as full IRIs, not CURIEs: the registry already expands every
+      CURIE to a full IRI at ingest time (see resolve_prefix() in
+      ingest_linkml.py), so there is no original prefix mapping left to
+      preserve, and inventing a fresh one here would just be another map to
+      keep in sync. A full IRI is valid wherever LinkML accepts a CURIE, so
+      this is a v1 scope choice, not a limitation of the format.
+
+      Identified by id, not hash_id: two people composing an identical
+      subset of content for different purposes are not the same entity.
+    slots:
+      - id
+      - name
+      - description
+      - namespace_iri
+      - default_range
+      - imports
+      - registry_classes
+      - registry_properties
+      - registry_rules
+      - registry_value_sets
+      - created_by
+      - created_at
 
 # ---------------------------------------------------------------------------
 # Slots
@@ -470,7 +504,7 @@ slots:
     description: >-
       The data type or value range for this property: a canonical XSD
       CURIE for primitives (e.g. "xsd:string", "xsd:integer"), or the
-      hash_id of a ValueSet for enumerated values. Bare primitive names
+      hash_id of a RegistryValueSet for enumerated values. Bare primitive names
       ("string", "float") are deprecated: datatype compatibility is an
       alignment signal and an incompatibility veto, so "float",
       "xsd:float" and "double" must not read as three unrelated types.
@@ -636,16 +670,16 @@ slots:
       standards-conformant (SSSOM/Proteus), not because anything sets it
       to ACCEPTED/REJECTED today.
 
-  # --- Rule slots ------------------------------------------------------------
+  # --- RegistryRule slots ------------------------------------------------------------
 
   rule_type:
-    range: RuleTypeEnum
+    range: RegistryRuleTypeEnum
     required: true
     in_subset:
       - HashSubset
     description: >-
-      What kind of constraint this Rule expresses. Each declarative
-      rule_type is atomic — one facet, one Rule — so that a source
+      What kind of constraint this RegistryRule expresses. Each declarative
+      rule_type is atomic — one facet, one RegistryRule — so that a source
       setting only a lower bound doesn't imply anything about an upper
       bound, and a class-level refinement of MIN_VALUE doesn't sweep
       up MAX_VALUE (matching LinkML slot_usage, which refines facets
@@ -657,7 +691,7 @@ slots:
       MIN_VALUE_EXCLUSIVE / MAX_VALUE_EXCLUSIVE, and each supported
       expression language is its own EXPRESSION_* variant
       (EXPRESSION_SHACL, EXPRESSION_PYTHON, …). Identity-defining — a
-      rule of type PATTERN with rule_value="^\\d+$" is a different Rule
+      rule of type PATTERN with rule_value="^\\d+$" is a different RegistryRule
       from a rule of type EXPRESSION_PYTHON whose value happens to
       embed the same regex.
 
@@ -684,7 +718,7 @@ slots:
       applies_to stays purely about the constrained targets.
       Range is RegistryEntity for flexibility; ingestion should only
       ever populate this with RegistryClass or RegistryProperty
-      targets (PermissibleValue, ValueSet, Rule itself are not valid
+      targets (PermissibleValue, RegistryValueSet, RegistryRule itself are not valid
       targets).
 
   used_in_class:
@@ -693,7 +727,7 @@ slots:
       - HashSubset
     # In the hash so a class-level refinement and the schema-level
     # default it overrides are distinct entities: unsetting used_in_class
-    # from a Rule and re-hashing would collapse the override into the
+    # from a RegistryRule and re-hashing would collapse the override into the
     # default, which is exactly the collision the override-resolution
     # rule is designed to keep separate.
     description: >-
@@ -715,7 +749,7 @@ slots:
       property doesn't have a "slot_usage" of its own.
 
   severity:
-    range: RuleSeverityEnum
+    range: RegistryRuleSeverityEnum
     ifabsent: 'ERROR'
     in_subset:
       - HashSubset
@@ -736,7 +770,7 @@ slots:
     range: string
     # Not in HashSubset — identity is the constraint, not the message the
     # source wrote next to it. Two ingestions of the same rule with
-    # slightly different phrasing should collapse to one Rule; a schema
+    # slightly different phrasing should collapse to one RegistryRule; a schema
     # editor tweaking the wording should not mint a new hash_id.
     description: >-
       Human-readable message describing what the rule requires, shown when
@@ -758,7 +792,7 @@ slots:
       MIN_VALUE / MIN_VALUE_EXCLUSIVE / MAX_VALUE / MAX_VALUE_EXCLUSIVE,
       an integer for MIN_LENGTH / MAX_LENGTH / MIN_CARDINALITY /
       MAX_CARDINALITY, "true"/"false" for REQUIRED / MULTIVALUED, an
-      XSD CURIE or ValueSet hash_id for RANGE, a ValueSet hash_id for
+      XSD CURIE or RegistryValueSet hash_id for RANGE, a RegistryValueSet hash_id for
       ENUM_MEMBERSHIP, a source-preserved default (LinkML `ifabsent`
       mini-expression, JSON Schema `default` as JSON text) for
       DEFAULT, and the whole validator body for the EXPRESSION_*
@@ -882,7 +916,61 @@ slots:
     range: string
     description: Human-readable summary of what changed in this version.
 
-  # --- PermissibleValue / ValueSet slots ------------------------------------
+  # --- RegistrySchema slots --------------------------------------------------
+
+  namespace_iri:
+    range: uriorcurie
+    required: true
+    description: >-
+      Base namespace for this schema — becomes its own `id:` when exported
+      to LinkML (or the equivalent namespace declaration in another output
+      format).
+
+  default_range:
+    range: string
+    description: >-
+      Default range for slots that don't declare one explicitly, carried
+      into the exported schema's `default_range:`. Optional — a composed
+      schema may leave every RegistryProperty's own property_range
+      explicit and not need a default.
+
+  imports:
+    range: string
+    multivalued: true
+    description: >-
+      Import statements to carry into the exported schema verbatim (e.g.
+      "linkml:types"). Not resolved or validated by the registry — passed
+      through as-is.
+
+  registry_classes:
+    range: RegistryClass
+    multivalued: true
+    description: The RegistryClass entities (by hash_id) included in this schema.
+
+  registry_properties:
+    range: RegistryProperty
+    multivalued: true
+    description: >-
+      The RegistryProperty entities (by hash_id) included in this schema.
+      Not implied by registry_classes' own `properties` — a composed
+      schema may include a standalone property not attached to any
+      included class, or omit one of an included class's properties.
+
+  registry_rules:
+    range: RegistryRule
+    multivalued: true
+    description: The RegistryRule entities (by hash_id) included in this schema.
+
+  registry_value_sets:
+    range: RegistryValueSet
+    multivalued: true
+    description: The RegistryValueSet entities (by hash_id) included in this schema.
+
+  created_by:
+    range: string
+    description: Agent (user or system) that composed this schema.
+
+  # --- PermissibleValue / RegistryValueSet slots ------------------------------------
 
   meaning:
     range: uriorcurie
@@ -898,7 +986,7 @@ slots:
     in_subset:
       - HashSubset
     description: >-
-      The set of permissible values for this ValueSet. Stored as hash_id
+      The set of permissible values for this RegistryValueSet. Stored as hash_id
       references; HAS_PERMISSIBLE_VALUE edges are the graph traversal.
 
   # --- UnitOfMeasure slots ---------------------------------------------------
@@ -981,12 +1069,12 @@ enums:
       SUPERSEDED:
         description: Replaced by a newer mapping.
 
-  RuleTypeEnum:
+  RegistryRuleTypeEnum:
     description: >-
-      The kind of constraint a Rule expresses. `rule_value` (a plain
+      The kind of constraint a RegistryRule expresses. `rule_value` (a plain
       string) carries the constraint's parameter, interpreted per
       rule_type — the grammar for each entry is given below. The
-      declarative types are per-facet and atomic (one Rule per facet)
+      declarative types are per-facet and atomic (one RegistryRule per facet)
       so cross-schema alignment and class-level slot_usage refinement
       both work facet-by-facet without the redundant restatement a
       bundled type would force. Facet variants that used to require a
@@ -1006,13 +1094,13 @@ enums:
           Value must satisfy a named semantic format. `rule_value` is
           the format keyword ("email", "uri", "uuid", "date-time",
           "ipv4", …). Distinct from PATTERN so two schemas both
-          declaring `"format": "email"` collapse to the same Rule
+          declaring `"format": "email"` collapse to the same RegistryRule
           even if their fallback regex enforcement differs.
       MIN_VALUE:
         description: >-
           Numeric value must satisfy a lower bound (inclusive).
           `rule_value` is the bound as a decimal string. A schema
-          stating only a lower bound produces just this Rule.
+          stating only a lower bound produces just this RegistryRule.
       MIN_VALUE_EXCLUSIVE:
         description: >-
           Numeric value must satisfy a strict lower bound (value >
@@ -1032,7 +1120,7 @@ enums:
           String length must satisfy a lower bound. `rule_value` is
           the bound as an integer string. Distinct from
           MIN_CARDINALITY so string-character and list-item bounds
-          never hash to the same Rule.
+          never hash to the same RegistryRule.
       MAX_LENGTH:
         description: >-
           String length must satisfy an upper bound. `rule_value` is
@@ -1047,7 +1135,7 @@ enums:
         description: >-
           Multivalued property must carry at most `rule_value` items.
           Exact-one is enforced as MIN_CARDINALITY=1 plus
-          MAX_CARDINALITY=1, two Rules — dandi-schema
+          MAX_CARDINALITY=1, two RegistryRules — dandi-schema
           `List[AccessRequirements] = Field(max_length=1)`.
       REQUIRED:
         description: >-
@@ -1062,25 +1150,25 @@ enums:
         description: >-
           Property's value type is refined to a specific range in the
           enclosing class scope. `rule_value` is an XSD CURIE
-          (e.g. "xsd:integer") or a ValueSet hash_id, same shape as
+          (e.g. "xsd:integer") or a RegistryValueSet hash_id, same shape as
           RegistryProperty.property_range. Distinct from that slot:
-          property_range is the property's default type, a RANGE Rule
+          property_range is the property's default type, a RANGE RegistryRule
           with `used_in_class` set is a per-class narrowing (LinkML
           `slot_usage` range refinement, JSON Schema `if/then` type
           switches).
       ENUM_MEMBERSHIP:
         description: >-
-          Value must be drawn from a ValueSet. `rule_value` is the
-          ValueSet's hash_id. Distinct from setting property_range to
-          a ValueSet — that is a type declaration; this is the
+          Value must be drawn from a RegistryValueSet. `rule_value` is the
+          RegistryValueSet's hash_id. Distinct from setting property_range to
+          a RegistryValueSet — that is a type declaration; this is the
           enforceable check.
       DEFAULT:
         description: >-
           Property takes `rule_value` when absent. A "fill-in" rule,
-          not a validator — retained in RuleTypeEnum because sources
+          not a validator — retained in RegistryRuleTypeEnum because sources
           declare defaults alongside constraints (LinkML `ifabsent`,
           JSON Schema `default`, Pydantic `Field(default=...)`) and
-          consumers read them from the same Rule graph. `rule_value`
+          consumers read them from the same RegistryRule graph. `rule_value`
           preserves the source form verbatim; downstream tools parse
           per-source (LinkML `ifabsent` mini-expressions, JSON default
           as JSON text).
@@ -1118,11 +1206,11 @@ enums:
           constraint prose-only, with no machine-checkable form.
           `rule_value` is the prose.
 
-  RuleSeverityEnum:
+  RegistryRuleSeverityEnum:
     description: >-
-      How a Rule failure is to be reported by a downstream validator.
+      How a RegistryRule failure is to be reported by a downstream validator.
       Mirrors SHACL's sh:severity levels; a source schema that does not
-      state a severity ingests as ERROR (see Rule.severity ifabsent).
+      state a severity ingests as ERROR (see RegistryRule.severity ifabsent).
     permissible_values:
       ERROR:
         meaning: sh:Violation

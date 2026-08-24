@@ -4,7 +4,7 @@ import pytest
 
 from ingest_linkml import parse_linkml, build_registry_entities
 from schema_registry_utils import (
-    RegistryProperty, RegistryClass, ValueSet, PermissibleValue, compute_hash_id_for,
+    RegistryProperty, RegistryClass, RegistryValueSet, PermissibleValue, compute_hash_id_for,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -149,7 +149,7 @@ def test_registry_property_does_not_retain_usage_constraints():
     """
     parse_linkml()'s dict has multivalued/required/pattern (see above) — but
     RegistryProperty deliberately doesn't model them at all (deferred to a
-    future Rule, since the same property can be required in one source's
+    future RegistryRule, since the same property can be required in one source's
     usage and optional in another's without being a different concept).
     Assert this at the model level, not just "the dict I built doesn't have
     it" — if someone re-adds these fields to RegistryProperty, this fails.
@@ -324,7 +324,7 @@ def test_parse_linkml_extracts_enums():
 
 def test_build_registry_entities_produces_value_sets():
     """
-    build_registry_entities()'s 3rd/4th return values are ValueSet and
+    build_registry_entities()'s 3rd/4th return values are RegistryValueSet and
     PermissibleValue dicts. PermissibleValue is a real RegistryEntity now
     (not the old hand-rolled node) — it gets a real description and
     provenance, keyed by hash_id since it's shared across enums/sources
@@ -337,7 +337,7 @@ def test_build_registry_entities_produces_value_sets():
 
     assert "StatusEnum" in value_sets
     vs = value_sets["StatusEnum"]
-    assert isinstance(vs, ValueSet)
+    assert isinstance(vs, RegistryValueSet)
     assert vs.name == "StatusEnum"
     assert vs.description == "Possible statuses for an annotation."
     assert len(vs.permissible_values) == 2
