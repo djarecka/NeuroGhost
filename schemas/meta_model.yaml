@@ -342,6 +342,40 @@ classes:
       - created_at
       - registry_version
 
+  RegistrySchema:
+    description: >-
+      A schema composed from existing registry content — a named, curated
+      subset of RegistryClasses/RegistryProperties/Rules/ValueSets that can
+      be exported as a standalone schema file (LinkML today; other output
+      formats are a serialization concern, not modeled here). Unlike
+      SchemaSource, which records where an *ingested* schema came from,
+      membership here is an explicit curatorial selection — there is no
+      attestation trail to derive it from, since composing this schema is
+      the act that creates the selection in the first place.
+
+      Exported as full IRIs, not CURIEs: the registry already expands every
+      CURIE to a full IRI at ingest time (see resolve_prefix() in
+      ingest_linkml.py), so there is no original prefix mapping left to
+      preserve, and inventing a fresh one here would just be another map to
+      keep in sync. A full IRI is valid wherever LinkML accepts a CURIE, so
+      this is a v1 scope choice, not a limitation of the format.
+
+      Identified by id, not hash_id: two people composing an identical
+      subset of content for different purposes are not the same entity.
+    slots:
+      - id
+      - name
+      - description
+      - namespace_iri
+      - default_range
+      - imports
+      - registry_classes
+      - registry_properties
+      - rules
+      - value_sets
+      - created_by
+      - created_at
+
 # ---------------------------------------------------------------------------
 # Slots
 # ---------------------------------------------------------------------------
@@ -881,6 +915,60 @@ slots:
   changes_summary:
     range: string
     description: Human-readable summary of what changed in this version.
+
+  # --- RegistrySchema slots --------------------------------------------------
+
+  namespace_iri:
+    range: uriorcurie
+    required: true
+    description: >-
+      Base namespace for this schema — becomes its own `id:` when exported
+      to LinkML (or the equivalent namespace declaration in another output
+      format).
+
+  default_range:
+    range: string
+    description: >-
+      Default range for slots that don't declare one explicitly, carried
+      into the exported schema's `default_range:`. Optional — a composed
+      schema may leave every RegistryProperty's own property_range
+      explicit and not need a default.
+
+  imports:
+    range: string
+    multivalued: true
+    description: >-
+      Import statements to carry into the exported schema verbatim (e.g.
+      "linkml:types"). Not resolved or validated by the registry — passed
+      through as-is.
+
+  registry_classes:
+    range: RegistryClass
+    multivalued: true
+    description: The RegistryClass entities (by hash_id) included in this schema.
+
+  registry_properties:
+    range: RegistryProperty
+    multivalued: true
+    description: >-
+      The RegistryProperty entities (by hash_id) included in this schema.
+      Not implied by registry_classes' own `properties` — a composed
+      schema may include a standalone property not attached to any
+      included class, or omit one of an included class's properties.
+
+  rules:
+    range: Rule
+    multivalued: true
+    description: The Rule entities (by hash_id) included in this schema.
+
+  value_sets:
+    range: ValueSet
+    multivalued: true
+    description: The ValueSet entities (by hash_id) included in this schema.
+
+  created_by:
+    range: string
+    description: Agent (user or system) that composed this schema.
 
   # --- PermissibleValue / ValueSet slots ------------------------------------
 

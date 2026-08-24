@@ -82,7 +82,11 @@ def bump_version(ver: str, bump: str = "patch") -> str:
 # .was_attributed_to/.was_generated_by/.was_derived_from) so this module
 # doesn't need to import schema_registry_utils.
 
-LIST_FIELDS = {"provenance", "skos_mappings", "properties", "class_mixins", "permissible_values"}
+LIST_FIELDS = {
+    "provenance", "skos_mappings", "properties", "class_mixins", "permissible_values",
+    "registry_classes", "registry_properties", "rules", "value_sets",
+    "applies_to", "referenced_entities",
+}
 HAS_PROVENANCE_REL = {
     "RegistryClass":    "HAS_PROVENANCE",
     "RegistryProperty": "HAS_PROVENANCE_P",
@@ -507,6 +511,19 @@ _REL_DDL: list[str] = [
     "CREATE REL TABLE IF NOT EXISTS USED_IN_CLASS      (FROM Rule             TO RegistryClass)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_R   (FROM Rule             TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_R (FROM Rule             TO Mapping)",
+    # referenced_entities is also range RegistryEntity, multivalued — same
+    # two-table split as applies_to, for the same reason.
+    "CREATE REL TABLE IF NOT EXISTS REFERENCED_ENTITIES   (FROM Rule TO RegistryClass)",
+    "CREATE REL TABLE IF NOT EXISTS REFERENCED_ENTITIES_P (FROM Rule TO RegistryProperty)",
+
+    # --- RegistrySchema ---
+    # registry_classes/registry_properties/rules/value_sets are all
+    # multivalued class-range slots, so each gets its own REL table (same
+    # reason Rule.applies_to needed two above: one FROM/TO pair per table).
+    "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_CLASS    (FROM RegistrySchema TO RegistryClass)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_PROPERTY (FROM RegistrySchema TO RegistryProperty)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_RULE     (FROM RegistrySchema TO Rule)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_VALUESET (FROM RegistrySchema TO ValueSet)",
 
     # --- Alignment ---
     """CREATE REL TABLE IF NOT EXISTS ALIGNED_TO (

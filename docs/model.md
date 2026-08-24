@@ -74,9 +74,25 @@ RegistryProperty {
     uriorcurie concept_uri
     uriorcurie hash_id
 }
-Rule {
+RegistrySchema {
+    string id
     string name
     string description
+    datetime created_at
+    string created_by
+    string default_range
+    stringList imports
+    uriorcurie namespace_iri
+}
+Rule {
+    string error_message
+    RuleTypeEnum rule_type
+    string rule_value
+    RuleSeverityEnum severity
+    string name
+    string description
+    stringList aliases
+    uriorcurie concept_uri
     uriorcurie hash_id
 }
 SchemaSource {
@@ -126,8 +142,10 @@ ValueSet {
 
 Mapping ||--}| MappingProvenanceEntry : "provenance"
 MappingProvenanceEntry ||--|o SchemaSource : "had_primary_source"
+MappingProvenanceEntry ||--|| Mapping : "attests_to"
 PermissibleValue ||--}o Mapping : "skos_mappings"
 PermissibleValue ||--}| ProvenanceEntry : "provenance"
+ProvenanceEntry ||--|| RegistryEntity : "attests_to"
 ProvenanceEntry ||--|| SchemaSource : "had_primary_source"
 RegistryClass ||--|o RegistryClass : "parent_class"
 RegistryClass ||--}o Mapping : "skos_mappings"
@@ -139,6 +157,16 @@ RegistryEntity ||--}| ProvenanceEntry : "provenance"
 RegistryProperty ||--|o UnitOfMeasure : "unit"
 RegistryProperty ||--}o Mapping : "skos_mappings"
 RegistryProperty ||--}| ProvenanceEntry : "provenance"
+RegistrySchema ||--}o RegistryClass : "registry_classes"
+RegistrySchema ||--}o RegistryProperty : "registry_properties"
+RegistrySchema ||--}o Rule : "rules"
+RegistrySchema ||--}o ValueSet : "value_sets"
+Rule ||--|o RegistryClass : "used_in_class"
+Rule ||--}o Mapping : "skos_mappings"
+Rule ||--}o RegistryEntity : "referenced_entities"
+Rule ||--}| ProvenanceEntry : "provenance"
+Rule ||--}| RegistryEntity : "applies_to"
+SchemaSource ||--}o ProvenanceEntry : "attestations"
 ValueSet ||--}o Mapping : "skos_mappings"
 ValueSet ||--}o PermissibleValue : "permissible_values"
 ValueSet ||--}| ProvenanceEntry : "provenance"
