@@ -491,6 +491,36 @@ def build_registry_entities(
         )
         value_sets[enum_name] = vs
 
+    # Second pass: resolve property_range placeholders to real hash_ids.
+    #
+    # For a class/enum-typed range, _slot_to_dict() initially stores
+    # make_iri(name) as the placeholder — a stable, name-derived IRI used
+    # during hash computation. That placeholder is what got hashed into
+    # each property's hash_id and, transitively, into each class's hash_id
+    # (which sorts property hash_ids into its own HashSubset). The
+    # placeholder pattern is required to break the identity cycle: with
+    # class hash_ids as the range, a self-referential slot
+    # (e.g. `was_derived_from: range: ProvEntity` on ProvEntity) would
+    # recurse forever through compute_hash_id_for.
+    #
+    # Now that every RegistryClass and RegistryValueSet has a stable
+    # hash_id, rewrite the stored property_range in place so downstream
+    # queries and exports reference targets by key rather than by
+    # synthetic name-IRI. Hash values are left untouched — the invariant
+    # "hash was computed against the name-IRI form of the range" holds,
+    # and no re-hash is needed.
+    name_iri_to_hash: dict[str, str] = {
+        make_iri(cls_name): rc.hash_id
+        for cls_name, rc in registry_classes.items()
+    }
+    name_iri_to_hash.update({
+        make_iri(enum_name): vs.hash_id
+        for enum_name, vs in value_sets.items()
+    })
+    for prop in properties.values():
+        if prop.property_range in name_iri_to_hash:
+            prop.property_range = name_iri_to_hash[prop.property_range]
+
     return properties, registry_classes, value_sets, permissible_values
 
 
