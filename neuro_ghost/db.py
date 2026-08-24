@@ -504,7 +504,7 @@ _REL_DDL: list[str] = [
     # RegistryClass / RegistryProperty / ValueSet / PermissibleValue variants.
     "CREATE REL TABLE IF NOT EXISTS APPLIES_TO         (FROM Rule             TO RegistryClass)",
     "CREATE REL TABLE IF NOT EXISTS APPLIES_TO_P       (FROM Rule             TO RegistryProperty)",
-    "CREATE REL TABLE IF NOT EXISTS DEFINED_IN_CLASS   (FROM Rule             TO RegistryClass)",
+    "CREATE REL TABLE IF NOT EXISTS USED_IN_CLASS      (FROM Rule             TO RegistryClass)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_R   (FROM Rule             TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_R (FROM Rule             TO Mapping)",
 
