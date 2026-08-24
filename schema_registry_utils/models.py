@@ -326,9 +326,7 @@ class RegistryProperty(RegistryEntity):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    property_range: str = Field(default=..., description="""The data type or value range for this property: a canonical XSD CURIE for primitives (e.g. \"xsd:string\", \"xsd:integer\"), or the hash_id of a RegistryValueSet for enumerated values. Bare primitive names (\"string\", \"float\") are deprecated: datatype compatibility is an alignment signal and an incompatibility veto, so \"float\", \"xsd:float\" and \"double\" must not read as three unrelated types. Ingestion normalizes source-native type names to XSD CURIEs; the declared range stays string until that lands.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty'],
-         'in_subset': ['HashSubset'],
-         'slot_uri': 'linkml:range'} })
+    property_range: str = Field(default=..., description="""The data type or value range for this property: a canonical XSD CURIE for primitives (e.g. \"xsd:string\", \"xsd:integer\"), or the hash_id of a RegistryClass or RegistryValueSet for entity/enum references. Bare primitive names (\"string\", \"float\") are deprecated: datatype compatibility is an alignment signal and an incompatibility veto, so \"float\", \"xsd:float\" and \"double\" must not read as three unrelated types. Ingestion normalizes source-native type names to XSD CURIEs.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty'], 'slot_uri': 'linkml:range'} })
     unit: Optional[UnitOfMeasure] = Field(default=None, description="""Structured unit of measure for this property's values, if applicable. ucum_code is the primary field for programmatic unit-compatibility checks (align.py's unit veto); the others are supplementary.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty'],
          'in_subset': ['HashSubset'],
          'slot_uri': 'qudt:unit'} })
