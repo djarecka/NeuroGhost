@@ -84,15 +84,15 @@ def bump_version(ver: str, bump: str = "patch") -> str:
 
 LIST_FIELDS = {
     "provenance", "skos_mappings", "properties", "class_mixins", "permissible_values",
-    "registry_classes", "registry_properties", "rules", "value_sets",
+    "registry_classes", "registry_properties", "registry_rules", "registry_value_sets",
     "applies_to", "referenced_entities",
 }
 HAS_PROVENANCE_REL = {
     "RegistryClass":    "HAS_PROVENANCE",
     "RegistryProperty": "HAS_PROVENANCE_P",
-    "Rule":             "HAS_PROVENANCE_R",
-    "ValueSet":         "HAS_PROVENANCE_VS",
-    "PermissibleValue": "HAS_PROVENANCE_PV",
+    "RegistryRule":      "HAS_PROVENANCE_R",
+    "RegistryValueSet":  "HAS_PROVENANCE_VS",
+    "PermissibleValue":  "HAS_PROVENANCE_PV",
 }
 
 # Inline class fields (db_inline in the meta-model): each one's sub-fields
@@ -485,45 +485,46 @@ _REL_DDL: list[str] = [
         created_at          STRING
     )""",
     """CREATE REL TABLE IF NOT EXISTS PRIOR_VERSION_R (
-        FROM Rule TO Rule,
+        FROM RegistryRule TO RegistryRule,
         diff_summary        STRING,
         changed_fields      STRING,
         registry_version    STRING,
         created_at          STRING
     )""",
 
-    # --- ValueSet / PermissibleValue ---
-    "CREATE REL TABLE IF NOT EXISTS HAS_PERMISSIBLE_VALUE (FROM ValueSet TO PermissibleValue)",
-    "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_VS     (FROM ValueSet TO ProvenanceEntry)",
+    # --- RegistryValueSet / PermissibleValue ---
+    "CREATE REL TABLE IF NOT EXISTS HAS_PERMISSIBLE_VALUE (FROM RegistryValueSet TO PermissibleValue)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_VS     (FROM RegistryValueSet TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_PV     (FROM PermissibleValue TO ProvenanceEntry)",
     "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_PV   (FROM PermissibleValue TO Mapping)",
 
-    # --- Rule ---
-    # Rule.applies_to has range RegistryEntity, so ingestion may target either
+    # --- RegistryRule ---
+    # RegistryRule.applies_to has range RegistryEntity, so ingestion may target either
     # a class (a class-scoped or cross-field rule) or a property (a plain
     # property-level constraint). Two REL tables so a query can filter by
     # target kind without matching both.
-    # Rule inherits provenance and skos_mappings from RegistryEntity — the
+    # RegistryRule inherits provenance and skos_mappings from RegistryEntity — the
     # HAS_PROVENANCE_R / HAS_SKOS_MAPPING_R edges are the same pattern as the
-    # RegistryClass / RegistryProperty / ValueSet / PermissibleValue variants.
-    "CREATE REL TABLE IF NOT EXISTS APPLIES_TO         (FROM Rule             TO RegistryClass)",
-    "CREATE REL TABLE IF NOT EXISTS APPLIES_TO_P       (FROM Rule             TO RegistryProperty)",
-    "CREATE REL TABLE IF NOT EXISTS USED_IN_CLASS      (FROM Rule             TO RegistryClass)",
-    "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_R   (FROM Rule             TO ProvenanceEntry)",
-    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_R (FROM Rule             TO Mapping)",
+    # RegistryClass / RegistryProperty / RegistryValueSet / PermissibleValue variants.
+    "CREATE REL TABLE IF NOT EXISTS APPLIES_TO         (FROM RegistryRule TO RegistryClass)",
+    "CREATE REL TABLE IF NOT EXISTS APPLIES_TO_P       (FROM RegistryRule TO RegistryProperty)",
+    "CREATE REL TABLE IF NOT EXISTS USED_IN_CLASS      (FROM RegistryRule TO RegistryClass)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_PROVENANCE_R   (FROM RegistryRule TO ProvenanceEntry)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_SKOS_MAPPING_R (FROM RegistryRule TO Mapping)",
     # referenced_entities is also range RegistryEntity, multivalued — same
     # two-table split as applies_to, for the same reason.
-    "CREATE REL TABLE IF NOT EXISTS REFERENCED_ENTITIES   (FROM Rule TO RegistryClass)",
-    "CREATE REL TABLE IF NOT EXISTS REFERENCED_ENTITIES_P (FROM Rule TO RegistryProperty)",
+    "CREATE REL TABLE IF NOT EXISTS REFERENCED_ENTITIES   (FROM RegistryRule TO RegistryClass)",
+    "CREATE REL TABLE IF NOT EXISTS REFERENCED_ENTITIES_P (FROM RegistryRule TO RegistryProperty)",
 
     # --- RegistrySchema ---
-    # registry_classes/registry_properties/rules/value_sets are all
-    # multivalued class-range slots, so each gets its own REL table (same
-    # reason Rule.applies_to needed two above: one FROM/TO pair per table).
+    # registry_classes/registry_properties/registry_rules/registry_value_sets
+    # are all multivalued class-range slots, so each gets its own REL table
+    # (same reason RegistryRule.applies_to needed two above: one FROM/TO
+    # pair per table).
     "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_CLASS    (FROM RegistrySchema TO RegistryClass)",
     "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_PROPERTY (FROM RegistrySchema TO RegistryProperty)",
-    "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_RULE     (FROM RegistrySchema TO Rule)",
-    "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_VALUESET (FROM RegistrySchema TO ValueSet)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_RULE     (FROM RegistrySchema TO RegistryRule)",
+    "CREATE REL TABLE IF NOT EXISTS HAS_MEMBER_VALUESET (FROM RegistrySchema TO RegistryValueSet)",
 
     # --- Alignment ---
     """CREATE REL TABLE IF NOT EXISTS ALIGNED_TO (

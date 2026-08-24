@@ -116,7 +116,7 @@ in `schemas/meta_model.yaml`.
 
 | Field | On | Notes |
 |---|---|---|
-| `hash_id` | every `RegistryEntity` (`RegistryClass`/`RegistryProperty`/`ValueSet`/`PermissibleValue`/...) | Content-derived. Everything else (`ProvenanceEntry`, `SchemaSource`, `SchemaVersionSnapshot`, `Mapping`) uses a plain random `id` instead, since it isn't a deduplicated, content-addressed concept — a per-attestation record or a mutable administrative record. |
+| `hash_id` | every `RegistryEntity` (`RegistryClass`/`RegistryProperty`/`RegistryValueSet`/`PermissibleValue`/...) | Content-derived. Everything else (`ProvenanceEntry`, `SchemaSource`, `SchemaVersionSnapshot`, `Mapping`) uses a plain random `id` instead, since it isn't a deduplicated, content-addressed concept — a per-attestation record or a mutable administrative record. |
 | `name`, `description` | `RegistryClass`, `RegistryProperty` | Identity-defining (part of the hash). |
 | `range`, `unit` | `RegistryProperty` | Identity-defining. `unit` is a structured `UnitOfMeasure` (`ucum_code`, `has_quantity_kind`, `symbol`, `abbreviation`, `descriptive_name`), inlined onto `RegistryProperty`'s own node — not its own content-addressed entity. |
 | `properties`, `is_a`, `mixins` | `RegistryClass` | Identity-defining — all stored as hash_id references. |
@@ -133,7 +133,7 @@ than inventing parallel terminology — e.g. `parse_linkml()` already produces
 **Deliberately not modeled yet:** `required`/`multivalued` used to live on
 `RegistryProperty` directly, which meant a property required in one schema's
 usage and optional in another's could never share a hash. They've been
-removed entirely — that's a **`Rule`** concern (still a stub), not identity.
+removed entirely — that's a **`RegistryRule`** concern (still a stub), not identity.
 
 ## Alignment
 
@@ -214,8 +214,8 @@ registry_version` stays `None` for now, pending a decision on the above.
 - **`was_derived_from`** on `ProvenanceEntry` is never populated — nothing yet
   detects "this hash supersedes that one" (would need an anchor like
   `(name, source)` to correlate an edit against prior content).
-- **`Rule`/`Transform`** are still stubs (`hash_id`/`name`/`description`
-  only) — `ValueSet` and `PermissibleValue` are real now.
+- **`RegistryRule`/`Transform`** are still stubs (`hash_id`/`name`/`description`
+  only) — `RegistryValueSet` and `PermissibleValue` are real now.
 - **`SemanticIdentity`/`PRIOR_VERSION*`** tables in `db.py`'s DDL are dead
   (superseded by content-hash identity) but not yet removed.
 - **`pandas`** isn't in `requirements.txt`, so `align.py`'s embedding cache

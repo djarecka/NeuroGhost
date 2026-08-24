@@ -97,7 +97,7 @@ def test_required_does_not_affect_property_identity(tmp_path):
     required_a.yml and required_b.yml declare the exact same "age" slot
     (same name/description/range/units) except one marks it `required: true`
     and the other doesn't. RegistryProperty doesn't model required at all
-    (deferred to a future Rule — see test_registry_property_does_not_retain_
+    (deferred to a future RegistryRule — see test_registry_property_does_not_retain_
     usage_constraints in test_ingest_linkml.py), so within a single source
     this must not create a second node: same hash_id, one node.
 

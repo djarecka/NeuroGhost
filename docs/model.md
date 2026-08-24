@@ -74,6 +74,17 @@ RegistryProperty {
     uriorcurie concept_uri
     uriorcurie hash_id
 }
+RegistryRule {
+    string error_message
+    RegistryRuleTypeEnum rule_type
+    string rule_value
+    RegistryRuleSeverityEnum severity
+    string name
+    string description
+    stringList aliases
+    uriorcurie concept_uri
+    uriorcurie hash_id
+}
 RegistrySchema {
     string id
     string name
@@ -84,11 +95,7 @@ RegistrySchema {
     stringList imports
     uriorcurie namespace_iri
 }
-Rule {
-    string error_message
-    RuleTypeEnum rule_type
-    string rule_value
-    RuleSeverityEnum severity
+RegistryValueSet {
     string name
     string description
     stringList aliases
@@ -132,13 +139,6 @@ UnitOfMeasure {
     string symbol
     string ucum_code
 }
-ValueSet {
-    string name
-    string description
-    stringList aliases
-    uriorcurie concept_uri
-    uriorcurie hash_id
-}
 
 Mapping ||--}| MappingProvenanceEntry : "provenance"
 MappingProvenanceEntry ||--|o SchemaSource : "had_primary_source"
@@ -157,19 +157,19 @@ RegistryEntity ||--}| ProvenanceEntry : "provenance"
 RegistryProperty ||--|o UnitOfMeasure : "unit"
 RegistryProperty ||--}o Mapping : "skos_mappings"
 RegistryProperty ||--}| ProvenanceEntry : "provenance"
+RegistryRule ||--|o RegistryClass : "used_in_class"
+RegistryRule ||--}o Mapping : "skos_mappings"
+RegistryRule ||--}o RegistryEntity : "referenced_entities"
+RegistryRule ||--}| ProvenanceEntry : "provenance"
+RegistryRule ||--}| RegistryEntity : "applies_to"
 RegistrySchema ||--}o RegistryClass : "registry_classes"
 RegistrySchema ||--}o RegistryProperty : "registry_properties"
-RegistrySchema ||--}o Rule : "rules"
-RegistrySchema ||--}o ValueSet : "value_sets"
-Rule ||--|o RegistryClass : "used_in_class"
-Rule ||--}o Mapping : "skos_mappings"
-Rule ||--}o RegistryEntity : "referenced_entities"
-Rule ||--}| ProvenanceEntry : "provenance"
-Rule ||--}| RegistryEntity : "applies_to"
+RegistrySchema ||--}o RegistryRule : "registry_rules"
+RegistrySchema ||--}o RegistryValueSet : "registry_value_sets"
+RegistryValueSet ||--}o Mapping : "skos_mappings"
+RegistryValueSet ||--}o PermissibleValue : "permissible_values"
+RegistryValueSet ||--}| ProvenanceEntry : "provenance"
 SchemaSource ||--}o ProvenanceEntry : "attestations"
-ValueSet ||--}o Mapping : "skos_mappings"
-ValueSet ||--}o PermissibleValue : "permissible_values"
-ValueSet ||--}| ProvenanceEntry : "provenance"
 
 ```
 <!-- ERDIAGRAM:END -->
