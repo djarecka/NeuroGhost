@@ -491,24 +491,19 @@ def build_registry_entities(
         )
         value_sets[enum_name] = vs
 
-    # Second pass: resolve property_range placeholders to real hash_ids.
+    # Second pass: resolve property_range name-IRIs to real hash_ids.
     #
-    # For a class/enum-typed range, _slot_to_dict() initially stores
-    # make_iri(name) as the placeholder — a stable, name-derived IRI used
-    # during hash computation. That placeholder is what got hashed into
-    # each property's hash_id and, transitively, into each class's hash_id
-    # (which sorts property hash_ids into its own HashSubset). The
-    # placeholder pattern is required to break the identity cycle: with
-    # class hash_ids as the range, a self-referential slot
-    # (e.g. `was_derived_from: range: ProvEntity` on ProvEntity) would
-    # recurse forever through compute_hash_id_for.
+    # For a class/enum-typed range, _slot_to_dict() stores make_iri(name)
+    # (e.g. https://registry.sensein.io/obj/ProvEntity) — a synthetic
+    # label, not a graph reference. Now that every RegistryClass and
+    # RegistryValueSet has a stable hash_id, rewrite each property's
+    # property_range in place so ranges point at real objects by key.
     #
-    # Now that every RegistryClass and RegistryValueSet has a stable
-    # hash_id, rewrite the stored property_range in place so downstream
-    # queries and exports reference targets by key rather than by
-    # synthetic name-IRI. Hash values are left untouched — the invariant
-    # "hash was computed against the name-IRI form of the range" holds,
-    # and no re-hash is needed.
+    # Safe against self-references and cross-class cycles because
+    # property_range is deliberately not in HashSubset (see meta_model.yaml):
+    # property hashes settle without knowing class hashes, class hashes
+    # settle from the property hashes, and this rewrite touches a field
+    # that no hash depends on. No re-hash needed.
     name_iri_to_hash: dict[str, str] = {
         make_iri(cls_name): rc.hash_id
         for cls_name, rc in registry_classes.items()

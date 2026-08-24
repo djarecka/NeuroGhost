@@ -121,8 +121,13 @@ def test_required_does_not_affect_property_identity(tmp_path):
 def test_content_change_produces_different_hash_id(tmp_path):
     """
     Same source, edited content → new hash. Both ingests use the same
-    source label ("source_a"), isolating the value_range edit as the sole
+    source label ("source_a"), isolating the description edit as the sole
     driver of the hash change.
+
+    A range edit is deliberately NOT tested here — property_range is not
+    in HashSubset (see meta_model.yaml), so a range change is metadata,
+    not identity. Per-usage range refinements land on RegistryRule
+    (rule_type=RANGE), which does carry range in its own HashSubset.
     """
     conn = _conn(tmp_path)
     insert_schema(conn, parse_linkml(FIXTURES / "source_a.yml"), "source_a", agent="tester")
@@ -132,7 +137,7 @@ def test_content_change_produces_different_hash_id(tmp_path):
     ).get_next()[0]
 
     edited = parse_linkml(FIXTURES / "source_a.yml")
-    edited["slots"]["age"]["value_range"] = "float"  # was "integer"
+    edited["slots"]["age"]["definition"] = "Age of the subject in years"  # was "Age of the subject"
     insert_schema(conn, edited, "source_a", agent="tester")
 
     hashes = {

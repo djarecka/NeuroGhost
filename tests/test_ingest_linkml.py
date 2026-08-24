@@ -176,6 +176,29 @@ def test_aliases_do_not_affect_identity():
     assert with_alias == without_alias
 
 
+def test_property_range_does_not_affect_identity():
+    """
+    property_range isn't in HashSubset — it's a graph reference (a class
+    hash_id, an enum hash_id, or an XSD CURIE), resolved by
+    build_registry_entities()'s post-hash pass, and per-usage range
+    refinements live on RegistryRule (rule_type=RANGE). Making it
+    identity-defining would force a mutual dependency between class hashes
+    and property hashes that self-referential slots can't satisfy.
+
+    Two properties differing only by property_range must therefore
+    collapse to the same hash_id.
+    """
+    base = dict(
+        name="target", description="An arbitrary reference.",
+        unit=None, concept_uri=None, skos_mappings=[], aliases=[],
+    )
+    as_string = compute_hash_id_for(RegistryProperty, dict(base, property_range="xsd:string"))
+    as_class_ref = compute_hash_id_for(
+        RegistryProperty, dict(base, property_range="sha256:606a7c1d0f962599070aad647f433f8ba8ededa183a1024c624fe57d297e878f"),
+    )
+    assert as_string == as_class_ref
+
+
 def test_build_registry_entities_produces_exactly_the_expected_objects():
     """
     Exact-equality check of build_registry_entities()'s output — the step
@@ -211,7 +234,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
         for name, p in properties.items()
     } == {
         "name": {
-            "hash_id": "sha256:7816ced135927c58f6ebc3f55668039ef2ab66e1549872b5b32b59ece0ce1e53",
+            "hash_id": "sha256:049ca9da4b9dc3a3c7510ddb041f1e67af456b2f545c7c5cb3eec102c1ce4e7f",
             "name": "name",
             "description": "Full name.",
             "skos_mappings": [],
@@ -221,7 +244,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "aliases": [],
         },
         "orcid": {
-            "hash_id": "sha256:617199b747e8730bed6ba1d2d08de02aba00907407391acebdc51ba1d58de6af",
+            "hash_id": "sha256:9b314737103a14dd66fca3b5d52dd6ae956d86307976a3e5e1d68f728c81ee1b",
             "name": "orcid",
             "description": "ORCID identifier.",
             "skos_mappings": [],
@@ -231,7 +254,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "aliases": ["ORCID iD"],
         },
         "role": {
-            "hash_id": "sha256:de9b8ad17ae0108b3ad71f9d7cebf4fa3b7a955c71be65afe96a63c09ac8e254",
+            "hash_id": "sha256:f8c9caa50578d700e2985a2c1c39701619722cc6477bca780b574780b031279c",
             "name": "role",
             "description": "Role on the study (units: FTE)",
             "skos_mappings": [],
@@ -247,7 +270,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "aliases": [],
         },
         "created_at": {
-            "hash_id": "sha256:5c74fcd14537ed64f8fb1649c2d9f7e414a0b4a3650a6c088c5c4e663d62845e",
+            "hash_id": "sha256:f5035dbf9b5ee2cdecb9ed9427df4deee27fcd8aad716d3e7fd6ec7e14a32f26",
             "name": "created_at",
             "description": "",
             "skos_mappings": [],
@@ -263,43 +286,43 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
         for name, c in registry_classes.items()
     } == {
         "Timestamped": {
-            "hash_id": "sha256:9bfceb04ede599148a836303684503e09198894fa02fc78174825b21621935a9",
+            "hash_id": "sha256:7a4316db29c63f8d207206a501962108e7d5cad381e350ac132757534a500893",
             "name": "Timestamped",
             "description": "Mixin providing a creation timestamp.",
             "skos_mappings": [],
             "concept_uri": None,
             "is_abstract": False,
-            "properties": ["sha256:5c74fcd14537ed64f8fb1649c2d9f7e414a0b4a3650a6c088c5c4e663d62845e"],
+            "properties": ["sha256:f5035dbf9b5ee2cdecb9ed9427df4deee27fcd8aad716d3e7fd6ec7e14a32f26"],
             "parent_class": None,
             "class_mixins": [],
             "aliases": [],
         },
         "Entity": {
-            "hash_id": "sha256:de6a525ca16c94d245fcd52076388be42d45deeed88c8309f414d823428d965f",
+            "hash_id": "sha256:37e3c24d9b174905ac53cc554d1833ccc2fb0b42e8d235a464199e14f7e9c8b1",
             "name": "Entity",
             "description": "Abstract base for all registry entities.",
             "skos_mappings": [],
             "concept_uri": "https://example.org/schema#Entity",
             "is_abstract": True,
-            "properties": ["sha256:7816ced135927c58f6ebc3f55668039ef2ab66e1549872b5b32b59ece0ce1e53"],
+            "properties": ["sha256:049ca9da4b9dc3a3c7510ddb041f1e67af456b2f545c7c5cb3eec102c1ce4e7f"],
             "parent_class": None,
             "class_mixins": [],
             "aliases": [],
         },
         "Person": {
-            "hash_id": "sha256:b0c27b7b4017b09a6dfe2d75f66243fa0278a7464e5a721e7d8afdda36fe2c32",
+            "hash_id": "sha256:74dce0f58353d5a50857fd27d96ecabd794850d1f2e0f0307013da52bec079e1",
             "name": "Person",
             "description": "A research investigator.",
             "skos_mappings": [],
             "concept_uri": "https://schema.org/Person",
             "is_abstract": False,
             "properties": [
-                "sha256:5c74fcd14537ed64f8fb1649c2d9f7e414a0b4a3650a6c088c5c4e663d62845e",
-                "sha256:617199b747e8730bed6ba1d2d08de02aba00907407391acebdc51ba1d58de6af",
-                "sha256:7816ced135927c58f6ebc3f55668039ef2ab66e1549872b5b32b59ece0ce1e53",
-                "sha256:de9b8ad17ae0108b3ad71f9d7cebf4fa3b7a955c71be65afe96a63c09ac8e254",
+                "sha256:049ca9da4b9dc3a3c7510ddb041f1e67af456b2f545c7c5cb3eec102c1ce4e7f",
+                "sha256:9b314737103a14dd66fca3b5d52dd6ae956d86307976a3e5e1d68f728c81ee1b",
+                "sha256:f5035dbf9b5ee2cdecb9ed9427df4deee27fcd8aad716d3e7fd6ec7e14a32f26",
+                "sha256:f8c9caa50578d700e2985a2c1c39701619722cc6477bca780b574780b031279c",
             ],
-            "parent_class": "sha256:de6a525ca16c94d245fcd52076388be42d45deeed88c8309f414d823428d965f",
+            "parent_class": "sha256:37e3c24d9b174905ac53cc554d1833ccc2fb0b42e8d235a464199e14f7e9c8b1",
             "class_mixins": [],
             "aliases": ["Investigator"],
         },
