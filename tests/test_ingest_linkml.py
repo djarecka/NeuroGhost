@@ -292,6 +292,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "skos_mappings": [],
             "concept_uri": None,
             "is_abstract": False,
+            "is_mixin": False,
             "properties": ["sha256:f5035dbf9b5ee2cdecb9ed9427df4deee27fcd8aad716d3e7fd6ec7e14a32f26"],
             "parent_class": None,
             "class_mixins": [],
@@ -304,6 +305,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "skos_mappings": [],
             "concept_uri": "https://example.org/schema#Entity",
             "is_abstract": True,
+            "is_mixin": False,
             "properties": ["sha256:049ca9da4b9dc3a3c7510ddb041f1e67af456b2f545c7c5cb3eec102c1ce4e7f"],
             "parent_class": None,
             "class_mixins": [],
@@ -316,6 +318,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "skos_mappings": [],
             "concept_uri": "https://schema.org/Person",
             "is_abstract": False,
+            "is_mixin": False,
             "properties": [
                 "sha256:049ca9da4b9dc3a3c7510ddb041f1e67af456b2f545c7c5cb3eec102c1ce4e7f",
                 "sha256:9b314737103a14dd66fca3b5d52dd6ae956d86307976a3e5e1d68f728c81ee1b",
