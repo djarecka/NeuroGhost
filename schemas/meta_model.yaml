@@ -99,31 +99,6 @@ classes:
       - property_range
       - unit
 
-  Prefix:
-    annotations:
-      db_inline: true
-    description: >-
-      A prefix binding — the pair {short prefix name, base IRI} the source
-      schema declared under its `prefixes:` block. Stored as its own class,
-      not a string, so a query can find every schema that binds a given
-      prefix or that maps a prefix to a given IRI. Not content-addressed:
-      identity here is the prefix name within its owning SchemaSource, not
-      a globally unique concept.
-
-      `db_inline: true` keeps Prefix out of the LadybugDB DDL generator
-      (which requires a primary key on every node table). Because
-      SchemaSource.declared_prefixes is multivalued, the DDL builder's
-      "multivalued inline → skip" branch means Prefix values are not
-      currently materialized in the graph DB — the meta_model still
-      declares the shape so exporters/reconstructors can round-trip
-      declared prefixes through JSON-LD. Graph-side materialization
-      (a HAS_DECLARED_PREFIX REL to a Prefix node table with its own
-      primary key) is deferred to the follow-up that also plumbs
-      parse_linkml → declared_prefixes.
-    slots:
-      - prefix_name
-      - namespace_iri
-
   ProvenanceEntry:
     description: >-
       One source's attestation of a registry entity — where it came from and
@@ -331,29 +306,31 @@ classes:
   SchemaSource:
     description: >-
       Registry record for a schema source (one node per ingested schema label).
-      Tracks the source's IRI, MIME type, and the registry version it was first
-      added under. Identity uses id (as everywhere) because this is a mutable
-      administrative record, not a content-addressed entity. Every attestation
-      about a registry entity that names this schema as its primary source is
-      surfaced on `attestations`, the inverse of
-      ProvenanceEntry.had_primary_source — a schema-regen query can walk
-      forward from a SchemaSource to every entity it defined in one hop.
+      A stable label used to attribute registry entities to where they came
+      from — nothing more. Every attestation about a registry entity that
+      names this schema as its primary source is surfaced on `attestations`,
+      the inverse of ProvenanceEntry.had_primary_source, so a schema-regen
+      query can walk forward from a SchemaSource to every entity it defined
+      in one hop.
 
-      `id` is the registry's internal UUID primary key (stable graph handle
-      for FKs). `source_id` is the persistent IRI the source schema declared
-      as its own `id:` — distinct from `id` so that ingestion-time renames or
-      re-ingestion under a different registry UUID doesn't drop the source's
-      own identifier. The remaining top-level schema metadata
-      (`description`, `default_prefix`, `default_range`, `declared_prefixes`)
-      is captured here so a round-trip of an ingested schema can reconstruct
-      the author's declared vocabulary surface, not just the URIs the graph
-      happens to reference.
+      Deliberately does NOT model the ingested schema's shape metadata
+      (default_prefix, default_range, declared prefix bindings, imports).
+      RegistrySchema owns the "schema-shape" concerns for schemas the
+      registry emits; SchemaSource is only a provenance record. Reconstructing
+      the source schema verbatim isn't a registry use case today, so those
+      fields don't need to be captured on the input side.
+
+      Identity uses id (a UUID, as everywhere) because this is a mutable
+      administrative record, not a content-addressed entity. `source_id` is
+      the persistent IRI the source schema declared as its own `id:` —
+      distinct from `id` so that re-ingestion under a different registry
+      UUID (or across registries) still resolves to the same source-of-truth
+      identifier.
     slots:
       - id
       - source_id
       - label
       - title
-      - description
       - publisher
       - contact
       - homepage
@@ -363,18 +340,7 @@ classes:
       - mime_type
       - created_at
       - registry_version
-      - default_prefix
-      - default_range
-      - declared_prefixes
       - attestations
-    slot_usage:
-      # The shared `description` slot is required: true (skos:definition on
-      # RegistryEntity subclasses — a registered class or property without
-      # a description is a bug). But a schema source without a top-level
-      # description is normal and legal — many source schemas omit it — so
-      # relax the requirement here.
-      description:
-        required: false
 
   SchemaVersionSnapshot:
     description: >-
@@ -1044,34 +1010,6 @@ slots:
       into the exported schema's `default_range:`. Optional — a composed
       schema may leave every RegistryProperty's own property_range
       explicit and not need a default.
-
-  default_prefix:
-    range: string
-    description: >-
-      Default prefix name for the schema — the prefix used to resolve any
-      unqualified identifier in the source (LinkML's `default_prefix:`;
-      equivalent concepts in other formats). Stored on SchemaSource as the
-      author's declaration, not on RegistrySchema where `namespace_iri`
-      plays a related role for composed schemas.
-
-  declared_prefixes:
-    range: Prefix
-    multivalued: true
-    inlined: true
-    inlined_as_list: true
-    description: >-
-      The full `prefixes:` block the source schema declared, verbatim.
-      Retained even for bindings the graph does not reference, since the
-      author's declared vocabulary surface is part of the schema even when
-      individual entries are unused — dropping them silently rewrites the
-      schema's intended namespaces.
-
-  prefix_name:
-    range: string
-    required: true
-    description: >-
-      The short prefix key (e.g. "bican", "prov"), the left-hand side of a
-      prefix binding.
 
   imports:
     range: string
