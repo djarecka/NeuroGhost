@@ -32,7 +32,7 @@ import click, httpx, rdflib
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from schema_registry_utils import (
-    RegistryClass, RegistryProperty, ProvenanceEntry, compute_hash_id_for,
+    RegistryClass, RegistryProperty, ProvenanceEntry, compute_content_hash_for,
 )
 
 from db import (
@@ -198,10 +198,12 @@ def build_registry_entities(
                 slot_uri=prop["iri"] or None,
                 skos_mappings=[],
             )
-            p_hash_id = compute_hash_id_for(RegistryProperty, fields)
+            p_sha = compute_content_hash_for(RegistryProperty, fields)
+            p_id  = make_id()
             p = RegistryProperty(
-                hash_id=p_hash_id,
-                provenance=[_provenance(schema_source_id, p_hash_id, registry_version=registry_version)],
+                id=p_id,
+                sha256_hash=p_sha,
+                provenance=[_provenance(schema_source_id, p_id, registry_version=registry_version)],
                 **fields,
             )
             properties[prop["iri"]] = p
@@ -220,23 +222,25 @@ def build_registry_entities(
         )
         parent = resolve_class(parent_name) if parent_name else None
 
-        prop_hash_ids = sorted({
-            properties[prop["iri"]].hash_id for prop in info["props"]
+        prop_ids = sorted({
+            properties[prop["iri"]].id for prop in info["props"]
         })
         fields = dict(
             name=name,
             description=info["comment"] or "",
             class_uri=info["iri"] or None,
             abstract=False,
-            is_a=parent.hash_id if parent else None,
-            properties=prop_hash_ids,
+            is_a=parent.id if parent else None,
+            properties=prop_ids,
             mixins=[],
             skos_mappings=[],
         )
-        rc_hash_id = compute_hash_id_for(RegistryClass, fields)
+        rc_sha = compute_content_hash_for(RegistryClass, fields)
+        rc_id  = make_id()
         rc = RegistryClass(
-            hash_id=rc_hash_id,
-            provenance=[_provenance(schema_source_id, rc_hash_id, registry_version=registry_version)],
+            id=rc_id,
+            sha256_hash=rc_sha,
+            provenance=[_provenance(schema_source_id, rc_id, registry_version=registry_version)],
             **fields,
         )
         registry_classes[name] = rc
@@ -270,7 +274,7 @@ def seed(db_path: str = "./registry.lbug",
     if not dry_run and not wipe:
         r = conn.execute("""
             MATCH (n:RegistryClass {name: 'Thing'})-[:HAS_PROVENANCE]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: 'schema.org'})
-            RETURN n.hash_id LIMIT 1
+            RETURN n.id LIMIT 1
         """)
         if r.has_next():
             print("schema.org seed already present — skipping. "

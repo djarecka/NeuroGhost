@@ -42,17 +42,17 @@ For every (entity, source) attestation → one ProvenanceEntry node,
 
 CONTENT-ADDRESSED IDENTITY
 ---------------------------
-A RegistryClass/RegistryProperty's hash_id is computed from its own semantic
+A RegistryClass/RegistryProperty's sha256_hash is computed from its own semantic
 content (name, description, range/units for properties; name, description,
 properties/is_a/mixins for classes) — see schema_registry_utils.hashing.
 Two properties from different schemas with identical content get the SAME
-hash_id automatically; there is no separate content_id/SemanticIdentity
+sha256_hash automatically; there is no separate content_id/SemanticIdentity
 lookup layer anymore.
 
 Identity is separate from provenance: ingesting the same content from a
 second source doesn't create a second node, it adds a second ProvenanceEntry
 to the existing one. There is no "version" or diff mechanism — a genuine
-content change produces a different hash_id (a new entity), not an edit of
+content change produces a different sha256_hash (a new entity), not an edit of
 the old one.
 
 USAGE
@@ -75,12 +75,13 @@ from linkml_runtime.utils.schemaview import SchemaView
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from schema_registry_utils import (
     RegistryClass, RegistryProperty, PermissibleValue, RegistryValueSet,
-    ProvenanceEntry, compute_hash_id_for,
+    ProvenanceEntry, compute_content_hash_for,
 )
 
 from db import (
     get_connection, make_iri, make_id, now_iso,
     write_registry_entities, write_structural_edges, ensure_schema_source,
+    find_id_by_sha256,
 )
 
 DB_PATH = "./registry.lbug"
@@ -348,21 +349,35 @@ def _make_provenance(schema_source_id: str, attests_to: str, agent: str,
 
 def build_registry_entities(
     parsed: dict, schema_source_id: str, agent: str, issue: str = "",
-    registry_version: str = "",
+    registry_version: str = "", conn=None,
 ) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass], dict[str, RegistryValueSet], dict[str, PermissibleValue]]:
     """
-    Convert parse_linkml()'s intermediate dict into content-hashed
-    RegistryProperty/RegistryClass instances, keyed by their original
-    slot/class name in the source schema. permissible_values (the 4th
-    return value) is keyed by hash_id instead, since PermissibleValue is
-    shared across enums/sources rather than tied to one source name.
+    Convert parse_linkml()'s intermediate dict into RegistryProperty/
+    RegistryClass instances, keyed by their original slot/class name in the
+    source schema. permissible_values (the 4th return value) is keyed by
+    id instead, since PermissibleValue is shared across enums/sources
+    rather than tied to one source name.
 
-    Properties are built first (classes reference them by hash_id in their
-    own `properties` list, which itself feeds the class's hash — the same
-    set of properties always produces the same class hash regardless of
-    declaration order, since compute_hash_id() sorts reference lists).
+    Identity is now split from content:
+      * `id` is a UUID minted by uuid.uuid4() (via db.make_id()) — the
+        graph's stable handle for FKs.
+      * `sha256_hash` is the content fingerprint, still computed from
+        HashSubset-marked fields the same way as before.
 
-    A class's `is_a` is resolved to its parent's hash_id recursively, so
+    Cross-source deduplication happens via sha256_hash lookup: for each
+    entity, compute the content hash first, then either reuse an existing
+    row's id (if any row already carries that sha256_hash) or mint a fresh
+    uuid4. `conn` is optional — passed in during real ingestion so the
+    dedup can consult the graph; omitted from unit tests, in which case
+    every entity gets a fresh UUID and dedup happens on next re-ingest.
+
+    Properties are built first because classes reference them by id in
+    their own `properties` list, and those ids must exist before the
+    class's own sha256_hash can be computed (the id list is part of the
+    class's HashSubset — same-content classes across sources hash the
+    same because their property ids were reused via dedup).
+
+    A class's `is_a` is resolved to its parent's id recursively, so
     multi-level hierarchies resolve correctly regardless of declaration
     order. This always succeeds for any schema that reaches this point:
     parse_linkml() (via SchemaView) already requires every is_a target to
@@ -383,6 +398,17 @@ def build_registry_entities(
             registry_version, source_version,
         )
 
+    def dedup_id(kind: str, sha: str) -> str:
+        """Return an existing id for this sha256_hash if the graph already
+        has one, otherwise mint a fresh UUID. `conn` may be None (unit
+        tests, dry-run) — in which case dedup is skipped and each entity
+        gets its own uuid, converging on the next real ingest."""
+        if conn is not None:
+            existing = find_id_by_sha256(conn, kind, sha)
+            if existing:
+                return existing
+        return make_id()
+
     properties: dict[str, RegistryProperty] = {}
     for slot_name in used_slots:
         slot = slots.get(slot_name)
@@ -401,10 +427,12 @@ def build_registry_entities(
             skos_mappings=[],
             aliases=slot.get("aliases") or [],
         )
-        prop_hash_id = compute_hash_id_for(RegistryProperty, fields)
+        sha = compute_content_hash_for(RegistryProperty, fields)
+        pid = dedup_id("RegistryProperty", sha)
         prop = RegistryProperty(
-            hash_id=prop_hash_id,
-            provenance=[make_prov(prop_hash_id)],
+            id=pid,
+            sha256_hash=sha,
+            provenance=[make_prov(pid)],
             **fields,
         )
         properties[slot_name] = prop
@@ -418,29 +446,31 @@ def build_registry_entities(
         if cls is None:
             return None  # is_a points outside this schema — left unresolved
 
-        parent_hash_id = None
+        parent_id = None
         if cls["is_a"]:
             parent = resolve_class(cls["is_a"])
-            parent_hash_id = parent.hash_id if parent else None
+            parent_id = parent.id if parent else None
 
-        prop_hash_ids = sorted({
-            properties[s].hash_id for s in cls["slots"] if s in properties
+        prop_ids = sorted({
+            properties[s].id for s in cls["slots"] if s in properties
         })
         fields = dict(
             name=cls_name,
             description=cls["definition"] or "",
             concept_uri=cls["iri"] or None,
             is_abstract=cls["is_abstract"],
-            parent_class=parent_hash_id,
-            properties=prop_hash_ids,
+            parent_class=parent_id,
+            properties=prop_ids,
             class_mixins=[],
             skos_mappings=[],
             aliases=cls.get("aliases") or [],
         )
-        rc_hash_id = compute_hash_id_for(RegistryClass, fields)
+        sha = compute_content_hash_for(RegistryClass, fields)
+        cid = dedup_id("RegistryClass", sha)
         rc = RegistryClass(
-            hash_id=rc_hash_id,
-            provenance=[make_prov(rc_hash_id)],
+            id=cid,
+            sha256_hash=sha,
+            provenance=[make_prov(cid)],
             **fields,
         )
         registry_classes[cls_name] = rc
@@ -450,16 +480,12 @@ def build_registry_entities(
         resolve_class(cls_name)
 
     # Build PermissibleValue + RegistryValueSet instances from parsed enums.
-    # PermissibleValue is a real RegistryEntity (content-addressed on
-    # name/description/meaning), so — like properties/classes above — it
-    # gets a real ProvenanceEntry, not the hand-rolled node the old
-    # non-RegistryEntity version used.
     prov_factory = make_prov
     value_sets: dict[str, RegistryValueSet] = {}
     permissible_values: dict[str, PermissibleValue] = {}
 
     for enum_name, enum_data in parsed.get("enums", {}).items():
-        pv_hash_ids: list[str] = []
+        pv_ids: list[str] = []
         for pv_text, pv_data in enum_data["permissible_values"].items():
             pv_fields = dict(
                 name=pv_text,
@@ -468,53 +494,56 @@ def build_registry_entities(
                 skos_mappings=[],
                 aliases=[],
             )
-            pv_hash_id = compute_hash_id_for(PermissibleValue, pv_fields)
-            if pv_hash_id not in permissible_values:
-                permissible_values[pv_hash_id] = PermissibleValue(
-                    hash_id=pv_hash_id,
-                    provenance=[prov_factory(pv_hash_id)],
+            pv_sha = compute_content_hash_for(PermissibleValue, pv_fields)
+            pv_id = dedup_id("PermissibleValue", pv_sha)
+            if pv_id not in permissible_values:
+                permissible_values[pv_id] = PermissibleValue(
+                    id=pv_id,
+                    sha256_hash=pv_sha,
+                    provenance=[prov_factory(pv_id)],
                     **pv_fields,
                 )
-            pv_hash_ids.append(pv_hash_id)
+            pv_ids.append(pv_id)
 
         vs_fields = dict(
             name=enum_name,
             description=enum_data["definition"] or "",
-            permissible_values=sorted(pv_hash_ids),
+            permissible_values=sorted(pv_ids),
             skos_mappings=[],
         )
-        vs_hash_id = compute_hash_id_for(RegistryValueSet, vs_fields)
+        vs_sha = compute_content_hash_for(RegistryValueSet, vs_fields)
+        vs_id = dedup_id("RegistryValueSet", vs_sha)
         vs = RegistryValueSet(
-            hash_id=vs_hash_id,
-            provenance=[prov_factory(vs_hash_id)],
+            id=vs_id,
+            sha256_hash=vs_sha,
+            provenance=[prov_factory(vs_id)],
             **vs_fields,
         )
         value_sets[enum_name] = vs
 
-    # Second pass: resolve property_range name-IRIs to real hash_ids.
+    # Second pass: resolve property_range name-IRIs to real UUIDs.
     #
     # For a class/enum-typed range, _slot_to_dict() stores make_iri(name)
     # (e.g. https://registry.sensein.io/obj/ProvEntity) — a synthetic
-    # label, not a graph reference. Now that every RegistryClass and
-    # RegistryValueSet has a stable hash_id, rewrite each property's
-    # property_range in place so ranges point at real objects by key.
+    # label, not a graph reference. Rewrite each property's property_range
+    # in place so ranges point at real objects by id.
     #
     # Safe against self-references and cross-class cycles because
     # property_range is deliberately not in HashSubset (see meta_model.yaml):
-    # property hashes settle without knowing class hashes, class hashes
-    # settle from the property hashes, and this rewrite touches a field
-    # that no hash depends on. No re-hash needed.
-    name_iri_to_hash: dict[str, str] = {
-        make_iri(cls_name): rc.hash_id
+    # property sha256_hashes settle without knowing class ids, class
+    # sha256_hashes settle from the property ids, and this rewrite touches
+    # a field that no fingerprint depends on. No re-hash needed.
+    name_iri_to_id: dict[str, str] = {
+        make_iri(cls_name): rc.id
         for cls_name, rc in registry_classes.items()
     }
-    name_iri_to_hash.update({
-        make_iri(enum_name): vs.hash_id
+    name_iri_to_id.update({
+        make_iri(enum_name): vs.id
         for enum_name, vs in value_sets.items()
     })
     for prop in properties.values():
-        if prop.property_range in name_iri_to_hash:
-            prop.property_range = name_iri_to_hash[prop.property_range]
+        if prop.property_range in name_iri_to_id:
+            prop.property_range = name_iri_to_id[prop.property_range]
 
     return properties, registry_classes, value_sets, permissible_values
 
@@ -544,30 +573,30 @@ def _write_value_sets(conn, value_sets: dict[str, "RegistryValueSet"],
 
     rels = 0
     for enum_name, vs in value_sets.items():
-        is_new = not entity_exists(conn, "RegistryValueSet", vs.hash_id)
+        is_new = not entity_exists(conn, "RegistryValueSet", vs.id)
         if is_new:
             create_entity_node(conn, "RegistryValueSet", vs)
         for prov in vs.provenance:
-            write_provenance(conn, "RegistryValueSet", vs.hash_id, prov)
+            write_provenance(conn, "RegistryValueSet", vs.id, prov)
 
         # Write each PermissibleValue node and link it.
-        for pv_hash_id in vs.permissible_values:
-            pv = permissible_values[pv_hash_id]
-            pv_is_new = not entity_exists(conn, "PermissibleValue", pv.hash_id)
+        for pv_id in vs.permissible_values:
+            pv = permissible_values[pv_id]
+            pv_is_new = not entity_exists(conn, "PermissibleValue", pv.id)
             if pv_is_new:
                 create_entity_node(conn, "PermissibleValue", pv)
             for prov in pv.provenance:
-                write_provenance(conn, "PermissibleValue", pv.hash_id, prov)
+                write_provenance(conn, "PermissibleValue", pv.id, prov)
 
             edge_exists = conn.execute("""
-                MATCH (vs:RegistryValueSet {hash_id: $vs})-[:HAS_PERMISSIBLE_VALUE]->(pv:PermissibleValue {hash_id: $pv})
-                RETURN vs.hash_id LIMIT 1
-            """, {"vs": vs.hash_id, "pv": pv.hash_id}).has_next()
+                MATCH (vs:RegistryValueSet {id: $vs})-[:HAS_PERMISSIBLE_VALUE]->(pv:PermissibleValue {id: $pv})
+                RETURN vs.id LIMIT 1
+            """, {"vs": vs.id, "pv": pv.id}).has_next()
             if not edge_exists:
                 conn.execute("""
-                    MATCH (vs:RegistryValueSet {hash_id: $vs}), (pv:PermissibleValue {hash_id: $pv})
+                    MATCH (vs:RegistryValueSet {id: $vs}), (pv:PermissibleValue {id: $pv})
                     CREATE (vs)-[:HAS_PERMISSIBLE_VALUE]->(pv)
-                """, {"vs": vs.hash_id, "pv": pv.hash_id})
+                """, {"vs": vs.id, "pv": pv.id})
                 rels += 1
 
     return rels
@@ -627,7 +656,7 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
     Insert a parsed LinkML schema into the LadybugDB graph.
 
       1. Build content-hashed RegistryProperty/RegistryClass instances
-      2. Write each one (skipped if its hash_id already exists) and attach
+      2. Write each one (skipped if its id already exists) and attach
          this ingestion's ProvenanceEntry (skipped if this source already
          attested to it)
       3. Create HAS_PROPERTY and SUBCLASS_OF edges
@@ -647,7 +676,7 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
     )
 
     properties, registry_classes, value_sets, permissible_values = build_registry_entities(
-        parsed, schema_source_id, agent, issue, registry_version,
+        parsed, schema_source_id, agent, issue, registry_version, conn=conn,
     )
 
     stats = write_registry_entities(conn, properties, registry_classes, dry_run=dry_run)

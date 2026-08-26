@@ -73,7 +73,7 @@ def bump_version(ver: str, bump: str = "patch") -> str:
 # Graph writers for content-addressed entities (RegistryClass, RegistryProperty)
 # ---------------------------------------------------------------------------
 # Shared by every script that writes these node types (ingest_linkml.py,
-# seed.py, ...): write the node only if its hash_id doesn't already exist,
+# seed.py, ...): write the node only if its id doesn't already exist,
 # then attach a ProvenanceEntry unless this exact source already attested to
 # it. This is how "identity is separate from provenance" plays out on disk.
 #
@@ -130,11 +130,22 @@ def scalar_fields(entity) -> dict:
     return flattened
 
 
-def entity_exists(conn, label: str, hash_id: str) -> bool:
+def entity_exists(conn, label: str, node_id: str) -> bool:
     return conn.execute(
-        f"MATCH (n:{label} {{hash_id: $hash_id}}) RETURN n.hash_id LIMIT 1",
-        {"hash_id": hash_id},
+        f"MATCH (n:{label} {{id: $node_id}}) RETURN n.id LIMIT 1",
+        {"node_id": node_id},
     ).has_next()
+
+
+def find_id_by_sha256(conn, label: str, sha256_hash: str) -> str | None:
+    """Return the existing entity's id if any row of this label already has
+    the given sha256_hash — used by build_registry_entities to reuse an id
+    for content that already appears in the graph. None if unseen."""
+    r = conn.execute(
+        f"MATCH (n:{label} {{sha256_hash: $sha}}) RETURN n.id LIMIT 1",
+        {"sha": sha256_hash},
+    )
+    return r.get_next()[0] if r.has_next() else None
 
 
 def create_entity_node(conn, label: str, entity) -> None:
@@ -143,7 +154,7 @@ def create_entity_node(conn, label: str, entity) -> None:
     conn.execute(f"CREATE (:{label} {{{prop_str}}})", fields)
 
 
-def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
+def write_provenance(conn, label: str, node_id: str, prov) -> bool:
     """
     Attach a ProvenanceEntry to an entity, unless this exact source has
     already attested to it. Returns True if a new ProvenanceEntry was added.
@@ -156,9 +167,9 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
     """
     rel = HAS_PROVENANCE_REL[label]
     already = conn.execute(f"""
-        MATCH (n:{label} {{hash_id: $hash_id}})-[:{rel}]->(pe:ProvenanceEntry {{had_primary_source: $had_primary_source}})
+        MATCH (n:{label} {{id: $node_id}})-[:{rel}]->(pe:ProvenanceEntry {{had_primary_source: $had_primary_source}})
         RETURN pe.id LIMIT 1
-    """, {"hash_id": hash_id, "had_primary_source": prov.had_primary_source}).has_next()
+    """, {"node_id": node_id, "had_primary_source": prov.had_primary_source}).has_next()
     if already:
         return False
 
@@ -181,9 +192,9 @@ def write_provenance(conn, label: str, hash_id: str, prov) -> bool:
         "was_derived_from":   prov.was_derived_from,
     })
     conn.execute(f"""
-        MATCH (n:{label} {{hash_id: $hash_id}}), (pe:ProvenanceEntry {{id: $id}})
+        MATCH (n:{label} {{id: $node_id}}), (pe:ProvenanceEntry {{id: $pe_id}})
         CREATE (n)-[:{rel}]->(pe)
-    """, {"hash_id": hash_id, "id": pe_id})
+    """, {"node_id": node_id, "pe_id": pe_id})
     conn.execute("""
         MATCH (pe:ProvenanceEntry {id: $id}), (ss:SchemaSource {id: $ss_id})
         CREATE (pe)-[:HAD_PRIMARY_SOURCE]->(ss)
@@ -229,13 +240,15 @@ def ensure_schema_source(conn, source_label: str, version: str, registry_version
 def write_registry_entities(conn, properties: dict, registry_classes: dict,
                              dry_run: bool = False) -> dict:
     """
-    Write (or reuse) each property/class node by hash_id, then attach this
+    Write (or reuse) each property/class node by id, then attach this
     ingestion's ProvenanceEntry to every one of them. Existing nodes are
-    never overwritten — a hash match means identical content, so there is
-    nothing to update; only a new ProvenanceEntry may need attaching.
+    never overwritten — a matching id means dedup already resolved this
+    to identical content (see build_registry_entities' sha256_hash lookup),
+    so there is nothing to update; only a new ProvenanceEntry may need
+    attaching.
 
     `properties`/`registry_classes` are name -> entity dicts (values just
-    need .hash_id and .provenance; shared by ingest_linkml.py and seed.py).
+    need .id and .provenance; shared by ingest_linkml.py and seed.py).
     """
     stats = {
         "properties_new": 0, "properties_existing": 0,
@@ -244,23 +257,23 @@ def write_registry_entities(conn, properties: dict, registry_classes: dict,
     }
 
     for prop in properties.values():
-        is_new = not entity_exists(conn, "RegistryProperty", prop.hash_id)
+        is_new = not entity_exists(conn, "RegistryProperty", prop.id)
         if is_new and not dry_run:
             create_entity_node(conn, "RegistryProperty", prop)
         stats["properties_new" if is_new else "properties_existing"] += 1
         if not dry_run:
             for prov in prop.provenance:
-                if write_provenance(conn, "RegistryProperty", prop.hash_id, prov):
+                if write_provenance(conn, "RegistryProperty", prop.id, prov):
                     stats["provenance_added"] += 1
 
     for rc in registry_classes.values():
-        is_new = not entity_exists(conn, "RegistryClass", rc.hash_id)
+        is_new = not entity_exists(conn, "RegistryClass", rc.id)
         if is_new and not dry_run:
             create_entity_node(conn, "RegistryClass", rc)
         stats["classes_new" if is_new else "classes_existing"] += 1
         if not dry_run:
             for prov in rc.provenance:
-                if write_provenance(conn, "RegistryClass", rc.hash_id, prov):
+                if write_provenance(conn, "RegistryClass", rc.id, prov):
                     stats["provenance_added"] += 1
 
     return stats
@@ -269,37 +282,37 @@ def write_registry_entities(conn, properties: dict, registry_classes: dict,
 def write_structural_edges(conn, registry_classes: dict) -> int:
     """
     HAS_PROPERTY (from each class's own `properties`) + SUBCLASS_OF (from
-    `is_a`, which is already resolved to a hash_id or None by the caller).
+    `is_a`, which is already resolved to an id or None by the caller).
     """
     rels = 0
 
     for rc in registry_classes.values():
-        for prop_hash_id in rc.properties:
+        for prop_id in rc.properties:
             already = conn.execute("""
-                MATCH (c:RegistryClass {hash_id: $c})-[:HAS_PROPERTY]->(p:RegistryProperty {hash_id: $p})
-                RETURN c.hash_id LIMIT 1
-            """, {"c": rc.hash_id, "p": prop_hash_id}).has_next()
+                MATCH (c:RegistryClass {id: $c})-[:HAS_PROPERTY]->(p:RegistryProperty {id: $p})
+                RETURN c.id LIMIT 1
+            """, {"c": rc.id, "p": prop_id}).has_next()
             if not already:
                 conn.execute("""
-                    MATCH (c:RegistryClass {hash_id: $c}), (p:RegistryProperty {hash_id: $p})
+                    MATCH (c:RegistryClass {id: $c}), (p:RegistryProperty {id: $p})
                     CREATE (c)-[:HAS_PROPERTY]->(p)
-                """, {"c": rc.hash_id, "p": prop_hash_id})
+                """, {"c": rc.id, "p": prop_id})
                 rels += 1
 
     for rc in registry_classes.values():
-        parent_hash_id = rc.parent_class
-        if not parent_hash_id:
+        parent_id = rc.parent_class
+        if not parent_id:
             continue
 
         already = conn.execute("""
-            MATCH (c:RegistryClass {hash_id: $c})-[:SUBCLASS_OF]->(p:RegistryClass {hash_id: $p})
-            RETURN c.hash_id LIMIT 1
-        """, {"c": rc.hash_id, "p": parent_hash_id}).has_next()
+            MATCH (c:RegistryClass {id: $c})-[:SUBCLASS_OF]->(p:RegistryClass {id: $p})
+            RETURN c.id LIMIT 1
+        """, {"c": rc.id, "p": parent_id}).has_next()
         if not already:
             conn.execute("""
-                MATCH (c:RegistryClass {hash_id: $c}), (p:RegistryClass {hash_id: $p})
+                MATCH (c:RegistryClass {id: $c}), (p:RegistryClass {id: $p})
                 CREATE (c)-[:SUBCLASS_OF]->(p)
-            """, {"c": rc.hash_id, "p": parent_hash_id})
+            """, {"c": rc.id, "p": parent_id})
             rels += 1
 
     return rels
@@ -361,7 +374,7 @@ def _build_registry_ddl(yaml_path: str | Path = SCHEMA_YAML) -> list[str]:
     Column rules per slot:
     - db_inline class ref → flatten its slots inline.
     - Multivalued class ref (e.g. provenance) → REL table (handled in _REL_DDL below; skipped here).
-    - Non-multivalued class ref → STRING column (hash_id FK).
+    - Non-multivalued class ref → STRING column (id FK).
     - Multivalued scalar (e.g. aliases) → native list column, e.g. STRING[].
       NOT a JSON-encoded STRING: a bound parameter string that looks like a
       Cypher list literal (starts with "[") gets silently reparsed and
@@ -410,7 +423,7 @@ def _build_registry_ddl(yaml_path: str | Path = SCHEMA_YAML) -> list[str]:
 
             elif range_ in classes:
                 if not multi:
-                    # Non-multivalued class ref → STRING FK (hash_id)
+                    # Non-multivalued class ref → STRING FK (id)
                     columns.append(f"    {slot_name:<24} STRING")
                 # multivalued → REL table, not a column
 
@@ -552,7 +565,7 @@ def _migrate_aligned_to(conn: lb.Connection) -> None:
     try:
         conn.execute("""
             MATCH (a:RegistryClass), (b:RegistryClass)
-            WHERE a.hash_id <> b.hash_id
+            WHERE a.id <> b.id
             WITH a, b LIMIT 1
             CREATE (a)-[:ALIGNED_TO {
                 distance: 0.0, method: '__probe__',
@@ -590,7 +603,7 @@ def _migrate_prior_version(conn: lb.Connection) -> None:
     try:
         conn.execute("""
             MATCH (a:RegistryClass), (b:RegistryClass)
-            WHERE a.hash_id <> b.hash_id
+            WHERE a.id <> b.id
             WITH a, b LIMIT 1
             CREATE (a)-[:PRIOR_VERSION {
                 diff_summary: '__probe__', changed_fields: '',
@@ -624,7 +637,7 @@ def _migrate_prior_version(conn: lb.Connection) -> None:
     try:
         conn.execute("""
             MATCH (a:RegistryProperty), (b:RegistryProperty)
-            WHERE a.hash_id <> b.hash_id
+            WHERE a.id <> b.id
             WITH a, b LIMIT 1
             CREATE (a)-[:PRIOR_VERSION_P {
                 diff_summary: '__probe__', changed_fields: '',

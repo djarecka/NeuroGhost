@@ -40,7 +40,8 @@ PermissibleValue {
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string id
+    string sha256_hash
 }
 ProvenanceEntry {
     string id
@@ -57,14 +58,16 @@ RegistryClass {
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string id
+    string sha256_hash
 }
 RegistryEntity {
     string name
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string id
+    string sha256_hash
 }
 RegistryProperty {
     string property_range
@@ -72,7 +75,8 @@ RegistryProperty {
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string id
+    string sha256_hash
 }
 RegistryRule {
     string error_message
@@ -83,7 +87,8 @@ RegistryRule {
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string id
+    string sha256_hash
 }
 RegistrySchema {
     string id
@@ -100,7 +105,8 @@ RegistryValueSet {
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string id
+    string sha256_hash
 }
 SchemaSource {
     string id
@@ -130,7 +136,8 @@ SchemaVersionSnapshot {
 Transform {
     string name
     string description
-    uriorcurie hash_id
+    string id
+    string sha256_hash
 }
 UnitOfMeasure {
     string abbreviation

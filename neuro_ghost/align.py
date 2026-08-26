@@ -13,7 +13,7 @@ ProvenanceEntry field renames, none of which had anything to do with
 alignment logic itself, just with keeping an inlined copy in sync.
 
 This placeholder does the simplest defensible thing instead: exact
-concept_uri matches only, using just hash_id/concept_uri/name — the most
+concept_uri matches only, using just node_id/concept_uri/name — the most
 stable fields in the schema, unlikely to be renamed. It exists so
 export_json.py's "alignments" export and mcp_server.py's alignment-reading
 tools have something real to read, not as a stand-in for real alignment
@@ -41,11 +41,11 @@ DB_PATH = "./registry.lbug"
 
 
 def load_classes(conn) -> list[dict]:
-    """hash_id, concept_uri, name for every RegistryClass — nothing else."""
+    """id, concept_uri, name for every RegistryClass — nothing else."""
     rows = conn.execute(
-        "MATCH (n:RegistryClass) RETURN n.hash_id, n.concept_uri, n.name"
+        "MATCH (n:RegistryClass) RETURN n.id, n.concept_uri, n.name"
     ).get_all()
-    return [{"hash_id": h, "concept_uri": c or "", "name": n or ""} for h, c, n in rows]
+    return [{"id": h, "concept_uri": c or "", "name": n or ""} for h, c, n in rows]
 
 
 def exact_concept_uri_pairs(classes: list[dict]) -> list[tuple[dict, dict]]:
@@ -67,17 +67,17 @@ def write_alignment(conn, a: dict, b: dict, registry_version: str = "") -> None:
     """Write a skos:exactMatch ALIGNED_TO edge in both directions."""
     for src, dst in ((a, b), (b, a)):
         conn.execute("""
-            MATCH (x:RegistryClass {hash_id: $ua})-[r:ALIGNED_TO]->(y:RegistryClass {hash_id: $ub})
+            MATCH (x:RegistryClass {id: $ua})-[r:ALIGNED_TO]->(y:RegistryClass {id: $ub})
             DELETE r
-        """, {"ua": src["hash_id"], "ub": dst["hash_id"]})
+        """, {"ua": src["id"], "ub": dst["id"]})
         conn.execute("""
-            MATCH (x:RegistryClass {hash_id: $ua}), (y:RegistryClass {hash_id: $ub})
+            MATCH (x:RegistryClass {id: $ua}), (y:RegistryClass {id: $ub})
             CREATE (x)-[:ALIGNED_TO {
                 distance: 0.0, method: 'exact_concept_uri', skos_relation: 'skos:exactMatch',
                 score_iri: 1.0, score_name: 0.0, score_desc: 0.0, score_slot: 0.0,
                 registry_version: $rv
             }]->(y)
-        """, {"ua": src["hash_id"], "ub": dst["hash_id"], "rv": registry_version})
+        """, {"ua": src["id"], "ub": dst["id"], "rv": registry_version})
 
 
 @click.command()

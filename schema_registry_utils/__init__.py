@@ -15,9 +15,9 @@ from schema_registry_utils.models import (
     ReviewStatusEnum,
 )
 from schema_registry_utils.hashing import (
-    compute_hash_id,
-    compute_hash_id_for,
-    assign_hash_id,
+    compute_content_hash,
+    compute_content_hash_for,
+    assign_content_hash,
 )
 
 __all__ = [
@@ -35,7 +35,7 @@ __all__ = [
     "SchemaVersionSnapshot",
     "SkosMappingTypeEnum",
     "ReviewStatusEnum",
-    "compute_hash_id",
-    "compute_hash_id_for",
-    "assign_hash_id",
+    "compute_content_hash",
+    "compute_content_hash_for",
+    "assign_content_hash",
 ]

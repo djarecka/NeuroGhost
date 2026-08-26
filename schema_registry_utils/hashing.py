@@ -8,12 +8,12 @@ HASH_SUBSET = "HashSubset"
 
 def _identity_fields(model_cls: type) -> set[str]:
     """
-    The identity-defining fields of a RegistryEntity subclass — everything
+    The content-fingerprint fields of a RegistryEntity subclass — everything
     tagged `in_subset: [HashSubset]` in schemas/meta_model.yaml.
 
-    The schema is the single source of truth for what's identity-defining,
-    not a hand-maintained Python allowlist/denylist that could drift out of
-    sync with it. gen-pydantic carries in_subset into each field's generated
+    The schema is the single source of truth for what counts as content, not a
+    hand-maintained Python allowlist/denylist that could drift out of sync with
+    it. gen-pydantic carries in_subset into each field's generated
     json_schema_extra['linkml_meta'], so this is a pure introspection of the
     already-generated model — no live SchemaView/YAML load needed here.
     """
@@ -25,26 +25,31 @@ def _identity_fields(model_cls: type) -> set[str]:
     return identity
 
 
-def compute_hash_id(entity: RegistryClass | RegistryProperty) -> str:
-    """Compute a content-based hash_id from entity's HashSubset fields."""
+def compute_content_hash(entity: RegistryClass | RegistryProperty) -> str:
+    """Compute a content sha256 from entity's HashSubset fields.
+
+    This is the fingerprint that goes into RegistryEntity.sha256_hash — not
+    the identifier (which is a UUID) but the value ingestion looks up to
+    reuse an existing id for content that already appears in the registry.
+    """
     identity = _identity_fields(type(entity))
     return _digest({k: v for k, v in entity.model_dump().items() if k in identity})
 
 
-def compute_hash_id_for(model_cls: type, fields: dict) -> str:
-    """Compute the hash_id for an entity that has not been constructed yet.
+def compute_content_hash_for(model_cls: type, fields: dict) -> str:
+    """Compute the sha256_hash for an entity that has not been constructed yet.
 
-    hash_id is the identifier in schemas/meta_model.yaml, so the generated
-    models require it at construction — but a content hash can only be derived
-    from the content itself. Builders therefore hash the field values they are
-    about to pass, then construct once with the real hash_id, rather than
-    constructing with a placeholder and mutating afterwards.
+    Builders need the content hash to look up (and dedup against) any existing
+    entity carrying the same content, before they know what `id` to construct
+    with — mint a fresh UUID only if no existing entity's sha256_hash matches.
+    So the hash is computed from a plain dict, before the pydantic instance
+    exists.
 
-    `fields` must carry every HashSubset slot of `model_cls`; anything
-    else may be present and is ignored. Omitting an identity slot raises,
-    because the alternative is a silently different hash the next time the
-    meta-model grows a slot — which would invalidate every stored hash_id in
-    the registry without anything failing.
+    `fields` must carry every HashSubset slot of `model_cls`; anything else
+    may be present and is ignored. Omitting an identity slot raises, because
+    the alternative is a silently different fingerprint the next time the
+    meta-model grows a slot — which would invalidate every stored
+    sha256_hash in the registry without anything failing.
     """
     identity = _identity_fields(model_cls)
     missing = identity - set(fields)
@@ -62,17 +67,17 @@ def _digest(content: dict) -> str:
     return f"sha256:{digest}"
 
 
-def assign_hash_id(entity: RegistryClass | RegistryProperty) -> RegistryClass | RegistryProperty:
-    """Compute entity's hash_id from its current content, then suffix its name
-    with the first 4 hex characters of the digest (e.g. "age" -> "age_a1b2").
+def assign_content_hash(entity: RegistryClass | RegistryProperty) -> RegistryClass | RegistryProperty:
+    """Compute entity's sha256_hash from its current content, then suffix its
+    name with the first 4 hex characters of the digest (e.g. "age" -> "age_a1b2").
 
     Mutates entity in place and returns it. Note: since name is part of the
-    hashed content, the resulting hash_id will no longer match a fresh
-    compute_hash_id() call on the entity after this mutation.
+    hashed content, the resulting sha256_hash will no longer match a fresh
+    compute_content_hash() call on the entity after this mutation.
     """
-    hash_id = compute_hash_id(entity)
-    digest = hash_id.split(":", 1)[1]
-    entity.hash_id = hash_id
+    sha = compute_content_hash(entity)
+    digest = sha.split(":", 1)[1]
+    entity.sha256_hash = sha
     entity.name = f"{entity.name}_{digest[:4]}"
     return entity
 

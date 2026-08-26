@@ -26,7 +26,7 @@ subsets:
   HashSubset:
     description: >-
       Slots that are part of a RegistryEntity subclass's content hash
-      (hash_id). schema_registry_utils/hashing.py derives the identity
+      (sha256_hash). schema_registry_utils/hashing.py derives the identity
       field set from each field's in_subset metadata.
 
 # ---------------------------------------------------------------------------
@@ -44,12 +44,29 @@ classes:
   RegistryEntity:
     abstract: true
     description: >-
-      Common base for content-addressed, provenance-tracked objects registered
-      in the schema registry. Identity (hash_id) is derived from content, so
-      there is no separate version slot: a change produces a new hash_id, with
-      lineage tracked via derived_from on each ProvenanceEntry.
+      Common base for provenance-tracked objects registered in the schema
+      registry.
+
+      Identity vs. content-address are two separate concerns here:
+
+      * `id` is a UUID (uuid4) minted on first ingest — the registry's stable
+        graph handle. Cross-references (class properties, parent_class,
+        class_mixins, property_range, ProvenanceEntry.attests_to) all use
+        UUIDs, so every FK is uniform regardless of the referent's type or
+        whether it is content-addressed.
+
+      * `sha256_hash` is a content fingerprint derived from the fields marked
+        `in_subset: HashSubset` in this schema. It is not the identifier;
+        instead it drives cross-source deduplication — on ingest, an entity
+        whose sha256_hash already exists in the graph reuses its existing
+        `id` rather than minting a new UUID, so the same concept ingested
+        from two sources collapses to one row that accumulates provenance
+        from both. A content change produces a different sha256_hash (a
+        different entity), never an edit of the old one; lineage is tracked
+        via was_derived_from on each ProvenanceEntry.
     slots:
-      - hash_id
+      - id
+      - sha256_hash
       - name
       - description
       - provenance
@@ -112,10 +129,10 @@ classes:
       One source's attestation of a registry entity — where it came from and
       how/when this record was generated (W3C PROV-O fields). An entity
       accumulates one ProvenanceEntry per source that attests to it; identity
-      (hash_id) never depends on provenance, so the same entity can carry many.
+      (id) never depends on provenance, so the same entity can carry many.
       Stored as its own node, linked via HAS_PROVENANCE / HAS_PROVENANCE_P
       edges (multivalued — cannot be inlined into the parent's node table).
-      Identified by id, not hash_id — a ProvenanceEntry is a per-attestation
+      Identified by id — a ProvenanceEntry is a per-attestation
       record, not a deduplicated, content-addressed registry entity.
 
       Carries `attests_to` (the reverse of `RegistryEntity.provenance`) so
@@ -160,10 +177,10 @@ classes:
   Mapping:
     description: >-
       A semantic mapping from a registry entity to a target — another
-      registry entity (by hash_id) or an external vocabulary concept (by
+      registry entity (by id) or an external vocabulary concept (by
       IRI). Covers both a source-declared mapping and one align.py
       computes, distinguished by provenance.mapping_justification, not by
-      class. Identified by id, not hash_id — not is_a RegistryEntity.
+      class. Identified by id — not is_a RegistryEntity.
     slots:
       - id
       - mapping_type
@@ -206,7 +223,7 @@ classes:
       string, interpreted per rule_type — a regex for PATTERN, a
       numeric literal for MIN_VALUE/MAX_VALUE, a length for
       MIN_LENGTH/MAX_LENGTH, "true"/"false" for REQUIRED/MULTIVALUED, a
-      RegistryValueSet hash_id for ENUM_MEMBERSHIP, an XSD CURIE for RANGE, the
+      RegistryValueSet id for ENUM_MEMBERSHIP, an XSD CURIE for RANGE, the
       literal default for DEFAULT, the whole validator body for
       EXPRESSION_*, and so on. This single-value shape is why exclusive
       bounds and expression languages are encoded as rule_type variants
@@ -220,7 +237,7 @@ classes:
       collapse to one RegistryRule node with both schemas attesting to it via
       `provenance` — matching the cross-schema identity behavior main
       restored in 534ee4b. A schema that changes only the human-readable
-      `error_message` keeps its hash_id (see the HashSubset membership on
+      `error_message` keeps its sha256_hash (see the HashSubset membership on
       each slot). RegistryRules are attached to RegistryClass/RegistryProperty
       through the `applies_to` slot — not inlined on the entity itself,
       so a RegistryRule's targets are visible as edges in the graph.
@@ -267,7 +284,7 @@ classes:
       STUB — a transformation between two RegistryClass definitions.
       Slots intentionally minimal; scope TBD.
     slots:
-      - hash_id
+      - id
       - name
       - description
 
@@ -315,7 +332,7 @@ classes:
     description: >-
       Registry record for a schema source (one node per ingested schema label).
       Tracks the source's IRI, MIME type, and the registry version it was first
-      added under. Identity uses id (not hash_id) because this is a mutable
+      added under. Identity uses id (as everywhere) because this is a mutable
       administrative record, not a content-addressed entity. Every attestation
       about a registry entity that names this schema as its primary source is
       surfaced on `attestations`, the inverse of
@@ -409,7 +426,7 @@ classes:
       keep in sync. A full IRI is valid wherever LinkML accepts a CURIE, so
       this is a v1 scope choice, not a limitation of the format.
 
-      Identified by id, not hash_id: two people composing an identical
+      Identified by id: two people composing an identical
       subset of content for different purposes are not the same entity.
     slots:
       - id
@@ -431,14 +448,20 @@ classes:
 
 slots:
 
-  hash_id:
-    identifier: true
+  sha256_hash:
+    range: string
     required: true
-    range: uriorcurie
     description: >-
-      Content-hash-derived identifier (format sha256:<hex>). A change in
-      any identity-defining field produces a new hash_id; lineage is
-      preserved via derived_from.
+      Content fingerprint (format `sha256:<hex>`) derived from the fields
+      marked `in_subset: HashSubset` on this entity's class. Not the
+      identifier — `id` (UUID) is — but content-addressed and stable across
+      sources: two sources that submit identical content produce identical
+      sha256_hash values, and ingestion uses that equality to reuse an
+      existing `id` rather than mint a new UUID for the duplicate.
+
+      A change in any HashSubset field produces a different sha256_hash
+      (a different entity), never an edit of the old one; lineage is
+      tracked via was_derived_from on each ProvenanceEntry.
 
   name:
     range: string
@@ -467,7 +490,7 @@ slots:
     inlined_as_list: true
     description: >-
       One ProvenanceEntry per source attesting to this entity. Accumulates
-      as more sources are ingested — never affects hash_id. Mirrored by
+      as more sources are ingested — never affects id or sha256_hash. Mirrored by
       ProvenanceEntry.attests_to so the relationship round-trips in either
       direction — the entity owns the list, and each entry names the
       entity it belongs to.
@@ -505,7 +528,7 @@ slots:
       Semantic mappings to external vocabulary concepts, or to other
       registry entities (align.py's computed correspondences). Storage is
       embedded (the owning entity is the implicit subject); SSSOM export
-      materializes subject_id from the owning entity's hash_id, so
+      materializes subject_id from the owning entity's id, so
       exported mapping sets are standalone, standards-conformant records.
 
   aliases:
@@ -535,7 +558,7 @@ slots:
     slot_uri: linkml:is_a
     in_subset:
       - HashSubset
-    description: The class this class inherits from (stored as hash_id FK).
+    description: The class this class inherits from (stored as UUID id FK).
 
   class_mixins:
     range: RegistryClass
@@ -549,10 +572,10 @@ slots:
     required: true
     slot_uri: linkml:range
     # Not in HashSubset — the range is a reference into the graph
-    # (a class hash_id, an enum hash_id, or an XSD CURIE for primitives).
+    # (a class id, an enum id, or an XSD CURIE for primitives).
     # Making it identity-defining forces class hashes and property hashes
     # into a mutual dependency: a class's hash includes its properties'
-    # hash_ids, and a property's hash would include the class hash it
+    # UUIDs, and a property's sha256_hash would include the class UUID it
     # points at, so a self-referential slot
     # (e.g. `was_derived_from: range: ProvEntity` on ProvEntity) can't be
     # hashed at all. Range is metadata that ingestion resolves to real
@@ -564,7 +587,7 @@ slots:
     description: >-
       The data type or value range for this property: a canonical XSD
       CURIE for primitives (e.g. "xsd:string", "xsd:integer"), or the
-      hash_id of a RegistryClass or RegistryValueSet for entity/enum
+      id of a RegistryClass or RegistryValueSet for entity/enum
       references. Bare primitive names ("string", "float") are
       deprecated: datatype compatibility is an alignment signal and an
       incompatibility veto, so "float", "xsd:float" and "double" must
@@ -596,9 +619,9 @@ slots:
       - HashSubset
     # Defaults to false rather than null: `is_abstract` is identity-defining,
     # so a null would hash differently from a false and silently change every
-    # RegistryClass hash_id. LinkML has no equivalent for the multivalued slots
+    # RegistryClass sha256_hash. LinkML has no equivalent for the multivalued slots
     # (properties/class_mixins), which still default to null — builders
-    # must pass them explicitly, and compute_hash_id_for() enforces that.
+    # must pass them explicitly, and compute_content_hash_for() enforces that.
     ifabsent: 'false'
     description: Whether this registered class is itself declared abstract.
 
@@ -610,7 +633,7 @@ slots:
     # from a non-mixin with otherwise identical content), so this slot
     # eventually belongs in HashSubset alongside is_abstract. Held out for
     # this PR because promoting it would shift every stored RegistryClass
-    # hash_id — coordinate that in the follow-up that plumbs the actual
+    # sha256_hash — coordinate that in the follow-up that plumbs the actual
     # `mixin: true` value through parse_linkml + build_registry_entities.
     description: >-
       Whether this registered class is itself declared a mixin (a class
@@ -625,11 +648,14 @@ slots:
     required: true
     range: string
     description: >-
-      Plain unique identifier, used by every class that isn't part of the
-      content-addressed RegistryEntity family (ProvenanceEntry, SchemaSource,
-      SchemaVersionSnapshot, Mapping) — LinkML's own conventional name
-      for a non-content-derived identifier. hash_id is reserved for
-      RegistryEntity subclasses.
+      UUID (uuid4) primary key for every registered object, minted at
+      first ingest and stable across content changes. Used uniformly by
+      RegistryEntity subclasses and by non-content-addressed classes
+      (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping),
+      so cross-references are the same shape regardless of the referent's
+      family. For RegistryEntity subclasses the `sha256_hash` fingerprint
+      is what enables cross-source dedup — see RegistryEntity's own
+      description.
 
   had_primary_source:
     range: SchemaSource
@@ -678,7 +704,7 @@ slots:
     multivalued: true
     slot_uri: prov:wasDerivedFrom
     description: >-
-      hash_ids of entities this entity was derived from, if any. Stored as
+      UUID ids of entities this entity was derived from, if any. Stored as
       a native list column in the graph database.
 
   # --- Mapping slots ---------------------------------------------------
@@ -691,7 +717,7 @@ slots:
     range: uriorcurie
     description: >-
       What this mapping points to — an external ontology concept (IRI), or
-      another registry entity's hash_id for align.py's computed
+      another registry entity's id for align.py's computed
       cross-schema correspondences.
 
   # --- MappingProvenanceEntry-only slots: how the mapping was produced ---
@@ -846,7 +872,7 @@ slots:
     # Not in HashSubset — identity is the constraint, not the message the
     # source wrote next to it. Two ingestions of the same rule with
     # slightly different phrasing should collapse to one RegistryRule; a schema
-    # editor tweaking the wording should not mint a new hash_id.
+    # editor tweaking the wording should not mint a new sha256_hash.
     description: >-
       Human-readable message describing what the rule requires, shown when
       it fails. Preserved verbatim from the source schema where one is
@@ -867,7 +893,7 @@ slots:
       MIN_VALUE / MIN_VALUE_EXCLUSIVE / MAX_VALUE / MAX_VALUE_EXCLUSIVE,
       an integer for MIN_LENGTH / MAX_LENGTH / MIN_CARDINALITY /
       MAX_CARDINALITY, "true"/"false" for REQUIRED / MULTIVALUED, an
-      XSD CURIE or RegistryValueSet hash_id for RANGE, a RegistryValueSet hash_id for
+      XSD CURIE or RegistryValueSet id for RANGE, a RegistryValueSet id for
       ENUM_MEMBERSHIP, a source-preserved default (LinkML `ifabsent`
       mini-expression, JSON Schema `default` as JSON text) for
       DEFAULT, and the whole validator body for the EXPRESSION_*
@@ -1058,13 +1084,13 @@ slots:
   registry_classes:
     range: RegistryClass
     multivalued: true
-    description: The RegistryClass entities (by hash_id) included in this schema.
+    description: The RegistryClass entities (by id) included in this schema.
 
   registry_properties:
     range: RegistryProperty
     multivalued: true
     description: >-
-      The RegistryProperty entities (by hash_id) included in this schema.
+      The RegistryProperty entities (by id) included in this schema.
       Not implied by registry_classes' own `properties` — a composed
       schema may include a standalone property not attached to any
       included class, or omit one of an included class's properties.
@@ -1072,12 +1098,12 @@ slots:
   registry_rules:
     range: RegistryRule
     multivalued: true
-    description: The RegistryRule entities (by hash_id) included in this schema.
+    description: The RegistryRule entities (by id) included in this schema.
 
   registry_value_sets:
     range: RegistryValueSet
     multivalued: true
-    description: The RegistryValueSet entities (by hash_id) included in this schema.
+    description: The RegistryValueSet entities (by id) included in this schema.
 
   created_by:
     range: string
@@ -1099,7 +1125,7 @@ slots:
     in_subset:
       - HashSubset
     description: >-
-      The set of permissible values for this RegistryValueSet. Stored as hash_id
+      The set of permissible values for this RegistryValueSet. Stored as id
       references; HAS_PERMISSIBLE_VALUE edges are the graph traversal.
 
   # --- UnitOfMeasure slots ---------------------------------------------------
@@ -1263,7 +1289,7 @@ enums:
         description: >-
           Property's value type is refined to a specific range in the
           enclosing class scope. `rule_value` is an XSD CURIE
-          (e.g. "xsd:integer") or a RegistryValueSet hash_id, same shape as
+          (e.g. "xsd:integer") or a RegistryValueSet id, same shape as
           RegistryProperty.property_range. Distinct from that slot:
           property_range is the property's default type, a RANGE RegistryRule
           with `used_in_class` set is a per-class narrowing (LinkML
@@ -1272,7 +1298,7 @@ enums:
       ENUM_MEMBERSHIP:
         description: >-
           Value must be drawn from a RegistryValueSet. `rule_value` is the
-          RegistryValueSet's hash_id. Distinct from setting property_range to
+          RegistryValueSet's id. Distinct from setting property_range to
           a RegistryValueSet — that is a type declaration; this is the
           enforceable check.
       DEFAULT:
