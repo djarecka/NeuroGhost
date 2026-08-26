@@ -449,11 +449,11 @@ slots:
     multivalued: true
     required: true
     inverse: attests_to
-    # Inlined so generated code carries ProvenanceEntry objects rather than id
-    # references: the pipeline builds entries in memory and hands them to the
-    # graph writers, which split them into their own nodes on write.
-    inlined: true
-    inlined_as_list: true
+    # Reference by ProvenanceEntry.id (UUID), not inlined: the graph stores
+    # ProvenanceEntry as its own node linked via HAS_PROVENANCE /
+    # HAS_PROVENANCE_P edges, so the pydantic model matches that reality —
+    # builders construct the ProvenanceEntry alongside the entity and pass
+    # its id here, rather than embedding the whole object.
     description: >-
       One ProvenanceEntry per source attesting to this entity. Accumulates
       as more sources are ingested — never affects id or sha256_hash. Mirrored by
@@ -488,14 +488,13 @@ slots:
   skos_mappings:
     range: Mapping
     multivalued: true
-    inlined: true
-    inlined_as_list: true
     description: >-
       Semantic mappings to external vocabulary concepts, or to other
-      registry entities (align.py's computed correspondences). Storage is
-      embedded (the owning entity is the implicit subject); SSSOM export
-      materializes subject_id from the owning entity's id, so
-      exported mapping sets are standalone, standards-conformant records.
+      registry entities (align.py's computed correspondences). Reference by
+      Mapping.id (UUID) — the mapping is a separate node so it can be
+      queried and shared across owners; SSSOM export still materializes
+      subject_id from the owning entity's id, so exported mapping sets
+      remain standalone, standards-conformant records.
 
   aliases:
     range: string
@@ -570,6 +569,13 @@ slots:
       Structured unit of measure for this property's values, if applicable.
       ucum_code is the primary field for programmatic unit-compatibility
       checks (align.py's unit veto); the others are supplementary.
+
+      Deliberately inlined: UnitOfMeasure is a value type (no `id` slot,
+      no independent identity — two properties measured in "mV" don't need
+      to share a graph node), so referencing by id doesn't apply here the
+      way it does for provenance/skos_mappings. UnitOfMeasure also carries
+      `annotations.db_inline: true` so its fields flatten into the parent's
+      LadybugDB row instead of forming a separate table.
 
   concept_uri:
     range: uriorcurie

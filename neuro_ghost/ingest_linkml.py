@@ -350,7 +350,13 @@ def _make_provenance(schema_source_id: str, attests_to: str, agent: str,
 def build_registry_entities(
     parsed: dict, schema_source_id: str, agent: str, issue: str = "",
     registry_version: str = "", conn=None,
-) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass], dict[str, RegistryValueSet], dict[str, PermissibleValue]]:
+) -> tuple[
+    dict[str, RegistryProperty],
+    dict[str, RegistryClass],
+    dict[str, RegistryValueSet],
+    dict[str, PermissibleValue],
+    dict[str, ProvenanceEntry],
+]:
     """
     Convert parse_linkml()'s intermediate dict into RegistryProperty/
     RegistryClass instances, keyed by their original slot/class name in the
@@ -392,11 +398,23 @@ def build_registry_entities(
     for cls in classes.values():
         used_slots.update(cls["slots"])
 
-    def make_prov(attests_to: str) -> ProvenanceEntry:
-        return _make_provenance(
+    # ProvenanceEntry is a separate node in the graph (linked via
+    # HAS_PROVENANCE/HAS_PROVENANCE_P), and the meta_model now reflects
+    # that: RegistryEntity.provenance stores ProvenanceEntry.id references,
+    # not embedded objects. Collect the entries here and return them
+    # alongside the entities so the writers can persist both.
+    provenance_entries: dict[str, ProvenanceEntry] = {}
+
+    def make_prov(attests_to: str) -> str:
+        """Build a ProvenanceEntry, store it in the collection, and return
+        its id — for use as a reference in the parent entity's `provenance`
+        list."""
+        pe = _make_provenance(
             schema_source_id, attests_to, agent, issue,
             registry_version, source_version,
         )
+        provenance_entries[pe.id] = pe
+        return pe.id
 
     def dedup_id(kind: str, sha: str) -> str:
         """Return an existing id for this sha256_hash if the graph already
@@ -545,7 +563,7 @@ def build_registry_entities(
         if prop.property_range in name_iri_to_id:
             prop.property_range = name_iri_to_id[prop.property_range]
 
-    return properties, registry_classes, value_sets, permissible_values
+    return properties, registry_classes, value_sets, permissible_values, provenance_entries
 
 
 # ---------------------------------------------------------------------------
@@ -561,13 +579,14 @@ def build_registry_entities(
 # ---------------------------------------------------------------------------
 
 def _write_value_sets(conn, value_sets: dict[str, "RegistryValueSet"],
-                      permissible_values: dict[str, "PermissibleValue"]) -> int:
+                      permissible_values: dict[str, "PermissibleValue"],
+                      provenance_entries: dict[str, "ProvenanceEntry"]) -> int:
     """
     Write RegistryValueSet and PermissibleValue nodes + edges. Returns edge count.
 
-    PermissibleValue is a real RegistryEntity now, so it's written through
-    the same entity_exists/create_entity_node/write_provenance pattern as
-    every other content-addressed entity — no more hand-rolled Cypher.
+    Provenance is passed in via `provenance_entries` (id → ProvenanceEntry)
+    because RegistryEntity.provenance is now a list of ids, not embedded
+    objects — the pydantic model matches the graph shape.
     """
     from db import entity_exists, create_entity_node, write_provenance
 
@@ -576,8 +595,8 @@ def _write_value_sets(conn, value_sets: dict[str, "RegistryValueSet"],
         is_new = not entity_exists(conn, "RegistryValueSet", vs.id)
         if is_new:
             create_entity_node(conn, "RegistryValueSet", vs)
-        for prov in vs.provenance:
-            write_provenance(conn, "RegistryValueSet", vs.id, prov)
+        for prov_id in vs.provenance:
+            write_provenance(conn, "RegistryValueSet", vs.id, provenance_entries[prov_id])
 
         # Write each PermissibleValue node and link it.
         for pv_id in vs.permissible_values:
@@ -585,8 +604,8 @@ def _write_value_sets(conn, value_sets: dict[str, "RegistryValueSet"],
             pv_is_new = not entity_exists(conn, "PermissibleValue", pv.id)
             if pv_is_new:
                 create_entity_node(conn, "PermissibleValue", pv)
-            for prov in pv.provenance:
-                write_provenance(conn, "PermissibleValue", pv.id, prov)
+            for prov_id in pv.provenance:
+                write_provenance(conn, "PermissibleValue", pv.id, provenance_entries[prov_id])
 
             edge_exists = conn.execute("""
                 MATCH (vs:RegistryValueSet {id: $vs})-[:HAS_PERMISSIBLE_VALUE]->(pv:PermissibleValue {id: $pv})
@@ -675,17 +694,19 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
         conn, source_label, meta["version"], registry_version, dry_run=dry_run,
     )
 
-    properties, registry_classes, value_sets, permissible_values = build_registry_entities(
+    properties, registry_classes, value_sets, permissible_values, provenance_entries = build_registry_entities(
         parsed, schema_source_id, agent, issue, registry_version, conn=conn,
     )
 
-    stats = write_registry_entities(conn, properties, registry_classes, dry_run=dry_run)
+    stats = write_registry_entities(
+        conn, properties, registry_classes, provenance_entries, dry_run=dry_run,
+    )
 
     if dry_run:
         return stats
 
     stats["rels"] = write_structural_edges(conn, registry_classes)
-    stats["rels"] += _write_value_sets(conn, value_sets, permissible_values)
+    stats["rels"] += _write_value_sets(conn, value_sets, permissible_values, provenance_entries)
 
     has_new_content = bool(stats["classes_new"] or stats["properties_new"])
     has_any_change   = has_new_content or bool(stats["provenance_added"])

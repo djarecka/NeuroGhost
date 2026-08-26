@@ -238,6 +238,7 @@ def ensure_schema_source(conn, source_label: str, version: str, registry_version
 
 
 def write_registry_entities(conn, properties: dict, registry_classes: dict,
+                             provenance_entries: dict,
                              dry_run: bool = False) -> dict:
     """
     Write (or reuse) each property/class node by id, then attach this
@@ -247,8 +248,10 @@ def write_registry_entities(conn, properties: dict, registry_classes: dict,
     so there is nothing to update; only a new ProvenanceEntry may need
     attaching.
 
-    `properties`/`registry_classes` are name -> entity dicts (values just
-    need .id and .provenance; shared by ingest_linkml.py and seed.py).
+    `properties`/`registry_classes` are name -> entity dicts, and each
+    entity's `.provenance` is a list of ProvenanceEntry.id references
+    (not embedded objects — the meta_model stores provenance by id, so the
+    caller passes the ProvenanceEntry dict alongside for lookup).
     """
     stats = {
         "properties_new": 0, "properties_existing": 0,
@@ -262,8 +265,8 @@ def write_registry_entities(conn, properties: dict, registry_classes: dict,
             create_entity_node(conn, "RegistryProperty", prop)
         stats["properties_new" if is_new else "properties_existing"] += 1
         if not dry_run:
-            for prov in prop.provenance:
-                if write_provenance(conn, "RegistryProperty", prop.id, prov):
+            for prov_id in prop.provenance:
+                if write_provenance(conn, "RegistryProperty", prop.id, provenance_entries[prov_id]):
                     stats["provenance_added"] += 1
 
     for rc in registry_classes.values():
@@ -272,8 +275,8 @@ def write_registry_entities(conn, properties: dict, registry_classes: dict,
             create_entity_node(conn, "RegistryClass", rc)
         stats["classes_new" if is_new else "classes_existing"] += 1
         if not dry_run:
-            for prov in rc.provenance:
-                if write_provenance(conn, "RegistryClass", rc.id, prov):
+            for prov_id in rc.provenance:
+                if write_provenance(conn, "RegistryClass", rc.id, provenance_entries[prov_id]):
                     stats["provenance_added"] += 1
 
     return stats

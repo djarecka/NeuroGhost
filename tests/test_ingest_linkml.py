@@ -251,7 +251,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     ProvenanceEntry.id/generated_at_time are non-deterministic per run.
     """
     parsed = parse_linkml(FIXTURES / "comprehensive.yml")
-    properties, registry_classes, value_sets, permissible_values = build_registry_entities(
+    properties, registry_classes, value_sets, permissible_values, provenance_entries = build_registry_entities(
         parsed, "comprehensive", "tester"
     )
     assert value_sets == {}  # comprehensive.yml has no enums
@@ -262,7 +262,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
 
     for entity in (*properties.values(), *registry_classes.values()):
         assert len(entity.provenance) == 1
-        prov = entity.provenance[0]
+        prov = provenance_entries[entity.provenance[0]]
         assert prov.had_primary_source == "comprehensive"
         assert prov.was_attributed_to == "tester"
         assert prov.was_generated_by == "ingestion"
@@ -421,7 +421,7 @@ def test_class_hash_dedup_makes_a_re_ingest_deterministic(monkeypatch):
     from ingest_linkml import build_registry_entities, parse_linkml
 
     parsed = parse_linkml(FIXTURES / "comprehensive.yml")
-    props1, classes1, _, _ = build_registry_entities(parsed, "comprehensive", "tester")
+    props1, classes1, _, _, _ = build_registry_entities(parsed, "comprehensive", "tester")
 
     # After first ingest: build the (label, sha256) -> id map that a
     # populated registry would return from find_id_by_sha256.
@@ -438,7 +438,7 @@ def test_class_hash_dedup_makes_a_re_ingest_deterministic(monkeypatch):
 
     # Second ingest, this time with `conn` set to any non-None sentinel — the
     # patched find_id_by_sha256 doesn't touch it. Every id must match.
-    props2, classes2, _, _ = build_registry_entities(
+    props2, classes2, _, _, _ = build_registry_entities(
         parsed, "comprehensive", "tester", conn=object(),
     )
     for name, p1 in props1.items():
@@ -474,7 +474,7 @@ def test_build_registry_entities_produces_value_sets():
     rather than tied to one source name.
     """
     parsed = parse_linkml(FIXTURES / "schema_with_enums.yml")
-    properties, registry_classes, value_sets, permissible_values = build_registry_entities(
+    properties, registry_classes, value_sets, permissible_values, provenance_entries = build_registry_entities(
         parsed, "enum_test", "tester"
     )
 
@@ -491,7 +491,7 @@ def test_build_registry_entities_produces_value_sets():
     assert vs.sha256_hash.startswith("sha256:")
     # Provenance from the ingestion
     assert len(vs.provenance) == 1
-    assert vs.provenance[0].had_primary_source == "enum_test"
+    assert provenance_entries[vs.provenance[0]].had_primary_source == "enum_test"
 
     assert set(vs.permissible_values) == set(permissible_values)
     for pv in permissible_values.values():
@@ -500,4 +500,4 @@ def test_build_registry_entities_produces_value_sets():
         assert _is_uuid(pv.id)
         assert pv.sha256_hash.startswith("sha256:")
         assert len(pv.provenance) == 1
-        assert pv.provenance[0].had_primary_source == "enum_test"
+        assert provenance_entries[pv.provenance[0]].had_primary_source == "enum_test"

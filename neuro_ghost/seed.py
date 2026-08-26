@@ -169,11 +169,18 @@ def _provenance(schema_source_id: str, attests_to: str, agent: str = "system",
 
 def build_registry_entities(
     classes: dict[str, dict], schema_source_id: str, registry_version: str = "",
-) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass]]:
+) -> tuple[
+    dict[str, RegistryProperty],
+    dict[str, RegistryClass],
+    dict[str, ProvenanceEntry],
+]:
     """
-    Convert collect_classes()'s output into content-hashed RegistryProperty/
-    RegistryClass instances — the same shape ingest_linkml.py produces, so
-    schema.org is written by the exact same graph writers as any other source.
+    Convert collect_classes()'s output into RegistryProperty/RegistryClass
+    instances — the same shape ingest_linkml.py produces, so schema.org is
+    written by the exact same graph writers as any other source. Returns the
+    ProvenanceEntry collection alongside so the writers can attach it (the
+    meta_model stores provenance by id, not embedded — see build_registry_
+    entities in ingest_linkml.py for the same pattern).
 
     A schema.org class can have multiple rdfs:subClassOf parents; RegistryClass
     only has one `is_a` (LinkML's single-inheritance convention, matching how
@@ -181,6 +188,13 @@ def build_registry_entities(
     so only the first resolvable parent is used — any additional parents are
     not represented as edges.
     """
+    provenance_entries: dict[str, ProvenanceEntry] = {}
+
+    def make_prov(attests_to: str) -> str:
+        pe = _provenance(schema_source_id, attests_to, registry_version=registry_version)
+        provenance_entries[pe.id] = pe
+        return pe.id
+
     properties: dict[str, RegistryProperty] = {}
     seen_prop_iris: dict[str, str] = {}   # prop iri -> name, dedupes by IRI
 
@@ -203,7 +217,7 @@ def build_registry_entities(
             p = RegistryProperty(
                 id=p_id,
                 sha256_hash=p_sha,
-                provenance=[_provenance(schema_source_id, p_id, registry_version=registry_version)],
+                provenance=[make_prov(p_id)],
                 **fields,
             )
             properties[prop["iri"]] = p
@@ -240,7 +254,7 @@ def build_registry_entities(
         rc = RegistryClass(
             id=rc_id,
             sha256_hash=rc_sha,
-            provenance=[_provenance(schema_source_id, rc_id, registry_version=registry_version)],
+            provenance=[make_prov(rc_id)],
             **fields,
         )
         registry_classes[name] = rc
@@ -249,7 +263,7 @@ def build_registry_entities(
     for name in classes:
         resolve_class(name)
 
-    return properties, registry_classes
+    return properties, registry_classes, provenance_entries
 
 
 def seed(db_path: str = "./registry.lbug",
@@ -289,7 +303,7 @@ def seed(db_path: str = "./registry.lbug",
     classes = collect_classes(g)
 
     print(f"Building {len(classes)} classes …")
-    properties, registry_classes = build_registry_entities(classes, schema_source_id, registry_version)
+    properties, registry_classes, provenance_entries = build_registry_entities(classes, schema_source_id, registry_version)
 
     if dry_run:
         print(f"\n[dry-run] Would insert:")
@@ -301,7 +315,7 @@ def seed(db_path: str = "./registry.lbug",
         print("  … (showing first 12)")
         return
 
-    stats = write_registry_entities(conn, properties, registry_classes)
+    stats = write_registry_entities(conn, properties, registry_classes, provenance_entries)
     rels  = write_structural_edges(conn, registry_classes)
 
     print(
