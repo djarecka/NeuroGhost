@@ -40,20 +40,20 @@ _REGISTRY: dict = {
         # BBQS source classes
         # ------------------------------------------------------------------ #
         {
-            "hash_id": "sha256:bbqs_investigator",
+            "id": "sha256:bbqs_investigator",
             "name": "Investigator",
             "sources": ["bbqs"],
             "iri": "https://brain-bbqs.org/schema/Investigator",
             "definition": "A research investigator on a BBQS-funded project.",
             "properties": [
-                {"name": "name",        "hash_id": "sha256:p_name"},
-                {"name": "email",       "hash_id": "sha256:p_email"},
-                {"name": "identifier",  "hash_id": "sha256:p_identifier"},
-                {"name": "affiliation", "hash_id": "sha256:p_affiliation"},
+                {"name": "name",        "id": "sha256:p_name"},
+                {"name": "email",       "id": "sha256:p_email"},
+                {"name": "identifier",  "id": "sha256:p_identifier"},
+                {"name": "affiliation", "id": "sha256:p_affiliation"},
             ],
             "alignments": [
                 {
-                    "target_hash_id": "sha256:bids_participant",
+                    "target_id": "sha256:bids_participant",
                     "target_name":    "Participant",
                     "distance":       0.15,
                     "method":         "proteus",
@@ -62,34 +62,34 @@ _REGISTRY: dict = {
             ],
         },
         {
-            "hash_id": "sha256:bbqs_dataset",
+            "id": "sha256:bbqs_dataset",
             "name": "Dataset",
             "sources": ["bbqs"],
             "iri": "https://brain-bbqs.org/schema/Dataset",
             "definition": "A BBQS research dataset archived in DANDI/EMBER.",
             "properties": [
-                {"name": "identifier", "hash_id": "sha256:p_identifier"},
-                {"name": "name",       "hash_id": "sha256:p_name"},
-                {"name": "species",    "hash_id": "sha256:p_species"},
-                {"name": "modality",   "hash_id": "sha256:p_modality"},
+                {"name": "identifier", "id": "sha256:p_identifier"},
+                {"name": "name",       "id": "sha256:p_name"},
+                {"name": "species",    "id": "sha256:p_species"},
+                {"name": "modality",   "id": "sha256:p_modality"},
             ],
             "alignments": [
                 {
-                    "target_hash_id": "sha256:bids_dataset",
+                    "target_id": "sha256:bids_dataset",
                     "target_name":    "BIDSDataset",
                     "distance":       0.20,
                     "method":         "proteus",
                     "skos_relation":  "closeMatch",
                 },
                 {
-                    "target_hash_id": "sha256:dandi_dandiset",
+                    "target_id": "sha256:dandi_dandiset",
                     "target_name":    "Dandiset",
                     "distance":       0.18,
                     "method":         "proteus",
                     "skos_relation":  "closeMatch",
                 },
                 {
-                    "target_hash_id": "sha256:nwb_nwbfile",
+                    "target_id": "sha256:nwb_nwbfile",
                     "target_name":    "NWBFile",
                     "distance":       0.35,
                     "method":         "proteus",
@@ -98,18 +98,18 @@ _REGISTRY: dict = {
             ],
         },
         {
-            "hash_id": "sha256:bbqs_device",
+            "id": "sha256:bbqs_device",
             "name": "Device",
             "sources": ["bbqs"],
             "iri": "https://brain-bbqs.org/schema/Device",
             "definition": "A recording device used in BBQS experiments.",
             "properties": [
-                {"name": "name",     "hash_id": "sha256:p_name"},
-                {"name": "modality", "hash_id": "sha256:p_modality"},
+                {"name": "name",     "id": "sha256:p_name"},
+                {"name": "modality", "id": "sha256:p_modality"},
             ],
             "alignments": [
                 {
-                    "target_hash_id": "sha256:nwb_device",
+                    "target_id": "sha256:nwb_device",
                     "target_name":    "Device",
                     "distance":       0.10,
                     "method":         "proteus",
@@ -118,20 +118,20 @@ _REGISTRY: dict = {
             ],
         },
         {
-            "hash_id": "sha256:bbqs_fundedproject",
+            "id": "sha256:bbqs_fundedproject",
             "name": "FundedProject",
             "sources": ["bbqs"],
             "iri": "https://brain-bbqs.org/schema/FundedProject",
             "definition": "An NIH-funded research project in the BBQS cohort.",
             "properties": [
-                {"name": "identifier", "hash_id": "sha256:p_identifier"},
-                {"name": "name",       "hash_id": "sha256:p_name"},
-                {"name": "funding",    "hash_id": "sha256:p_funding"},
-                {"name": "species",    "hash_id": "sha256:p_species"},
+                {"name": "identifier", "id": "sha256:p_identifier"},
+                {"name": "name",       "id": "sha256:p_name"},
+                {"name": "funding",    "id": "sha256:p_funding"},
+                {"name": "species",    "id": "sha256:p_species"},
             ],
             "alignments": [
                 {
-                    "target_hash_id": "sha256:dandi_dandiset",
+                    "target_id": "sha256:dandi_dandiset",
                     "target_name":    "Dandiset",
                     "distance":       0.40,
                     "method":         "proteus",
@@ -140,14 +140,14 @@ _REGISTRY: dict = {
             ],
         },
         {
-            "hash_id": "sha256:bbqs_software",
+            "id": "sha256:bbqs_software",
             "name": "Software",
             "sources": ["bbqs"],
             "iri": "https://brain-bbqs.org/schema/Software",
             "definition": "Analysis software used in BBQS data processing.",
             "properties": [
-                {"name": "name",       "hash_id": "sha256:p_name"},
-                {"name": "identifier", "hash_id": "sha256:p_identifier"},
+                {"name": "name",       "id": "sha256:p_name"},
+                {"name": "identifier", "id": "sha256:p_identifier"},
             ],
             "alignments": [],  # no close match in bids/nwb/dandi yet
         },
@@ -155,29 +155,29 @@ _REGISTRY: dict = {
         # BIDS target classes
         # ------------------------------------------------------------------ #
         {
-            "hash_id": "sha256:bids_participant",
+            "id": "sha256:bids_participant",
             "name": "Participant",
             "sources": ["bids"],
             "iri": "https://bids.neuroimaging.io/schema/Participant",
             "definition": "A research participant in a BIDS dataset.",
             "properties": [
-                {"name": "name",        "hash_id": "sha256:p_name"},
-                {"name": "email",       "hash_id": "sha256:p_email"},
-                {"name": "identifier",  "hash_id": "sha256:p_identifier"},
-                {"name": "affiliation", "hash_id": "sha256:p_affiliation"},
+                {"name": "name",        "id": "sha256:p_name"},
+                {"name": "email",       "id": "sha256:p_email"},
+                {"name": "identifier",  "id": "sha256:p_identifier"},
+                {"name": "affiliation", "id": "sha256:p_affiliation"},
             ],
             "alignments": [],
         },
         {
-            "hash_id": "sha256:bids_dataset",
+            "id": "sha256:bids_dataset",
             "name": "BIDSDataset",
             "sources": ["bids"],
             "iri": "https://bids.neuroimaging.io/schema/BIDSDataset",
             "definition": "A BIDS-compliant dataset.",
             "properties": [
-                {"name": "name",       "hash_id": "sha256:p_name"},
-                {"name": "identifier", "hash_id": "sha256:p_identifier"},
-                {"name": "species",    "hash_id": "sha256:p_species"},
+                {"name": "name",       "id": "sha256:p_name"},
+                {"name": "identifier", "id": "sha256:p_identifier"},
+                {"name": "species",    "id": "sha256:p_species"},
             ],
             "alignments": [],
         },
@@ -185,27 +185,27 @@ _REGISTRY: dict = {
         # NWB target classes
         # ------------------------------------------------------------------ #
         {
-            "hash_id": "sha256:nwb_device",
+            "id": "sha256:nwb_device",
             "name": "Device",
             "sources": ["nwb"],
             "iri": "https://nwb-schema.readthedocs.io/en/latest/#Device",
             "definition": "A recording device described in an NWB file.",
             "properties": [
-                {"name": "name",     "hash_id": "sha256:p_name"},
-                {"name": "modality", "hash_id": "sha256:p_modality"},
+                {"name": "name",     "id": "sha256:p_name"},
+                {"name": "modality", "id": "sha256:p_modality"},
             ],
             "alignments": [],
         },
         {
-            "hash_id": "sha256:nwb_nwbfile",
+            "id": "sha256:nwb_nwbfile",
             "name": "NWBFile",
             "sources": ["nwb"],
             "iri": "https://nwb-schema.readthedocs.io/en/latest/#NWBFile",
             "definition": "Root container for an NWB file.",
             "properties": [
-                {"name": "identifier", "hash_id": "sha256:p_identifier"},
-                {"name": "species",    "hash_id": "sha256:p_species"},
-                {"name": "modality",   "hash_id": "sha256:p_modality"},
+                {"name": "identifier", "id": "sha256:p_identifier"},
+                {"name": "species",    "id": "sha256:p_species"},
+                {"name": "modality",   "id": "sha256:p_modality"},
             ],
             "alignments": [],
         },
@@ -213,15 +213,15 @@ _REGISTRY: dict = {
         # DANDI target classes
         # ------------------------------------------------------------------ #
         {
-            "hash_id": "sha256:dandi_dandiset",
+            "id": "sha256:dandi_dandiset",
             "name": "Dandiset",
             "sources": ["dandi"],
             "iri": "https://dandiarchive.org/schema/Dandiset",
             "definition": "A curated collection of NWB files on DANDI.",
             "properties": [
-                {"name": "identifier", "hash_id": "sha256:p_identifier"},
-                {"name": "name",       "hash_id": "sha256:p_name"},
-                {"name": "species",    "hash_id": "sha256:p_species"},
+                {"name": "identifier", "id": "sha256:p_identifier"},
+                {"name": "name",       "id": "sha256:p_name"},
+                {"name": "species",    "id": "sha256:p_species"},
             ],
             "alignments": [],
         },

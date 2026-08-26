@@ -94,7 +94,7 @@ def _sources() -> list[dict]:
 
 
 def _class_index() -> dict[str, dict]:
-    return {c["hash_id"]: c for c in _classes()}
+    return {c["id"]: c for c in _classes()}
 
 
 # ---------------------------------------------------------------------------
@@ -139,7 +139,7 @@ def search_classes(
         source: Optional schema label to restrict results (e.g. "bbqs", "bids").
         limit:  Max results to return (default 20).
 
-    Returns a list of {name, hash_id, sources, iri, definition} dicts.
+    Returns a list of {name, node_id, sources, iri, definition} dicts.
     """
     q = query.lower()
     results: list[dict] = []
@@ -149,7 +149,7 @@ def search_classes(
         if q in c["name"].lower() or q in (c.get("definition") or "").lower():
             results.append({
                 "name":       c["name"],
-                "hash_id":    c["hash_id"],
+                "id":    c["id"],
                 "iri":        c.get("iri", ""),
                 "sources":    c.get("sources", []),
                 "definition": (c.get("definition") or "")[:300],
@@ -169,13 +169,13 @@ def get_class(name_or_hash: str) -> dict | None:
     Get full detail for a class — properties, alignments, sources, IRI.
 
     Args:
-        name_or_hash: Class name (case-insensitive, partial ok) or exact hash_id.
+        name_or_hash: Class name (case-insensitive, partial ok) or exact node_id.
 
     Returns the full class dict or null if not found.
     """
     q = name_or_hash.lower()
     for c in _classes():
-        if c["hash_id"] == name_or_hash or q in c["name"].lower():
+        if c["id"] == name_or_hash or q in c["name"].lower():
             return c
     return None
 
@@ -195,7 +195,7 @@ def get_alignments(
     Distance: 0.0 = identical, 1.0 = unrelated.
 
     Args:
-        class_name:   Name or hash_id of the source class.
+        class_name:   Name or node_id of the source class.
         max_distance: Only return alignments closer than this (default 0.5).
 
     Returns a list of aligned classes sorted by distance, each with
@@ -210,10 +210,10 @@ def get_alignments(
     for a in c.get("alignments", []):
         if a["distance"] > max_distance:
             continue
-        target = index.get(a["target_hash_id"], {})
+        target = index.get(a["target_id"], {})
         results.append({
             "name":       a.get("target_name", ""),
-            "hash_id":    a.get("target_hash_id", ""),
+            "id":    a.get("target_id", ""),
             "sources":    target.get("sources", []),
             "distance":   a["distance"],
             "method":     a.get("method", ""),
@@ -244,7 +244,7 @@ def diff_schemas(source_a: str, source_b: str) -> dict:
     """
     a_classes = [c for c in _classes() if source_a in c.get("sources", [])]
     b_classes = [c for c in _classes() if source_b in c.get("sources", [])]
-    b_index   = {c["hash_id"]: c for c in b_classes}
+    b_index   = {c["id"]: c for c in b_classes}
 
     only_a: list[str] = []
     only_b: list[str] = []
@@ -254,7 +254,7 @@ def diff_schemas(source_a: str, source_b: str) -> dict:
     for c in a_classes:
         aligned_to_b = [
             a for a in c.get("alignments", [])
-            if a["target_hash_id"] in b_index
+            if a["target_id"] in b_index
         ]
         if aligned_to_b:
             best = min(aligned_to_b, key=lambda x: x["distance"])
@@ -263,12 +263,12 @@ def diff_schemas(source_a: str, source_b: str) -> dict:
                 "b_name":   best["target_name"],
                 "distance": best["distance"],
             })
-            matched_b.add(best["target_hash_id"])
+            matched_b.add(best["target_id"])
         else:
             only_a.append(c["name"])
 
     for c in b_classes:
-        if c["hash_id"] not in matched_b:
+        if c["id"] not in matched_b:
             only_b.append(c["name"])
 
     shared.sort(key=lambda x: x["distance"])
@@ -307,7 +307,7 @@ def transform_record(
         warnings: human-readable notes
     """
     src_classes = [c for c in _classes() if source_schema in c.get("sources", [])]
-    tgt_index   = {c["hash_id"]: c for c in _classes() if target_schema in c.get("sources", [])}
+    tgt_index   = {c["id"]: c for c in _classes() if target_schema in c.get("sources", [])}
 
     # Build property map: source_prop_name (lower) -> target_prop_name
     prop_map: dict[str, str] = {}
@@ -316,7 +316,7 @@ def transform_record(
         for align in src_c.get("alignments", []):
             if align["distance"] > 0.6:
                 continue
-            tgt_c = tgt_index.get(align["target_hash_id"])
+            tgt_c = tgt_index.get(align["target_id"])
             if not tgt_c:
                 continue
             tgt_props = {p["name"].lower(): p["name"] for p in tgt_c.get("properties", [])}
@@ -433,7 +433,7 @@ def find_concept(concept: str) -> str:
     return (
         f"Search the NeuroGhost registry for '{concept}':\n"
         f"1. Call search_classes(query='{concept}') to find matching classes.\n"
-        f"2. For the top result, call get_alignments(class_name=<hash_id>) to show "
+        f"2. For the top result, call get_alignments(class_name=<node_id>) to show "
         f"how it aligns across schemas.\n"
         f"3. Summarise: what schemas define this concept, how similar are they, "
         f"and what SKOS relation links them (exactMatch, closeMatch, etc.)."

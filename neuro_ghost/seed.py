@@ -32,7 +32,7 @@ import click, httpx, rdflib
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from schema_registry_utils import (
-    RegistryClass, RegistryProperty, ProvenanceEntry, compute_hash_id_for,
+    RegistryClass, RegistryProperty, ProvenanceEntry, compute_content_hash_for,
 )
 
 from db import (
@@ -169,11 +169,18 @@ def _provenance(schema_source_id: str, attests_to: str, agent: str = "system",
 
 def build_registry_entities(
     classes: dict[str, dict], schema_source_id: str, registry_version: str = "",
-) -> tuple[dict[str, RegistryProperty], dict[str, RegistryClass]]:
+) -> tuple[
+    dict[str, RegistryProperty],
+    dict[str, RegistryClass],
+    dict[str, ProvenanceEntry],
+]:
     """
-    Convert collect_classes()'s output into content-hashed RegistryProperty/
-    RegistryClass instances — the same shape ingest_linkml.py produces, so
-    schema.org is written by the exact same graph writers as any other source.
+    Convert collect_classes()'s output into RegistryProperty/RegistryClass
+    instances — the same shape ingest_linkml.py produces, so schema.org is
+    written by the exact same graph writers as any other source. Returns the
+    ProvenanceEntry collection alongside so the writers can attach it (the
+    meta_model stores provenance by id, not embedded — see build_registry_
+    entities in ingest_linkml.py for the same pattern).
 
     A schema.org class can have multiple rdfs:subClassOf parents; RegistryClass
     only has one `is_a` (LinkML's single-inheritance convention, matching how
@@ -181,6 +188,13 @@ def build_registry_entities(
     so only the first resolvable parent is used — any additional parents are
     not represented as edges.
     """
+    provenance_entries: dict[str, ProvenanceEntry] = {}
+
+    def make_prov(attests_to: str) -> str:
+        pe = _provenance(schema_source_id, attests_to, registry_version=registry_version)
+        provenance_entries[pe.id] = pe
+        return pe.id
+
     properties: dict[str, RegistryProperty] = {}
     seen_prop_iris: dict[str, str] = {}   # prop iri -> name, dedupes by IRI
 
@@ -198,10 +212,12 @@ def build_registry_entities(
                 slot_uri=prop["iri"] or None,
                 skos_mappings=[],
             )
-            p_hash_id = compute_hash_id_for(RegistryProperty, fields)
+            p_sha = compute_content_hash_for(RegistryProperty, fields)
+            p_id  = make_id()
             p = RegistryProperty(
-                hash_id=p_hash_id,
-                provenance=[_provenance(schema_source_id, p_hash_id, registry_version=registry_version)],
+                id=p_id,
+                sha256_hash=p_sha,
+                provenance=[make_prov(p_id)],
                 **fields,
             )
             properties[prop["iri"]] = p
@@ -220,23 +236,25 @@ def build_registry_entities(
         )
         parent = resolve_class(parent_name) if parent_name else None
 
-        prop_hash_ids = sorted({
-            properties[prop["iri"]].hash_id for prop in info["props"]
+        prop_ids = sorted({
+            properties[prop["iri"]].id for prop in info["props"]
         })
         fields = dict(
             name=name,
             description=info["comment"] or "",
             class_uri=info["iri"] or None,
             abstract=False,
-            is_a=parent.hash_id if parent else None,
-            properties=prop_hash_ids,
+            is_a=parent.id if parent else None,
+            properties=prop_ids,
             mixins=[],
             skos_mappings=[],
         )
-        rc_hash_id = compute_hash_id_for(RegistryClass, fields)
+        rc_sha = compute_content_hash_for(RegistryClass, fields)
+        rc_id  = make_id()
         rc = RegistryClass(
-            hash_id=rc_hash_id,
-            provenance=[_provenance(schema_source_id, rc_hash_id, registry_version=registry_version)],
+            id=rc_id,
+            sha256_hash=rc_sha,
+            provenance=[make_prov(rc_id)],
             **fields,
         )
         registry_classes[name] = rc
@@ -245,7 +263,7 @@ def build_registry_entities(
     for name in classes:
         resolve_class(name)
 
-    return properties, registry_classes
+    return properties, registry_classes, provenance_entries
 
 
 def seed(db_path: str = "./registry.lbug",
@@ -270,7 +288,7 @@ def seed(db_path: str = "./registry.lbug",
     if not dry_run and not wipe:
         r = conn.execute("""
             MATCH (n:RegistryClass {name: 'Thing'})-[:HAS_PROVENANCE]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: 'schema.org'})
-            RETURN n.hash_id LIMIT 1
+            RETURN n.id LIMIT 1
         """)
         if r.has_next():
             print("schema.org seed already present — skipping. "
@@ -285,7 +303,7 @@ def seed(db_path: str = "./registry.lbug",
     classes = collect_classes(g)
 
     print(f"Building {len(classes)} classes …")
-    properties, registry_classes = build_registry_entities(classes, schema_source_id, registry_version)
+    properties, registry_classes, provenance_entries = build_registry_entities(classes, schema_source_id, registry_version)
 
     if dry_run:
         print(f"\n[dry-run] Would insert:")
@@ -297,7 +315,7 @@ def seed(db_path: str = "./registry.lbug",
         print("  … (showing first 12)")
         return
 
-    stats = write_registry_entities(conn, properties, registry_classes)
+    stats = write_registry_entities(conn, properties, registry_classes, provenance_entries)
     rels  = write_structural_edges(conn, registry_classes)
 
     print(

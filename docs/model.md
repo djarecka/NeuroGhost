@@ -36,11 +36,12 @@ MappingProvenanceEntry {
 }
 PermissibleValue {
     uriorcurie meaning
+    string id
     string name
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string sha256_hash
 }
 ProvenanceEntry {
     string id
@@ -53,37 +54,42 @@ ProvenanceEntry {
 }
 RegistryClass {
     boolean is_abstract
+    boolean is_mixin
+    string id
     string name
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string sha256_hash
 }
 RegistryEntity {
+    string id
     string name
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string sha256_hash
 }
 RegistryProperty {
     string property_range
+    string id
     string name
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string sha256_hash
 }
 RegistryRule {
     string error_message
     RegistryRuleTypeEnum rule_type
     string rule_value
     RegistryRuleSeverityEnum severity
+    string id
     string name
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string sha256_hash
 }
 RegistrySchema {
     string id
@@ -96,11 +102,12 @@ RegistrySchema {
     uriorcurie namespace_iri
 }
 RegistryValueSet {
+    string id
     string name
     string description
     stringList aliases
     uriorcurie concept_uri
-    uriorcurie hash_id
+    string sha256_hash
 }
 SchemaSource {
     string id
@@ -112,6 +119,7 @@ SchemaSource {
     string mime_type
     string publisher
     string registry_version
+    uriorcurie source_id
     uriorcurie source_iri
     string source_version
     string title
@@ -128,9 +136,9 @@ SchemaVersionSnapshot {
     string yml_path
 }
 Transform {
+    string id
     string name
     string description
-    uriorcurie hash_id
 }
 UnitOfMeasure {
     string abbreviation

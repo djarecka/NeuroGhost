@@ -13,8 +13,8 @@ pyyaml>=6.0
 # different bytes for an unchanged schema, which fails `gen_models.sh --check`
 # for reasons unrelated to the change under review. More importantly, the
 # generator decides field optionality and defaults, and those feed
-# compute_hash_id() — so a generator change could silently shift every stored
-# hash_id. .github/workflows/gen_models.yml installs this exact line; bump it
+# compute_content_hash() — so a generator change could silently shift every stored
+# sha256_hash. .github/workflows/gen_models.yml installs this exact line; bump it
 # here and regenerate models.py in the same commit.
 linkml==1.11.1
 pytest>=8.0.0
