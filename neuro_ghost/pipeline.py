@@ -6,7 +6,7 @@ Steps
 1. (Optional) Delete the database file for a clean rebuild
 2. Seed schema.org as the base vocabulary
 3. (Optional) Fetch + convert external schemas via converters/run_all.py
-4. Ingest every .yml file found in the schemas directory
+4. Ingest every .yml file found in the registry_schemas directory
 5. Compute cross-schema alignments
 6. Export registry.json + version snapshot
 
@@ -19,7 +19,7 @@ Usage
     python neuro_ghost/pipeline.py --fresh --skip-converters
 
     # Incremental — add one schema to an existing DB
-    python neuro_ghost/pipeline.py --skip-converters --schemas schemas/bbqs.yml
+    python neuro_ghost/pipeline.py --skip-converters --schemas registry_schemas/bbqs.yml
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ import click
 
 HERE     = Path(__file__).parent
 ROOT     = HERE.parent
-SCHEMAS  = ROOT / "schemas"
+SCHEMAS  = ROOT / "registry_schemas"
 DB_PATH  = str(ROOT / "registry.lbug")
 
 
@@ -51,7 +51,7 @@ def _run(cmd: list[str]) -> None:
 @click.option("--skip-converters",  is_flag=True,
               help="Skip fetching external schemas (BIDS, NWB, DANDI, …).")
 @click.option("--schemas",          default=None, multiple=True,
-              help="Specific .yml files to ingest. Defaults to all files in schemas/.")
+              help="Specific .yml files to ingest. Defaults to all files in registry_schemas/.")
 @click.option("--bump",             default="minor", show_default=True,
               type=click.Choice(["major", "minor", "patch"]),
               help="Version bump type for the registry export.")
@@ -83,8 +83,7 @@ def cli(db: str, fresh: bool, skip_converters: bool,
     targets: list[Path] = (
         [Path(s) for s in schemas]
         if schemas
-        else sorted(p for p in SCHEMAS.glob("*.yml")
-                    if p.name != "meta_model.yaml")
+        else sorted(SCHEMAS.glob("*.yml"))
     )
 
     if not targets:

@@ -1,6 +1,6 @@
 name: Generate Pydantic Models
 
-# schema_registry_utils/models.py is generated from schemas/meta_model.yaml by
+# schema_registry_utils/models.py is generated from meta_model.yaml by
 # ./scripts/gen_models.sh (which wraps `linkml gen-pydantic`). This workflow
 # keeps the two in sync:
 #
@@ -16,12 +16,12 @@ on:
   push:
     branches: [main]
     paths:
-      - "schemas/meta_model.yaml"
+      - "meta_model.yaml"
       - "scripts/gen_models.sh"
       - ".github/workflows/gen_models.yml"
   pull_request:
     paths:
-      - "schemas/meta_model.yaml"
+      - "meta_model.yaml"
       - "scripts/gen_models.sh"
       - "schema_registry_utils/models.py"
   workflow_dispatch:

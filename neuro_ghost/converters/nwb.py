@@ -15,7 +15,7 @@ from pathlib import Path
 
 GITHUB_API = "https://api.github.com/repos/NeurodataWithoutBorders/nwb-schema/contents/core"
 GITHUB_RAW = "https://raw.githubusercontent.com/NeurodataWithoutBorders/nwb-schema/dev/core"
-OUT_PATH   = Path("schemas/nwb.yml")
+OUT_PATH   = Path("registry_schemas/nwb.yml")
 
 NWB_CORE_FILES = [
     "nwb.base.yaml",

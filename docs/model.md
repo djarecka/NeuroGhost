@@ -1,6 +1,6 @@
 # The registry meta-model
 
-A logical view of every class and relationship in `schemas/meta_model.yaml`
+A logical view of every class and relationship in `meta_model.yaml`
 (LinkML's `gen-erdiagram`, run via `scripts/gen_erdiagram.sh`). This shows
 *logical* relationships — every object-valued slot is drawn as an edge,
 regardless of how it's actually stored. For the *physical* LadybugDB layout

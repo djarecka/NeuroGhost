@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # GENERATED FILE — DO NOT EDIT BY HAND.
 #
-# Produced by ./scripts/gen_models.sh from schemas/meta_model.yaml.
+# Produced by ./scripts/gen_models.sh from meta_model.yaml.
 # Edit the schema and regenerate; hand edits are overwritten by
 # .github/workflows/gen_models.yml on the next schema change.
 # ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ linkml_meta = LinkMLMeta({'default_prefix': 'screg',
                             'prefix_reference': 'https://example.org/schema-registry-utils/'},
                   'skos': {'prefix_prefix': 'skos',
                            'prefix_reference': 'http://www.w3.org/2004/02/skos/core#'}},
-     'source_file': 'schemas/meta_model.yaml',
+     'source_file': 'meta_model.yaml',
      'subsets': {'HashSubset': {'description': 'Slots that are part of a '
                                                "RegistryEntity subclass's content "
                                                'hash (sha256_hash). '

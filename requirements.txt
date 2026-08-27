@@ -8,7 +8,7 @@ pydantic>=2.0.0
 click>=8.0.0
 pyyaml>=6.0
 # Exact pin, not a range: schema_registry_utils/models.py is generated from
-# schemas/meta_model.yaml by scripts/gen_models.sh, and gen-pydantic bakes the
+# meta_model.yaml by scripts/gen_models.sh, and gen-pydantic bakes the
 # metamodel version into its output. A different LinkML therefore produces
 # different bytes for an unchanged schema, which fails `gen_models.sh --check`
 # for reasons unrelated to the change under review. More importantly, the

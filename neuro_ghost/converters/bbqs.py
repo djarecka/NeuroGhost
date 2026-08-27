@@ -1,5 +1,5 @@
 """
-converters/bbqs.py — Fetch BBQS schema from brain-bbqs.org and write to schemas/
+converters/bbqs.py — Fetch BBQS schema from brain-bbqs.org and write to registry_schemas/
 ---------------------------------------------------------------------------------
 Source: https://brain-bbqs.org/bbqs-schema.linkml.yaml
 
@@ -10,7 +10,7 @@ registry.
 
 Because BBQS is already valid LinkML, this converter is a straight fetch-and-
 save — no transformation needed. The ingest_linkml.py parser handles it
-directly. We just ensure it lands in schemas/bbqs.yml at the right path.
+directly. We just ensure it lands in registry_schemas/bbqs.yml at the right path.
 
 The canonical URL is stable and maintained by the BBQS consortium.
 """
@@ -20,7 +20,7 @@ import httpx
 from pathlib import Path
 
 BBQS_URL = "https://brain-bbqs.org/bbqs-schema.linkml.yaml"
-OUT_PATH  = Path("schemas/bbqs.yml")
+OUT_PATH  = Path("registry_schemas/bbqs.yml")
 
 
 def convert() -> str:
