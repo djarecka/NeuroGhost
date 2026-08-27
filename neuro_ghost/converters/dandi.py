@@ -16,7 +16,7 @@ from pathlib import Path
 # Correct repo: dandi/schema, not dandi/dandi-schema
 DANDI_SCHEMA_BASE = "https://raw.githubusercontent.com/dandi/schema/master/releases"
 DANDI_VERSION     = "0.6.8"
-OUT_PATH          = Path("schemas/dandi.yml")
+OUT_PATH          = Path("registry_schemas/dandi.yml")
 
 JSON_SCHEMA_TYPE_MAP = {
     "string":  "xsd:string",

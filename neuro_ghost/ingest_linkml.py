@@ -57,10 +57,10 @@ the old one.
 
 USAGE
 -----
-  python ingest_linkml.py --file schemas/bbqs.yml
-  python ingest_linkml.py                          # all schemas/*.yml
+  python ingest_linkml.py --file registry_schemas/bbqs.yml
+  python ingest_linkml.py                          # all registry_schemas/*.yml
   python ingest_linkml.py --dry-run                # preview, no writes
-  python ingest_linkml.py --wipe --file schemas/bbqs.yml  # remove this source's
+  python ingest_linkml.py --wipe --file registry_schemas/bbqs.yml  # remove this source's
                                                             # attestations first
 """
 
@@ -757,7 +757,7 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
 
 @click.command()
 @click.option("--file",    default=None,
-              help="Path to a specific .yml file. Default: all schemas/*.yml")
+              help="Path to a specific .yml file. Default: all registry_schemas/*.yml")
 @click.option("--db",      default=DB_PATH, show_default=True)
 @click.option("--dry-run", is_flag=True,
               help="Parse and count without writing to DB.")
@@ -772,22 +772,22 @@ def cli(file, db, dry_run, wipe, registry_version, issue, agent) -> None:
     Ingest one or more LinkML .yml schemas into the NeuroGhost graph.
 
     Examples:
-      python ingest_linkml.py --file schemas/bbqs.yml
-      python ingest_linkml.py --file schemas/bids.yml --dry-run
-      python ingest_linkml.py --wipe --file schemas/nwb.yml
+      python ingest_linkml.py --file registry_schemas/bbqs.yml
+      python ingest_linkml.py --file registry_schemas/bids.yml --dry-run
+      python ingest_linkml.py --wipe --file registry_schemas/nwb.yml
     """
     conn = get_connection(db)
 
     if file:
         files = [Path(file)]
     else:
-        schemas_dir = Path("schemas")
+        schemas_dir = Path("registry_schemas")
         if not schemas_dir.exists():
-            click.echo("No schemas/ directory. Use --file or create schemas/.")
+            click.echo("No registry_schemas/ directory. Use --file or create registry_schemas/.")
             return
         files = sorted(schemas_dir.glob("*.yml"))
         if not files:
-            click.echo("No .yml files in schemas/")
+            click.echo("No .yml files in registry_schemas/")
             return
 
     for path in files:

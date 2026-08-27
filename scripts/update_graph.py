@@ -2,12 +2,12 @@
 """
 scripts/update_graph.py
 -----------------------
-Parse schemas/meta_model.yaml and regenerate the GN / GR constants in
+Parse meta_model.yaml and regenerate the GN / GR constants in
 index.html so the "Graph Schema" view always reflects the current meta model.
 
 Run locally:  python scripts/update_graph.py
 Called by CI: .github/workflows/update_graph.yml (on push that touches
-              schemas/meta_model.yaml)
+              meta_model.yaml)
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ except ImportError:
     sys.exit("PyYAML required: pip install pyyaml")
 
 ROOT       = Path(__file__).parent.parent
-META_MODEL = ROOT / "schemas" / "meta_model.yaml"
+META_MODEL = ROOT / "meta_model.yaml"
 INDEX_HTML = ROOT / "index.html"
 
 # Classes whose slots are "rolled up" into their concrete children for display.

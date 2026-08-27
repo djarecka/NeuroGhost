@@ -4,7 +4,7 @@ db.py — Shared DB setup for the SenseIn Schema Registry
 Single source of truth for:
   - LadybugDB connection
   - DDL:
-      Registry entity node tables → generated from schemas/meta_model.yaml
+      Registry entity node tables → generated from meta_model.yaml
         (via _build_registry_ddl). Edit that file and rebuild the DB to
         change node structure. SchemaSource and SchemaVersionSnapshot are
         first-class meta-model classes and come through the same path.
@@ -37,7 +37,7 @@ REG = "https://registry.sensein.io/"
 # Schema YAML — edit this file to change registry entity node structure
 # ---------------------------------------------------------------------------
 
-SCHEMA_YAML = Path(__file__).parent.parent / "schemas" / "meta_model.yaml"
+SCHEMA_YAML = Path(__file__).parent.parent / "meta_model.yaml"
 
 # ---------------------------------------------------------------------------
 # Identity helpers
@@ -455,7 +455,7 @@ def _build_registry_ddl(yaml_path: str | Path = SCHEMA_YAML) -> list[str]:
 # DDL
 # ---------------------------------------------------------------------------
 
-# Registry entity node tables — generated from schemas/meta_model.yaml.
+# Registry entity node tables — generated from meta_model.yaml.
 # To add/remove columns: edit the YAML and rebuild the database.
 _REGISTRY_NODE_DDL: list[str] = _build_registry_ddl()
 

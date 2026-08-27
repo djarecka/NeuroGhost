@@ -100,7 +100,7 @@ To register a new module:
 
 ### Meta-model Moderation
 
-Changes to `schemas/meta_model.yaml` and `schema_registry_utils/` require
+Changes to `meta_model.yaml` and `schema_registry_utils/` require
 approval from at least one **meta-model moderator** before merging:
 
 | Moderator | GitHub |

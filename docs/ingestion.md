@@ -33,7 +33,7 @@ Every registered object carries two identity-related fields:
   `ProvenanceEntry.attests_to` are all UUIDs.
 - **`sha256_hash`** — a content fingerprint on `RegistryEntity` subclasses,
   computed from the fields marked `in_subset: HashSubset` in
-  `schemas/meta_model.yaml`. Not the identifier — but the mechanism by
+  `meta_model.yaml`. Not the identifier — but the mechanism by
   which two sources' identical concepts collapse to one row: on ingest,
   `build_registry_entities` computes each entity's `sha256_hash` first,
   then either reuses an existing row's `id` (via `find_id_by_sha256`) or
@@ -156,7 +156,7 @@ UUID references. These functions are shared between `ingest_linkml.py` and
 ## The data model
 
 See [`model.md`](model.md) for a diagram of every class and relationship
-in `schemas/meta_model.yaml`.
+in `meta_model.yaml`.
 
 | Field | On | Notes |
 |---|---|---|

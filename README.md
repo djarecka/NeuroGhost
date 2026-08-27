@@ -47,7 +47,7 @@
 
 ## Adding a schema
 
-1. Write a LinkML `.yml` file (copy `schemas/bbqs.yml` as a template).
+1. Write a LinkML `.yml` file (copy `registry_schemas/bbqs.yml` as a template).
 2. Go to the [Register tab](https://sensein.group/NeuroGhost/), paste your YAML, click **Open GitHub Issue**.
 3. A GitHub Action validates, ingests, aligns, and archives it within minutes.
 
@@ -66,7 +66,7 @@ pip install -r requirements.txt
 ```bash
 python neuro_ghost/pipeline.py --fresh                              # full rebuild
 python neuro_ghost/pipeline.py --fresh --skip-converters            # local schemas only
-python neuro_ghost/pipeline.py --skip-converters --schemas schemas/bbqs.yml  # one schema
+python neuro_ghost/pipeline.py --skip-converters --schemas registry_schemas/bbqs.yml  # one schema
 ```
 
 Options: `--fresh` (wipe DB), `--skip-converters` (skip BIDS/NWB/DANDI/openMINDS/AIND fetch), `--schemas FILE`, `--bump major|minor|patch`, `--agent TEXT`.
@@ -103,7 +103,7 @@ See [docs/GOVERNANCE.md](docs/GOVERNANCE.md) for the full spec.
 | Module | Maintainer | Repository | Behind main | Compare |
 |--------|-----------|------------|-------------|---------|
 | Proteus | @neurovium (Nema) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | ⚠ pin unset | [compare ↗](https://github.com/neurovium/Proteus/commits/main) |
-| Dorada | @djarecka | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) | 107 commits | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...djarecka:NeuroGhost:main) |
+| Dorada | @djarecka | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) | 106 commits | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...djarecka:NeuroGhost:main) |
 <!-- MODULE_SYNC_END -->
 
 ---

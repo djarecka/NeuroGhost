@@ -7,7 +7,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "schemas/**"
+      - "registry_schemas/**"
+      - "meta_model.yaml"
       - "neuro_ghost/**"
       - "requirements.txt"
   workflow_dispatch:
@@ -70,7 +71,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/embeddings.parquet
-          key: embeddings-${{ hashFiles('schemas/*.yml') }}
+          key: embeddings-${{ hashFiles('registry_schemas/*.yml') }}
           restore-keys: embeddings-
 
       # -----------------------------------------------------------------------
@@ -107,7 +108,7 @@ jobs:
 
           # Stage registry outputs + any new converted schemas
           git add data/registry.json data/versions/ data/provenance.json
-          git add schemas/ --ignore-errors
+          git add registry_schemas/ --ignore-errors
 
           if git diff --cached --quiet; then
             echo "Registry unchanged — nothing to commit."

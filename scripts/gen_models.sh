@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Regenerate schema_registry_utils/models.py from schemas/meta_model.yaml.
+# Regenerate schema_registry_utils/models.py from meta_model.yaml.
 #
 # Used by both developers and .github/workflows/gen_models.yml, so that a local
 # run and a CI run produce byte-identical output — otherwise the workflow would
@@ -23,7 +23,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-SCHEMA="schemas/meta_model.yaml"
+SCHEMA="meta_model.yaml"
 TARGET="schema_registry_utils/models.py"
 
 # Prefer the repo venv's gen-pydantic; fall back to PATH (CI installs it there).

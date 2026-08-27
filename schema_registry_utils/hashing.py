@@ -9,7 +9,7 @@ HASH_SUBSET = "HashSubset"
 def _identity_fields(model_cls: type) -> set[str]:
     """
     The content-fingerprint fields of a RegistryEntity subclass — everything
-    tagged `in_subset: [HashSubset]` in schemas/meta_model.yaml.
+    tagged `in_subset: [HashSubset]` in meta_model.yaml.
 
     The schema is the single source of truth for what counts as content, not a
     hand-maintained Python allowlist/denylist that could drift out of sync with
