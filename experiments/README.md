@@ -10,10 +10,10 @@ Each team member gets their own subdirectory:
 
 ```
 experiments/
-  sulstice/      ← Suliman (Sully)
+  sulstice/      ← Suliman
   puja/          ← Puja Trivedi
-  nima/          ← Nima (Niderian Tech)
-  dorota/        ← Dorota Jarecka
+  nema/          ← Nema
+  dorada/        ← Dorada
 ```
 
 ## Guidelines
