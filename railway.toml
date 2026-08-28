@@ -1,6 +1,0 @@
-[build]
-builder = "dockerfile"
-
-[deploy]
-startCommand = "MCP_TRANSPORT=sse python -m neuro_ghost.mcp_server"
-restartPolicyType = "on_failure"
