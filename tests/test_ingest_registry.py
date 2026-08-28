@@ -1,16 +1,8 @@
-from pathlib import Path
-
-from db import get_connection
+from conftest import FIXTURES
 from ingest_linkml import insert_schema, parse_linkml
 
-FIXTURES = Path(__file__).parent / "fixtures"
 
-
-def _conn(tmp_path):
-    return get_connection(str(tmp_path / "test.lbug"))
-
-
-def test_identical_property_from_two_sources_collapses_to_one_entity(tmp_path):
+def test_identical_property_from_two_sources_collapses_to_one_entity(conn):
     """
     Identity is content-derived only — no source-anchoring field is part of
     the sha256_hash — so identical content ingested from two different schemas
@@ -19,8 +11,6 @@ def test_identical_property_from_two_sources_collapses_to_one_entity(tmp_path):
     separate from provenance: nothing about the entity's sha256_hash depends on
     where it came from, and the shared id follows.
     """
-    conn = _conn(tmp_path)
-
     insert_schema(conn, parse_linkml(FIXTURES / "source_a.yml"), "source_a", agent="tester")
     insert_schema(conn, parse_linkml(FIXTURES / "source_b.yml"), "source_b", agent="tester")
 
@@ -35,7 +25,7 @@ def test_identical_property_from_two_sources_collapses_to_one_entity(tmp_path):
     assert {r[0] for r in labels} == {"source_a", "source_b"}
 
 
-def test_aliases_round_trip_through_the_graph(tmp_path):
+def test_aliases_round_trip_through_the_graph(conn):
     """
     aliases is a plain multivalued string field (not a UUID-reference list
     like properties), so it's written to a native list column
@@ -45,7 +35,6 @@ def test_aliases_round_trip_through_the_graph(tmp_path):
     engine. Confirm it survives the write/read round trip through the real
     graph, not just in-memory.
     """
-    conn = _conn(tmp_path)
     insert_schema(conn, parse_linkml(FIXTURES / "comprehensive.yml"), "comprehensive", agent="tester")
 
     prop_rows = conn.execute(
@@ -59,8 +48,7 @@ def test_aliases_round_trip_through_the_graph(tmp_path):
     assert class_rows[0][0] == ["Investigator"]
 
 
-def test_reingesting_same_source_is_idempotent(tmp_path):
-    conn = _conn(tmp_path)
+def test_reingesting_same_source_is_idempotent(conn):
     parsed = parse_linkml(FIXTURES / "source_a.yml")
 
     first = insert_schema(conn, parsed, "source_a", agent="tester")
@@ -75,8 +63,7 @@ def test_reingesting_same_source_is_idempotent(tmp_path):
     assert second.get("schema_unchanged") is True
 
 
-def test_inherited_slots_and_subclass_edge(tmp_path):
-    conn = _conn(tmp_path)
+def test_inherited_slots_and_subclass_edge(conn):
     insert_schema(conn, parse_linkml(FIXTURES / "hierarchy.yml"), "hierarchy", agent="tester")
 
     props = conn.execute("""
@@ -92,7 +79,7 @@ def test_inherited_slots_and_subclass_edge(tmp_path):
     assert parent == [["Device"]]
 
 
-def test_required_does_not_affect_property_identity(tmp_path):
+def test_required_does_not_affect_property_identity(conn):
     """
     required_a.yml and required_b.yml declare the exact same "age" slot
     (same name/description/range/units) except one marks it `required: true`
@@ -105,8 +92,6 @@ def test_required_does_not_affect_property_identity(tmp_path):
     `required` flag as the only differing input, which is what the test
     asserts is irrelevant to identity.
     """
-    conn = _conn(tmp_path)
-
     stats_a = insert_schema(conn, parse_linkml(FIXTURES / "required_a.yml"), "required", agent="tester")
     stats_b = insert_schema(conn, parse_linkml(FIXTURES / "required_b.yml"), "required", agent="tester")
 
@@ -118,7 +103,7 @@ def test_required_does_not_affect_property_identity(tmp_path):
     assert len(rows) == 1                         # no duplicate node
 
 
-def test_content_change_produces_different_entity(tmp_path):
+def test_content_change_produces_different_entity(conn):
     """
     Same source, edited content → new hash. Both ingests use the same
     source label ("source_a"), isolating the description edit as the sole
@@ -129,7 +114,6 @@ def test_content_change_produces_different_entity(tmp_path):
     not identity. Per-usage range refinements land on RegistryRule
     (rule_type=RANGE), which does carry range in its own HashSubset.
     """
-    conn = _conn(tmp_path)
     insert_schema(conn, parse_linkml(FIXTURES / "source_a.yml"), "source_a", agent="tester")
 
     original_sha = conn.execute(
@@ -148,7 +132,7 @@ def test_content_change_produces_different_entity(tmp_path):
     assert original_sha in shas
 
 
-def test_bican_prov_ingests_expected_classes_and_properties(tmp_path):
+def test_bican_prov_ingests_expected_classes_and_properties(conn):
     """
     bican_prov.yaml (github.com/brain-bican/models) is a small, real-world
     schema: two classes, three properties, and — notably — a slot whose
@@ -159,7 +143,6 @@ def test_bican_prov_ingests_expected_classes_and_properties(tmp_path):
     happens to look right.
 
     """
-    conn = _conn(tmp_path)
     insert_schema(conn, parse_linkml(FIXTURES / "bican_prov.yaml"), "bican_prov", agent="tester")
 
     classes = {
