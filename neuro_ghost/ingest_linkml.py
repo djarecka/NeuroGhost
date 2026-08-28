@@ -75,13 +75,13 @@ from linkml_runtime.utils.schemaview import SchemaView
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from schema_registry_utils import (
     RegistryClass, RegistryProperty, PermissibleValue, RegistryValueSet,
-    ProvenanceEntry, compute_content_hash_for,
+    RegistryRule, ProvenanceEntry, compute_content_hash_for,
 )
 
 from db import (
     get_connection, make_iri, make_id, now_iso,
-    write_registry_entities, write_structural_edges, ensure_schema_source,
-    find_id_by_sha256,
+    write_registry_entities, write_structural_edges, write_rule_edges,
+    ensure_schema_source, find_id_by_sha256,
 )
 
 DB_PATH = "./registry.lbug"
@@ -188,6 +188,8 @@ def _slot_to_dict(slot, prefixes: dict[str, str]) -> dict:
         "multivalued": bool(slot.multivalued),
         "required":    bool(slot.required),
         "pattern":     slot.pattern or "",
+        "minimum_value": None if slot.minimum_value is None else str(slot.minimum_value),
+        "maximum_value": None if slot.maximum_value is None else str(slot.maximum_value),
         "aliases":     list(slot.aliases or []),
     }
 
@@ -283,12 +285,22 @@ def parse_linkml(path: Path) -> dict[str, Any]:
             except (ValueError, KeyError):
                 is_a = None
 
+        # Same dangling-reference handling for mixins as is_a above.
+        mixins = []
+        for mixin_name in (cls_def.mixins or []):
+            try:
+                sv.get_class(mixin_name)
+                mixins.append(mixin_name)
+            except (ValueError, KeyError):
+                pass
+
         classes[cls_name] = {
             "iri":         resolved_iri,
             "definition":  cls_def.description or "",
             "is_a":        is_a,
             "is_abstract": bool(cls_def.abstract),
             "is_mixin":    bool(cls_def.mixin),
+            "mixins":      mixins,
             "slots":       [slot.name for slot in induced_slots],
             "aliases":     list(cls_def.aliases or []),
         }
@@ -356,6 +368,7 @@ def build_registry_entities(
     dict[str, RegistryClass],
     dict[str, RegistryValueSet],
     dict[str, PermissibleValue],
+    dict[str, RegistryRule],
     dict[str, ProvenanceEntry],
 ]:
     """
@@ -456,6 +469,60 @@ def build_registry_entities(
         )
         properties[slot_name] = prop
 
+    # RegistryRule: one per declarative facet a slot states, atomic per
+    # rule_type (see RegistryRuleTypeEnum) — only REQUIRED, PATTERN,
+    # MIN_VALUE, and MAX_VALUE are built today, the facets parse_linkml()
+    # already extracts; the remaining rule_types (MAX_LENGTH,
+    # ENUM_MEMBERSHIP, ...) aren't wired up yet and need their own
+    # parse_linkml() extraction first.
+    _RULE_TYPE_DESCRIPTIONS = {
+        "REQUIRED": "Property must be present.",
+        "PATTERN": "Value must match a regex.",
+        "MIN_VALUE": "Numeric value must satisfy a lower bound (inclusive).",
+        "MAX_VALUE": "Numeric value must satisfy an upper bound (inclusive).",
+    }
+
+    rules: dict[str, RegistryRule] = {}
+
+    def make_rule(slot_name: str, rule_type: str, rule_value: str, error_message: str) -> None:
+        fields = dict(
+            name=rule_type,
+            description=_RULE_TYPE_DESCRIPTIONS[rule_type],
+            skos_mappings=[],
+            aliases=[],
+            concept_uri=None,
+            rule_type=rule_type,
+            rule_value=rule_value,
+            applies_to=[properties[slot_name].id],
+            used_in_class=None,
+            severity="ERROR",
+            error_message=error_message,
+            referenced_entities=[],
+        )
+        sha = compute_content_hash_for(RegistryRule, fields)
+        rid = dedup_id("RegistryRule", sha)
+        rule = RegistryRule(
+            id=rid,
+            sha256_hash=sha,
+            provenance=[make_prov(rid)],
+            **fields,
+        )
+        rules[f"{slot_name}:{rule_type}"] = rule
+
+    for slot_name, prop in properties.items():
+        slot = slots[slot_name]
+        if slot.get("required"):
+            make_rule(slot_name, "REQUIRED", "true", f"{slot_name} is required.")
+        if slot.get("pattern"):
+            make_rule(slot_name, "PATTERN", slot["pattern"],
+                      f"{slot_name} must match pattern {slot['pattern']!r}.")
+        if slot.get("minimum_value") is not None:
+            make_rule(slot_name, "MIN_VALUE", slot["minimum_value"],
+                      f"{slot_name} must be >= {slot['minimum_value']}.")
+        if slot.get("maximum_value") is not None:
+            make_rule(slot_name, "MAX_VALUE", slot["maximum_value"],
+                      f"{slot_name} must be <= {slot['maximum_value']}.")
+
     registry_classes: dict[str, RegistryClass] = {}
 
     def resolve_class(cls_name: str) -> RegistryClass | None:
@@ -470,6 +537,11 @@ def build_registry_entities(
             parent = resolve_class(cls["is_a"])
             parent_id = parent.id if parent else None
 
+        mixin_ids = sorted({
+            mixin.id for m in cls.get("mixins", [])
+            if (mixin := resolve_class(m)) is not None
+        })
+
         prop_ids = sorted({
             properties[s].id for s in cls["slots"] if s in properties
         })
@@ -481,7 +553,7 @@ def build_registry_entities(
             is_mixin=cls["is_mixin"],
             parent_class=parent_id,
             properties=prop_ids,
-            class_mixins=[],
+            class_mixins=mixin_ids,
             skos_mappings=[],
             aliases=cls.get("aliases") or [],
         )
@@ -565,7 +637,7 @@ def build_registry_entities(
         if prop.property_range in name_iri_to_id:
             prop.property_range = name_iri_to_id[prop.property_range]
 
-    return properties, registry_classes, value_sets, permissible_values, provenance_entries
+    return properties, registry_classes, value_sets, permissible_values, rules, provenance_entries
 
 
 # ---------------------------------------------------------------------------
@@ -696,18 +768,19 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
         conn, source_label, meta["version"], registry_version, dry_run=dry_run,
     )
 
-    properties, registry_classes, value_sets, permissible_values, provenance_entries = build_registry_entities(
+    properties, registry_classes, value_sets, permissible_values, rules, provenance_entries = build_registry_entities(
         parsed, schema_source_id, agent, issue, registry_version, conn=conn,
     )
 
     stats = write_registry_entities(
-        conn, properties, registry_classes, provenance_entries, dry_run=dry_run,
+        conn, properties, registry_classes, rules, provenance_entries, dry_run=dry_run,
     )
 
     if dry_run:
         return stats
 
     stats["rels"] = write_structural_edges(conn, registry_classes)
+    stats["rels"] += write_rule_edges(conn, rules, registry_classes, properties)
     stats["rels"] += _write_value_sets(conn, value_sets, permissible_values, provenance_entries)
 
     has_new_content = bool(stats["classes_new"] or stats["properties_new"])
@@ -759,7 +832,7 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
 
 def _print_entities(properties: dict, registry_classes: dict,
                     value_sets: dict, permissible_values: dict,
-                    provenance_entries: dict) -> None:
+                    rules: dict, provenance_entries: dict) -> None:
     """
     Pretty-print the entities build_registry_entities() would create, for
     visual inspection (--verbose). Resolves id-reference fields
@@ -807,6 +880,19 @@ def _print_entities(properties: dict, registry_classes: dict,
             click.echo(f"      sha256_hash:        {vs.sha256_hash}")
             click.echo(f"      permissible_values: {pv_names}")
 
+    if rules:
+        click.echo("  --- RegistryRule ---")
+        for key, r in rules.items():
+            click.echo(f"  {key}")
+            click.echo(f"      id:                  {r.id}")
+            click.echo(f"      sha256_hash:         {r.sha256_hash}")
+            click.echo(f"      rule_type:           {r.rule_type}")
+            click.echo(f"      rule_value:          {r.rule_value}")
+            click.echo(f"      applies_to:          {[name_by_id.get(a, a) for a in r.applies_to]}")
+            click.echo(f"      used_in_class:       {name_by_id.get(r.used_in_class, r.used_in_class)}")
+            click.echo(f"      severity:            {r.severity}")
+            click.echo(f"      error_message:       {r.error_message}")
+
     if provenance_entries:
         click.echo("  --- ProvenanceEntry ---")
         for pe in provenance_entries.values():
@@ -819,9 +905,6 @@ def _print_entities(properties: dict, registry_classes: dict,
             click.echo(f"      was_attributed_to:  {pe.was_attributed_to}")
             click.echo(f"      was_generated_by:   {pe.was_generated_by}")
             click.echo(f"      was_derived_from:   {pe.was_derived_from}")
-
-    # RegistryRule intentionally omitted: nothing in build_registry_entities()
-    # constructs one yet, regardless of source schema content.
 
 
 @click.command()
@@ -900,10 +983,10 @@ def cli(file, db, dry_run, verbose, wipe, registry_version, issue, agent) -> Non
                 conn, source_label, parsed["meta"]["version"],
                 registry_version, dry_run=dry_run,
             )
-            p_props, p_classes, p_vs, p_pvs, p_provs = build_registry_entities(
+            p_props, p_classes, p_vs, p_pvs, p_rules, p_provs = build_registry_entities(
                 parsed, preview_source_id, agent, issue, registry_version, conn=conn,
             )
-            _print_entities(p_props, p_classes, p_vs, p_pvs, p_provs)
+            _print_entities(p_props, p_classes, p_vs, p_pvs, p_rules, p_provs)
 
         stats = insert_schema(
             conn, parsed, source_label, agent=agent, issue=issue,

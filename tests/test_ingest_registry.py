@@ -158,9 +158,6 @@ def test_bican_prov_ingests_expected_classes_and_properties(tmp_path):
     placeholder to the real RegistryClass id, not just a string that
     happens to look right.
 
-    Known gap, not asserted here: both source classes declare `mixin: true`
-    in the LinkML file, but nothing in parse_linkml()/RegistryClass tracks
-    mixin-ness — it's silently dropped on ingest.
     """
     conn = _conn(tmp_path)
     insert_schema(conn, parse_linkml(FIXTURES / "bican_prov.yaml"), "bican_prov", agent="tester")

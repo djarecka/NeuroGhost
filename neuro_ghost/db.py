@@ -240,24 +240,25 @@ def ensure_schema_source(conn, source_label: str, version: str, registry_version
 
 
 def write_registry_entities(conn, properties: dict, registry_classes: dict,
-                             provenance_entries: dict,
+                             rules: dict, provenance_entries: dict,
                              dry_run: bool = False) -> dict:
     """
-    Write (or reuse) each property/class node by id, then attach this
+    Write (or reuse) each property/class/rule node by id, then attach this
     ingestion's ProvenanceEntry to every one of them. Existing nodes are
     never overwritten — a matching id means dedup already resolved this
     to identical content (see build_registry_entities' sha256_hash lookup),
     so there is nothing to update; only a new ProvenanceEntry may need
     attaching.
 
-    `properties`/`registry_classes` are name -> entity dicts, and each
-    entity's `.provenance` is a list of ProvenanceEntry.id references
+    `properties`/`registry_classes`/`rules` are name -> entity dicts, and
+    each entity's `.provenance` is a list of ProvenanceEntry.id references
     (not embedded objects — the meta_model stores provenance by id, so the
     caller passes the ProvenanceEntry dict alongside for lookup).
     """
     stats = {
         "properties_new": 0, "properties_existing": 0,
         "classes_new":    0, "classes_existing":    0,
+        "rules_new":      0, "rules_existing":       0,
         "provenance_added": 0,
     }
 
@@ -281,13 +282,24 @@ def write_registry_entities(conn, properties: dict, registry_classes: dict,
                 if write_provenance(conn, "RegistryClass", rc.id, provenance_entries[prov_id]):
                     stats["provenance_added"] += 1
 
+    for rule in rules.values():
+        is_new = not entity_exists(conn, "RegistryRule", rule.id)
+        if is_new and not dry_run:
+            create_entity_node(conn, "RegistryRule", rule)
+        stats["rules_new" if is_new else "rules_existing"] += 1
+        if not dry_run:
+            for prov_id in rule.provenance:
+                if write_provenance(conn, "RegistryRule", rule.id, provenance_entries[prov_id]):
+                    stats["provenance_added"] += 1
+
     return stats
 
 
 def write_structural_edges(conn, registry_classes: dict) -> int:
     """
     HAS_PROPERTY (from each class's own `properties`) + SUBCLASS_OF (from
-    `is_a`, which is already resolved to an id or None by the caller).
+    `is_a`, which is already resolved to an id or None by the caller) +
+    MIXIN (from `class_mixins`, same resolved-id shape).
     """
     rels = 0
 
@@ -319,6 +331,64 @@ def write_structural_edges(conn, registry_classes: dict) -> int:
                 CREATE (c)-[:SUBCLASS_OF]->(p)
             """, {"c": rc.id, "p": parent_id})
             rels += 1
+
+    for rc in registry_classes.values():
+        for mixin_id in rc.class_mixins:
+            already = conn.execute("""
+                MATCH (c:RegistryClass {id: $c})-[:MIXIN]->(m:RegistryClass {id: $m})
+                RETURN c.id LIMIT 1
+            """, {"c": rc.id, "m": mixin_id}).has_next()
+            if not already:
+                conn.execute("""
+                    MATCH (c:RegistryClass {id: $c}), (m:RegistryClass {id: $m})
+                    CREATE (c)-[:MIXIN]->(m)
+                """, {"c": rc.id, "m": mixin_id})
+                rels += 1
+
+    return rels
+
+
+def write_rule_edges(conn, rules: dict, registry_classes: dict, properties: dict) -> int:
+    """
+    APPLIES_TO/APPLIES_TO_P (from each rule's `applies_to`, split by
+    target-node-type since a Kùzu REL table has a fixed FROM/TO pair) and
+    USED_IN_CLASS (from `used_in_class`, if set).
+    """
+    class_ids = {rc.id for rc in registry_classes.values()}
+    property_ids = {p.id for p in properties.values()}
+    rels = 0
+
+    for rule in rules.values():
+        for target_id in rule.applies_to:
+            if target_id in class_ids:
+                rel, label = "APPLIES_TO", "RegistryClass"
+            elif target_id in property_ids:
+                rel, label = "APPLIES_TO_P", "RegistryProperty"
+            else:
+                continue  # target not in this ingestion's batch
+
+            already = conn.execute(f"""
+                MATCH (r:RegistryRule {{id: $r}})-[:{rel}]->(t:{label} {{id: $t}})
+                RETURN r.id LIMIT 1
+            """, {"r": rule.id, "t": target_id}).has_next()
+            if not already:
+                conn.execute(f"""
+                    MATCH (r:RegistryRule {{id: $r}}), (t:{label} {{id: $t}})
+                    CREATE (r)-[:{rel}]->(t)
+                """, {"r": rule.id, "t": target_id})
+                rels += 1
+
+        if rule.used_in_class:
+            already = conn.execute("""
+                MATCH (r:RegistryRule {id: $r})-[:USED_IN_CLASS]->(c:RegistryClass {id: $c})
+                RETURN r.id LIMIT 1
+            """, {"r": rule.id, "c": rule.used_in_class}).has_next()
+            if not already:
+                conn.execute("""
+                    MATCH (r:RegistryRule {id: $r}), (c:RegistryClass {id: $c})
+                    CREATE (r)-[:USED_IN_CLASS]->(c)
+                """, {"r": rule.id, "c": rule.used_in_class})
+                rels += 1
 
     return rels
 

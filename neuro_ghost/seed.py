@@ -315,7 +315,7 @@ def seed(db_path: str = "./registry.lbug",
         print("  … (showing first 12)")
         return
 
-    stats = write_registry_entities(conn, properties, registry_classes, provenance_entries)
+    stats = write_registry_entities(conn, properties, registry_classes, {}, provenance_entries)
     rels  = write_structural_edges(conn, registry_classes)
 
     print(
