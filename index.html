@@ -3,143 +3,192 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NeuroGhost</title>
+<title>NeuroRegistry</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0b0d13;--bg-elev:#10131c;--surface:#151926;--surface-2:#1b2030;
-  --border:#232838;--text:#e6e9f2;--text-dim:#b3b9cc;--muted:#6b7391;
-  --teal:#2dd4bf;--teal-soft:rgba(45,212,191,.12);--teal-line:rgba(45,212,191,.35);
-  --purple:#a78bfa;--purple-soft:rgba(167,139,250,.14);--purple-line:rgba(167,139,250,.35);
-  --yellow:#fbbf24;--green:#34d399;--red:#f87171;
-  --mono:"JetBrains Mono",ui-monospace,monospace;--sans:"Inter",-apple-system,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;overflow:hidden;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13.5px;-webkit-font-smoothing:antialiased;}
-
-/* ── Header ── */
-header{height:52px;padding:0 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:20px;background:var(--bg);position:relative;z-index:10;}
+:root{--bg:#0b0d13;--bg-elev:#10131c;--surface:#151926;--surface-2:#1b2030;--border:#232838;--border-soft:#1c2130;--text:#e6e9f2;--text-dim:#b3b9cc;--muted:#6b7391;--mute-soft:#4a5170;--teal:#2dd4bf;--teal-soft:rgba(45,212,191,.12);--teal-line:rgba(45,212,191,.35);--purple:#a78bfa;--purple-soft:rgba(167,139,250,.14);--purple-line:rgba(167,139,250,.35);--yellow:#fbbf24;--yellow-soft:rgba(251,191,36,.12);--red:#f87171;--red-soft:rgba(248,113,113,.12);--green:#34d399;--green-soft:rgba(52,211,153,.14);--blue:#60a5fa;--blue-soft:rgba(96,165,250,.14);--mono:"JetBrains Mono",ui-monospace,monospace;--sans:"Inter",-apple-system,sans-serif;--radius:8px;--radius-sm:6px;--radius-xs:4px;--ease:cubic-bezier(.16,1,.3,1);}
+*{box-sizing:border-box;margin:0;padding:0;}html,body{height:100%;}
+body{background:radial-gradient(1200px 600px at 80% -10%,rgba(45,212,191,.05),transparent 60%),radial-gradient(900px 500px at -10% 10%,rgba(167,139,250,.05),transparent 60%),var(--bg);color:var(--text);font-family:var(--sans);font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+::selection{background:var(--teal-soft);color:var(--teal);}
+::-webkit-scrollbar{width:8px;height:8px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:#242a3d;border-radius:6px;border:2px solid var(--bg);}
+header{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;background:var(--bg);}
 .brand{display:flex;align-items:center;gap:10px;}
-.mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--teal),var(--purple));display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:11px;color:#0a1017;flex-shrink:0;}
-.brand h1{font-size:14px;font-weight:600;}
-nav{display:flex;gap:2px;flex:1;}
-.tab{background:none;border:none;color:var(--muted);padding:7px 14px;cursor:pointer;font-size:12.5px;font-family:var(--sans);font-weight:500;border-radius:6px;display:inline-flex;align-items:center;gap:7px;transition:all .15s;}
-.tab svg{width:13px;height:13px;flex-shrink:0;}
-.tab:hover{color:var(--text-dim);background:var(--surface);}
-.tab.active{color:var(--teal);background:var(--teal-soft);}
-#status-label{margin-left:auto;color:var(--muted);font-size:11px;font-family:var(--mono);display:flex;align-items:center;gap:6px;white-space:nowrap;}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(52,211,153,.15);}
-
-/* ── Views ── */
-.view{display:none;height:calc(100vh - 52px);}
-.view.active{display:flex;}
-
-/* ══ META-MODEL ══════════════════════════════════════ */
-#view-meta{flex-direction:row;overflow:hidden;}
-.meta-main{flex:1;position:relative;overflow:hidden;}
-#meta-canvas{width:100%;height:100%;position:relative;background:radial-gradient(ellipse 60% 40% at 50% 30%,rgba(45,212,191,.04),transparent);}
-#edge-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
-
-.m-node{position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 14px;cursor:pointer;user-select:none;transition:border-color .15s,box-shadow .15s,transform .1s;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.m-node:hover{border-color:var(--teal-line);box-shadow:0 0 0 3px var(--teal-soft);transform:translateY(-1px);}
-.m-node.selected{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft);}
-.m-node.is-abstract{border-style:dashed;border-color:var(--purple-line);background:linear-gradient(135deg,var(--purple-soft),transparent);}
-.m-node.is-abstract:hover,.m-node.is-abstract.selected{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-soft);}
-.n-name{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text);line-height:1.2;}
-.m-node.is-abstract .n-name{color:var(--purple);}
-.n-tag{font-size:9px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.06em;}
-
-/* Side panel */
-.meta-panel{width:288px;border-left:1px solid var(--border);background:var(--bg-elev);display:flex;flex-direction:column;overflow:hidden;}
-.panel-scroll{flex:1;overflow-y:auto;}
-.panel-placeholder{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);text-align:center;gap:10px;font-size:12px;padding:24px;}
-.panel-placeholder svg{width:32px;height:32px;opacity:.25;}
-.panel-inner{padding:18px 16px;}
-.p-name{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--teal);margin-bottom:5px;}
-.p-name.abstract{color:var(--purple);}
-.p-pill{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:2px 9px;font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:12px;}
-.p-desc{font-size:12px;color:var(--text-dim);line-height:1.75;margin-bottom:14px;}
-.p-slots-title{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;margin-bottom:8px;}
-.slot-chip{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:10.5px;font-family:var(--mono);color:var(--text-dim);margin:2px 3px 2px 0;}
-.panel-legend{border-top:1px solid var(--border);padding:14px 16px;}
-.l-title{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;margin-bottom:10px;}
-.l-row{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--text-dim);margin-bottom:6px;}
-.l-line{display:inline-block;width:28px;height:2px;border-radius:1px;flex-shrink:0;}
-.l-isa{background:var(--border);}
-.l-rel{background:var(--teal);opacity:.5;}
-.l-rel-dashed{background:none;border-top:2px dashed rgba(45,212,191,.4);height:0;margin-top:1px;}
-.panel-enums{border-top:1px solid var(--border);padding:14px 16px;}
-.enum-chip{display:block;font-family:var(--mono);font-size:10px;color:var(--purple);background:var(--purple-soft);border:1px solid var(--purple-line);border-radius:5px;padding:3px 9px;margin-bottom:5px;}
-
-/* ══ INGEST ══════════════════════════════════════════ */
-#view-ingest{flex-direction:row;overflow:hidden;}
-
-.drop-zone{flex:0 0 auto;width:50%;border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;position:relative;}
-.drop-zone.full{width:100%;}
-.drop-zone.has-file{align-items:flex-start;padding:20px 24px;cursor:default;background:var(--bg-elev);}
-.drop-zone.over{background:var(--teal-soft);}
-.drop-inner{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:40px;pointer-events:none;}
-.drop-icon{width:56px;height:56px;border-radius:14px;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;margin-bottom:2px;}
-.drop-icon svg{width:24px;height:24px;color:var(--muted);}
-.drop-zone.over .drop-icon{border-color:var(--teal);background:var(--teal-soft);}
-.drop-zone.over .drop-icon svg{color:var(--teal);}
-.drop-title{font-size:15px;font-weight:600;color:var(--text);}
-.drop-sub{font-size:12.5px;color:var(--muted);}
-.drop-ext{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
-.loaded-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;width:100%;}
-.loaded-icon{width:32px;height:32px;border-radius:8px;background:var(--teal-soft);border:1px solid var(--teal-line);display:grid;place-items:center;flex-shrink:0;}
-.loaded-icon svg{width:15px;height:15px;color:var(--teal);}
-.loaded-name{font-family:var(--mono);font-size:12px;color:var(--teal);font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--sans);cursor:pointer;transition:all .15s;}
-.btn-ghost:hover{border-color:var(--red);color:var(--red);}
-.schema-info{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.8;}
-.si-row{display:flex;justify-content:space-between;}
-.si-label{color:var(--muted);}
-.si-val{color:var(--text);font-family:var(--mono);font-size:11.5px;}
-.another-btn{margin-top:12px;background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:7px;padding:6px 14px;font-size:12px;font-family:var(--sans);cursor:pointer;width:100%;transition:all .15s;}
-.another-btn:hover{border-color:var(--teal-line);color:var(--teal);}
-
-/* Preview pane */
-.preview-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg-elev);}
-.preview-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--muted);font-size:12px;text-align:center;padding:24px;}
-.preview-empty svg{width:32px;height:32px;opacity:.2;}
-.preview-header{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;}
-.preview-title{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;}
-.yaml-wrap{flex:1;overflow:auto;padding:14px 18px;}
-.yaml-code{font-family:var(--mono);font-size:11.5px;line-height:1.75;white-space:pre;}
-.y-key{color:var(--teal);}.y-str{color:var(--yellow);}.y-comment{color:var(--muted);font-style:italic;}.y-class{color:var(--purple);}.y-bool{color:var(--green);}
-.preview-footer{padding:13px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px;}
-.ingest-btn{background:var(--teal);color:#0a1017;border:none;border-radius:7px;padding:8px 18px;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:opacity .15s;white-space:nowrap;}
-.ingest-btn:hover{opacity:.88;}
-.ingest-btn svg{width:14px;height:14px;}
-.ingest-btn:disabled{opacity:.4;cursor:not-allowed;}
-.ingest-log{border-top:1px solid var(--border);font-family:var(--mono);font-size:11px;max-height:120px;overflow-y:auto;padding:10px 16px;display:none;flex-direction:column;gap:2px;background:var(--bg);flex-shrink:0;}
-.ingest-log.visible{display:flex;}
-.log-line{color:var(--text-dim);line-height:1.6;}.log-ok{color:var(--green);}.log-err{color:var(--red);}
+.mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--teal),var(--purple));display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:12px;color:#0a1017;}
+header h1{font-size:14px;font-weight:600;}.slash{color:var(--muted);font-weight:400;margin:0 4px;}.accent{color:var(--teal);}
+#status{color:var(--muted);font-size:11px;font-family:var(--mono);}
+.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:5px;box-shadow:0 0 0 3px rgba(52,211,153,.15);vertical-align:middle;}
+.status-dot.loading{background:var(--yellow);animation:pulse 1.4s infinite;}.status-dot.err{background:var(--red);}
+@keyframes pulse{50%{opacity:.35;}}
+.header-actions{display:flex;gap:8px;}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:var(--radius-sm);padding:5px 12px;font-size:12px;font-family:var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal);}.btn-ghost svg{width:13px;height:13px;}
+nav{display:flex;gap:2px;border-bottom:1px solid var(--border);padding:0 16px;background:var(--bg-elev);overflow-x:auto;}
+nav button{background:none;border:none;color:var(--muted);padding:10px 14px;cursor:pointer;font-size:12.5px;font-family:var(--sans);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;transition:color .15s,border-color .15s;}
+nav button:hover{color:var(--text-dim);}nav button.active{color:var(--teal);border-bottom-color:var(--teal);}nav button svg{width:13px;height:13px;}
+.view{display:none;animation:fadeIn .22s var(--ease);}.view.active{display:flex;flex-direction:column;}
+.view-inner{display:flex;height:calc(100vh - 88px);overflow:hidden;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}@keyframes detailIn{from{opacity:0;transform:translateY(-3px);}to{opacity:1;transform:translateY(0);}}
+aside{width:220px;border-right:1px solid var(--border);padding:16px 10px;overflow-y:auto;flex-shrink:0;background:var(--bg-elev);}
+aside h2{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:4px 8px 10px;font-weight:600;}
+.source-pill{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:transparent;border:1px solid transparent;border-radius:var(--radius-sm);padding:6px 10px;margin-bottom:3px;cursor:pointer;font-size:12px;color:var(--text-dim);font-family:var(--sans);transition:all .15s;position:relative;}
+.source-pill:hover{background:var(--surface);color:var(--text);}.source-pill.active{background:var(--surface-2);border-color:var(--border);color:var(--text);}
+.source-pill.active::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--teal);}
+.source-pill .count{color:var(--muted);font-family:var(--mono);font-size:10.5px;background:var(--bg);border:1px solid var(--border-soft);padding:1px 5px;border-radius:10px;}
+main{flex:1;overflow-y:auto;padding:16px 24px 40px;min-width:0;}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.search-wrap{flex:1;position:relative;max-width:440px;}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--muted);pointer-events:none;}
+.toolbar input[type=text]{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 12px 7px 30px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;}
+.toolbar input[type=text]:focus{border-color:var(--teal);}.toolbar input[type=text]::placeholder{color:var(--muted);}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 8px;font-size:10.5px;font-family:var(--mono);font-weight:500;border:1px solid transparent;line-height:1.4;}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;}
+.badge.schemaorg{background:var(--teal-soft);color:var(--teal);border-color:var(--teal-line);}.badge.bbqs{background:var(--purple-soft);color:var(--purple);border-color:var(--purple-line);}.badge.other{background:var(--yellow-soft);color:var(--yellow);border-color:rgba(251,191,36,.3);}
+.badge.abstract{background:transparent;color:var(--muted);border-color:var(--border);text-transform:uppercase;font-size:9px;letter-spacing:.08em;padding:1px 6px;}.badge.abstract::before{display:none;}
+.badge.flag-multi{background:var(--blue-soft);color:var(--blue);border-color:rgba(96,165,250,.3);}.badge.flag-req{background:var(--red-soft);color:var(--red);border-color:rgba(248,113,113,.3);}.badge.flag-multi::before,.badge.flag-req::before{display:none;}
+.iri{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.dist-badge{display:inline-flex;align-items:center;gap:4px;border-radius:var(--radius-xs);padding:2px 6px;font-size:10.5px;font-family:var(--mono);font-weight:500;border:1px solid transparent;}
+.dist-badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;}
+.dist-0{background:var(--green-soft);color:var(--green);border-color:rgba(52,211,153,.3);}.dist-05{background:var(--yellow-soft);color:var(--yellow);border-color:rgba(251,191,36,.3);}.dist-1{background:var(--red-soft);color:var(--red);border-color:rgba(248,113,113,.3);}
+.export-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-dim);border-radius:var(--radius-xs);padding:4px 10px;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;font-family:var(--sans);}
+.export-btn:hover{border-color:var(--teal);color:var(--teal);}.export-btn svg{width:11px;height:11px;}
+/* Concepts */
+.concept-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+.concept-header{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;}.concept-header:hover{background:var(--surface-2);}
+.concept-name{font-weight:600;font-size:13px;flex:1;}.concept-sources{display:flex;gap:6px;flex-wrap:wrap;}
+.concept-body{border-top:1px solid var(--border);padding:14px 16px;display:none;animation:detailIn .2s var(--ease);}.concept-body.open{display:block;}
+.concept-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.concept-col{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;}
+.concept-col h5{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.concept-col .def{font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:8px;}
+.align-score{display:flex;align-items:center;gap:8px;font-size:11.5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-soft);}
+.export-bar{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0 2px;}
+/* Diff */
+.diff-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.diff-toolbar select{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;cursor:pointer;}
+.diff-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.diff-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+.diff-col-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.diff-col-header h3{font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.diff-list{overflow-y:auto;max-height:calc(100vh - 240px);}
+.diff-item{padding:8px 14px;border-bottom:1px solid var(--border-soft);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;}
+.diff-item:last-child{border-bottom:none;}.diff-item:hover{background:var(--surface-2);}
+.diff-item .matched{color:var(--green);font-size:10.5px;font-family:var(--mono);}.diff-item .unique{color:var(--yellow);font-size:10.5px;font-family:var(--mono);}
+/* Graph */
+#graph-canvas{width:100%;height:calc(100vh - 160px);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);position:relative;overflow:hidden;}
+.g-node{position:absolute;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;font-size:12px;cursor:pointer;user-select:none;min-width:150px;text-align:center;transition:box-shadow .15s;}
+.g-node:hover,.g-node.selected{box-shadow:0 0 0 3px var(--teal-soft);}
+.g-node-label{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:3px;}
+svg.graph-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+.g-legend{position:absolute;bottom:14px;left:14px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:11px;}
+.g-legend h4{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.g-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px;color:var(--text-dim);}
+.g-legend-dot{width:8px;height:8px;border-radius:50%;}
+/* Provenance */
+.prov-subtabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);}
+.prov-subtabs button{background:none;border:none;color:var(--muted);padding:10px 14px;cursor:pointer;font-size:12.5px;font-family:var(--sans);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;}
+.prov-subtabs button:hover{color:var(--text-dim);}.prov-subtabs button.active{color:var(--teal);border-bottom-color:var(--teal);}
+.prov-panel{display:none;}.prov-panel.active{display:block;}
+.prov-timeline{max-width:720px;}
+.prov-entry{display:grid;grid-template-columns:120px 24px 1fr;gap:0 12px;margin-bottom:0;}
+.prov-left{text-align:right;padding-top:4px;}.prov-left .ts{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.5;}
+.prov-dot{width:10px;height:10px;border-radius:50%;background:var(--teal);border:2px solid var(--bg);margin-top:5px;}
+.prov-line{width:2px;flex:1;background:var(--border);min-height:36px;}
+.prov-right{padding:0 0 20px 0;}
+.prov-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;}
+.prov-card h4{font-size:13px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.prov-card .ver-badge{font-family:var(--mono);font-size:10px;background:var(--teal-soft);color:var(--teal);border:1px solid var(--teal-line);padding:1px 7px;border-radius:10px;}
+.prov-card .meta{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.prov-card .stats{display:flex;gap:8px;flex-wrap:wrap;}
+.prov-stat{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-xs);padding:3px 9px;font-size:10.5px;font-family:var(--mono);color:var(--text-dim);}
+.prov-card .issue-link{font-size:11px;color:var(--teal);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px;}
+.diff-detail{background:var(--bg-elev);border:1px solid var(--border-soft);border-radius:var(--radius-xs);padding:8px 12px;margin-top:8px;font-size:11.5px;}
+.diff-detail .diff-row{padding:3px 0;color:var(--text-dim);}
+.diff-detail .from{color:var(--red);text-decoration:line-through;}.diff-detail .to{color:var(--green);}
+/* History picker layout */
+.hist-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;height:calc(100vh - 200px);}
+.hist-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow-y:auto;}
+.hist-list-item{padding:9px 14px;border-bottom:1px solid var(--border-soft);cursor:pointer;font-size:12.5px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.hist-list-item:hover{background:var(--surface-2);}.hist-list-item.active{background:var(--surface-2);border-left:2px solid var(--teal);}
+.hist-list-item:last-child{border-bottom:none;}
+.hist-list-item .ver{color:var(--muted);font-family:var(--mono);font-size:10.5px;}
+.hist-detail{overflow-y:auto;padding:0 8px;}
+.hist-search{padding:10px 12px;border-bottom:1px solid var(--border);}
+.hist-search input{width:100%;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none;}
+/* Transform */
+.transform-panel{max-width:900px;padding:20px;}
+.transform-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;}
+.transform-section h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:12px;}
+.file-drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:border-color .15s;}
+.file-drop:hover{border-color:var(--teal);}
+.file-drop input{display:none;}
+.mapping-table{width:100%;font-size:12px;}
+.mapping-table td{padding:8px 10px;border-bottom:1px solid var(--border-soft);}
+.mapping-table th{padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;border-bottom:1px solid var(--border);}
+.mapping-table select{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-xs);padding:4px 8px;color:var(--text);font-size:11.5px;font-family:var(--sans);}
+/* Query view */
+.query-panel{padding:20px;max-width:1000px;}
+.query-tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid var(--border);}
+.query-tabs button{background:none;border:none;color:var(--muted);padding:8px 14px;cursor:pointer;font-size:12.5px;font-family:var(--sans);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.query-tabs button.active{color:var(--teal);border-bottom-color:var(--teal);}
+.query-mode{display:none;}.query-mode.active{display:block;}
+.query-builder{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:14px;}
+.builder-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.builder-row label{font-size:11.5px;color:var(--text-dim);min-width:110px;}
+.builder-row select,.builder-row input[type=text],.builder-row input[type=number]{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;color:var(--text);font-size:12.5px;font-family:var(--sans);outline:none;}
+.cypher-preview{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--teal);white-space:pre-wrap;margin:10px 0;line-height:1.6;}
+.query-results{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:14px;}
+.query-results-header{padding:10px 14px;background:var(--bg-elev);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.query-results-header h4{font-size:11.5px;font-weight:600;color:var(--text-dim);}
+.query-results-body{max-height:400px;overflow-y:auto;}
+.query-result-row{padding:10px 14px;border-bottom:1px solid var(--border-soft);font-size:12.5px;}
+.query-result-row:last-child{border-bottom:none;}
+.claude-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;}
+.claude-box textarea{width:100%;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.6;outline:none;resize:vertical;min-height:100px;}
+.claude-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+/* Submit */
+.section-pad{padding:20px 24px 40px;overflow-y:auto;height:calc(100vh - 88px);}
+.submit-inner{padding:36px 28px 60px;max-width:760px;}
+.submit-inner h2{font-size:20px;font-weight:600;letter-spacing:-.02em;margin-bottom:6px;background:linear-gradient(135deg,var(--text) 30%,var(--teal));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;display:inline-block;}
+.submit-inner .lede{color:var(--text-dim);font-size:13px;margin-bottom:24px;line-height:1.6;}
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.field{padding:14px 16px;border-bottom:1px solid var(--border);}.field:last-child{border-bottom:none;}
+.field .row{display:flex;justify-content:space-between;margin-bottom:6px;}
+.field label{font-size:12px;font-weight:600;color:var(--text-dim);}.field .hint{font-size:11px;color:var(--muted);}.field .req{color:var(--red);}
+.field input[type=text]{width:100%;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 11px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;}
+.editor-shell{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.editor-toolbar{padding:6px 12px;background:var(--bg-elev);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.editor-toolbar .dots{display:flex;gap:5px;}.editor-toolbar .dots span{width:8px;height:8px;border-radius:50%;background:var(--border);}
+textarea.yaml-editor{width:100%;height:280px;background:transparent;border:none;padding:12px 14px;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.6;outline:none;resize:vertical;display:block;}
+.form-actions{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-elev);border-top:1px solid var(--border);gap:12px;}
+.form-actions .note{color:var(--muted);font-size:11.5px;}
+.btn{background:linear-gradient(180deg,#34e0cc,var(--teal));color:#051512;font-weight:600;border:none;border-radius:var(--radius-sm);padding:8px 16px;cursor:pointer;font-size:12.5px;font-family:var(--sans);display:inline-flex;align-items:center;gap:7px;transition:transform .12s;}
+.btn:hover{transform:translateY(-1px);}.btn svg{width:13px;height:13px;}
+.instructions{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;}
+.instructions strong{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.instructions strong svg{width:13px;height:13px;color:var(--teal);}
+.instructions ol{list-style:none;counter-reset:step;}
+.instructions li{counter-increment:step;display:grid;grid-template-columns:18px 1fr;gap:10px;padding:5px 0;font-size:12px;color:var(--text-dim);line-height:1.6;}
+.instructions li::before{content:counter(step);width:18px;height:18px;border-radius:50%;background:var(--bg-elev);border:1px solid var(--border);color:var(--teal);font-family:var(--mono);font-size:9.5px;font-weight:600;display:grid;place-items:center;}
+.instructions code{font-family:var(--mono);font-size:11px;color:var(--teal);background:var(--teal-soft);padding:1px 5px;border-radius:3px;border:1px solid var(--teal-line);}
+.empty{color:var(--muted);font-size:13px;padding:40px 20px;text-align:center;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);}
+.empty::before{content:"∅";display:block;font-size:22px;color:var(--mute-soft);margin-bottom:8px;}
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <div class="mark">NG</div>
-    <h1>NeuroGhost</h1>
+    <div class="mark">N</div>
+    <div>
+      <h1><span class="accent">Neuro</span>Registry</h1>
+      <div id="status"><span class="status-dot loading"></span>Loading…</div>
+    </div>
   </div>
-  <nav>
-    <button class="tab active" data-view="meta">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="4" height="4" rx="1"/><rect x="10" y="2" width="4" height="4" rx="1"/><rect x="6" y="10" width="4" height="4" rx="1"/><path d="M4 6v1.5a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V6"/><line x1="8" y1="8" x2="8" y2="10"/></svg>
-      Meta-model
+  <div class="header-actions">
+    <button class="btn-ghost" onclick="dlAll()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>registry.json
     </button>
-    <button class="tab" data-view="ingest">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v9"/><polyline points="5 8 8 11 11 8"/><path d="M3 13h10"/></svg>
-      Ingest
-    </button>
-  </nav>
-  <div id="status-label">
-    <span class="dot"></span>
-    <span>registry v1.9.7 · 671 classes · 7 schemas</span>
   </div>
 </header>
 
@@ -187,7 +236,7 @@ nav{display:flex;gap:2px;flex:1;}
 <!-- GRAPH SCHEMA -->
 <div id="view-graph" class="view">
   <div class="section-pad">
-    <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Node types and relationships in the LadybugDB graph. Every entity has a UUID <code style="font-family:var(--mono);color:var(--teal)">id</code> (primary key) and a <code style="font-family:var(--mono);color:var(--teal)">sha256_hash</code> content fingerprint that drives cross-source dedup. Click a node to inspect its fields.</p>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Node types and relationships in the LadybugDB graph. Identity is content-addressed (<code style="font-family:var(--mono);color:var(--teal)">hash_id = sha256:…</code>). Click a node to inspect its fields.</p>
     <div id="graph-canvas">
       <svg class="graph-svg" id="graph-svg"></svg>
       <div class="g-legend"><h4>Legend</h4><div class="g-legend-item"><div class="g-legend-dot" style="background:var(--teal)"></div>Node table</div><div class="g-legend-item"><div class="g-legend-dot" style="background:var(--purple)"></div>Relationship</div></div>
@@ -199,60 +248,292 @@ nav{display:flex;gap:2px;flex:1;}
       </div>
     </div>
   </div>
-  <div class="meta-panel">
-    <div class="panel-scroll">
-      <div id="panel-content">
-        <div class="panel-placeholder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-          <span>Click any class node to see its definition and slots</span>
+</div>
+
+<!-- TRANSFORM -->
+<div id="view-transform" class="view">
+  <div class="transform-panel">
+    <div class="query-tabs" style="margin-bottom:20px">
+      <button onclick="trTabSwitch('demo',this)" class="active">BBQS Live Demo</button>
+      <button onclick="trTabSwitch('browser',this)">In-browser CSV</button>
+      <button onclick="trTabSwitch('api',this)">API reference</button>
+    </div>
+
+    <!-- BBQS Live Demo -->
+    <div id="tr-tab-demo">
+      <p style="color:var(--text-dim);font-size:12.5px;margin-bottom:20px;line-height:1.6">
+        Transform real BBQS entities to other schemas using live alignment data from the registry. Runs entirely in your browser.
+      </p>
+
+      <div class="transform-section">
+        <h3>1. Pick a BBQS entity</h3>
+        <div id="tr-demo-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:4px"></div>
+      </div>
+
+      <div class="transform-section" id="tr-demo-step2" style="display:none">
+        <h3>2. Target schema</h3>
+        <div class="builder-row">
+          <label>Convert to</label>
+          <select id="tr-demo-tgt" onchange="trRunDemo()"></select>
         </div>
+        <div id="tr-demo-record" style="margin-top:12px;background:var(--bg-elev);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--text-dim);white-space:pre-wrap;line-height:1.6"></div>
+      </div>
+
+      <div class="transform-section" id="tr-demo-result" style="display:none">
+        <h3>3. Result</h3>
+        <div id="tr-demo-result-inner"></div>
       </div>
     </div>
-    <div class="panel-legend">
-      <div class="l-title">Edges</div>
-      <div class="l-row"><span class="l-line l-isa"></span> is_a (inheritance)</div>
-      <div class="l-row"><span class="l-line l-rel-dashed"></span> relationship</div>
+
+    <!-- In-browser CSV transform -->
+    <div id="tr-tab-browser" style="display:none">
+      <p style="color:var(--text-dim);font-size:12.5px;margin-bottom:20px;line-height:1.6">Upload a CSV whose columns match one schema, and convert to another. Uses stored alignments to auto-map columns. Runs entirely in your browser — no data leaves your machine.</p>
+
+      <div class="transform-section">
+        <h3>1. Upload CSV</h3>
+        <label class="file-drop">
+          <input type="file" id="tr-file" accept=".csv" onchange="trOnFile(event)"/>
+          <div id="tr-drop-label" style="color:var(--muted);font-size:13px">Click to select a CSV file, or drag here</div>
+        </label>
+        <div id="tr-file-info" style="margin-top:10px;font-size:11.5px;color:var(--text-dim);display:none"></div>
+      </div>
+
+      <div class="transform-section" id="tr-schema-picker" style="display:none">
+        <h3>2. Pick schemas</h3>
+        <div class="builder-row"><label>Source schema (CSV format)</label><select id="tr-src" onchange="trBuildMapping()"></select></div>
+        <div class="builder-row"><label>Target schema (convert to)</label><select id="tr-tgt" onchange="trBuildMapping()"></select></div>
+      </div>
+
+      <div class="transform-section" id="tr-mapping" style="display:none">
+        <h3>3. Column mapping</h3>
+        <p style="color:var(--muted);font-size:11.5px;margin-bottom:10px">Auto-matches shown. Adjust any dropdowns to override.</p>
+        <table class="mapping-table" id="tr-mapping-table"></table>
+      </div>
+
+      <div class="transform-section" id="tr-convert" style="display:none">
+        <button class="btn" onclick="trConvert()">Convert and download</button>
+      </div>
     </div>
-    <div class="panel-enums">
-      <div class="l-title">Enums</div>
-      <span class="enum-chip">SkosMappingTypeEnum</span>
-      <span class="enum-chip">ReviewStatusEnum</span>
-      <span class="enum-chip">RegistryRuleTypeEnum</span>
-      <span class="enum-chip">RegistryRuleSeverityEnum</span>
+
+    <!-- API reference -->
+    <div id="tr-tab-api" style="display:none">
+      <p style="color:var(--text-dim);font-size:12.5px;margin-bottom:20px;line-height:1.6">
+        The registry exposes read endpoints today. Transform endpoints are planned — field mapping as a static file, data transform via a serverless function.
+      </p>
+
+      <div class="transform-section">
+        <h3 style="display:flex;align-items:center;gap:8px;color:var(--text)">
+          <span style="background:var(--teal-soft);color:var(--teal);border:1px solid var(--teal-line);border-radius:4px;padding:2px 7px;font-family:var(--mono);font-size:10px">GET</span>
+          Field mapping between two schemas
+          <span style="background:var(--green-soft);color:var(--green);border:1px solid rgba(52,211,153,.3);border-radius:4px;padding:1px 6px;font-size:9px;font-family:var(--mono)">PLANNED</span>
+        </h3>
+        <div class="cypher-preview" id="tr-api-get-url" style="cursor:pointer;user-select:all" title="click to copy"></div>
+        <p style="color:var(--muted);font-size:11.5px;margin:10px 0 8px">Returns the pre-computed field-to-field mapping derived from alignment scores. Servable as a static file — no extra infrastructure needed.</p>
+        <pre style="background:var(--bg-elev);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:11.5px;color:var(--text-dim);white-space:pre-wrap;line-height:1.7">{
+  "from": "bbqs",  "to": "bids",
+  "mappings": [
+    {
+      "from_class": "Subject",  "to_class": "Participant",  "distance": 0.12,
+      "field_mappings": [
+        { "from_field": "subject_id", "to_field": "participant_id", "confidence": 0.85 },
+        { "from_field": "age",        "to_field": "age",            "confidence": 0.97 }
+      ]
+    }
+  ]
+}</pre>
+      </div>
+
+      <div class="transform-section">
+        <h3 style="display:flex;align-items:center;gap:8px;color:var(--text)">
+          <span style="background:var(--purple-soft);color:var(--purple);border:1px solid var(--purple-line);border-radius:4px;padding:2px 7px;font-family:var(--mono);font-size:10px">POST</span>
+          Transform a dataset
+          <span style="background:var(--yellow-soft);color:var(--yellow);border:1px solid rgba(251,191,36,.3);border-radius:4px;padding:1px 6px;font-size:9px;font-family:var(--mono)">NEEDS COMPUTE</span>
+        </h3>
+        <div class="cypher-preview">POST https://sensein.group/NeuroGhost/api/transform</div>
+        <p style="color:var(--muted);font-size:11.5px;margin:10px 0 8px">Accepts a record in one schema's format and returns it remapped. Requires a serverless compute layer (Cloudflare Worker or equivalent).</p>
+        <pre style="background:var(--bg-elev);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:11.5px;color:var(--text-dim);white-space:pre-wrap;line-height:1.7"># Request
+{ "from": "bbqs", "to": "bids", "data": { "subject_id": "sub-01", "age": 24 } }
+
+# Response
+{ "from": "bbqs", "to": "bids",
+  "result": { "participant_id": "sub-01", "age": 24 },
+  "unmapped_fields": [], "warnings": [] }</pre>
+      </div>
+
+      <div class="transform-section">
+        <h3 style="color:var(--text)">Live read endpoints</h3>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <thead><tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">Method</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">URL</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">Description</th>
+          </tr></thead>
+          <tbody id="tr-api-endpoints"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ══ INGEST VIEW ══ -->
-<div id="view-ingest" class="view">
-  <div id="drop-zone" class="drop-zone full">
-    <div class="drop-inner" id="drop-inner">
-      <div class="drop-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><polyline points="9 15 12 18 15 15"/></svg>
+<!-- QUERY -->
+<div id="view-query" class="view">
+  <div class="query-panel">
+    <h2 style="font-size:18px;font-weight:600;margin-bottom:8px">Query the registry</h2>
+    <p style="color:var(--text-dim);font-size:12.5px;margin-bottom:20px;line-height:1.6">Build queries with dropdowns, or use natural language via Claude. Queries run in your browser against the registry snapshot.</p>
+
+    <div class="query-tabs">
+      <button class="active" onclick="qmSwitch('builder')">Structured builder</button>
+      <button onclick="qmSwitch('llm')">Ask Claude</button>
+    </div>
+
+    <!-- Builder mode -->
+    <div id="qm-builder" class="query-mode active">
+      <div class="query-builder">
+        <div class="builder-row">
+          <label>Show me</label>
+          <select id="q-what"><option value="classes">Classes</option><option value="properties">Properties</option><option value="alignments">Alignments</option></select>
+        </div>
+        <div class="builder-row">
+          <label>From source</label>
+          <select id="q-src"><option value="">any</option></select>
+        </div>
+        <div class="builder-row" id="q-aln-row">
+          <label>Aligned to source</label>
+          <select id="q-aln-src"><option value="">any</option></select>
+          <label style="min-width:auto">with distance ≤</label>
+          <input type="number" id="q-dist" min="0" max="1" step="0.05" value="0.5" style="width:70px"/>
+        </div>
+        <div class="builder-row">
+          <label>Name contains</label>
+          <input type="text" id="q-name" placeholder="(optional)"/>
+        </div>
+        <div class="builder-row">
+          <button class="btn" onclick="runQuery()">Run query</button>
+        </div>
       </div>
-      <p class="drop-title">Drop a LinkML YAML schema</p>
-      <p class="drop-sub">or click anywhere to browse</p>
-      <p class="drop-ext">.yml · .yaml</p>
+      <div id="q-cypher" class="cypher-preview" style="display:none"></div>
+      <div id="q-results"></div>
     </div>
-    <input type="file" id="file-input" accept=".yml,.yaml" style="display:none">
+
+    <!-- LLM mode -->
+    <div id="qm-llm" class="query-mode">
+      <div class="claude-box">
+        <div style="margin-bottom:12px;color:var(--text-dim);font-size:12.5px;line-height:1.6">
+          Type what you want in plain English. Click "Copy prompt for Claude" — this copies a prompt that includes the registry structure. Paste it into <a href="https://claude.ai" target="_blank" style="color:var(--teal)">claude.ai</a>, then paste Claude's JSON response back here to see results.
+        </div>
+        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Your question</label>
+        <textarea id="llm-question" placeholder="e.g. show me all bbqs classes that align to a schema.org Person with distance under 0.3"></textarea>
+        <div class="claude-actions">
+          <button class="btn" onclick="copyClaudePrompt()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy prompt for Claude
+          </button>
+          <a href="https://claude.ai" target="_blank" class="btn-ghost" style="text-decoration:none">Open claude.ai ↗</a>
+        </div>
+        <label style="display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 6px">Paste Claude's response here</label>
+        <textarea id="llm-response" placeholder='Paste the JSON Claude returned…'></textarea>
+        <div class="claude-actions"><button class="btn" onclick="runLLMResponse()">Run response</button></div>
+      </div>
+      <div id="qm-llm-results" style="margin-top:14px"></div>
+    </div>
   </div>
-  <div class="preview-pane" id="preview-pane">
-    <div class="preview-header">
-      <span class="preview-title">Preview</span>
-    </div>
-    <div id="preview-body" class="preview-empty">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      <span>Drop a file on the left to preview it</span>
-    </div>
-    <div class="preview-footer">
-      <div id="footer-meta" style="font-size:11.5px;color:var(--muted);">No file loaded</div>
-      <button class="ingest-btn" id="ingest-btn" disabled>
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2"/><path d="M8 2v8"/><polyline points="5 7 8 10 11 7"/></svg>
-        Open ingestion issue
+</div>
+
+<!-- PROVENANCE -->
+<div id="view-provenance" class="view">
+  <div class="section-pad">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h2 style="font-size:18px;font-weight:600">Provenance & History</h2>
+      <button class="btn-ghost" onclick="dlProv()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>provenance.json
       </button>
     </div>
-    <div class="ingest-log" id="ingest-log"></div>
+
+    <div class="prov-subtabs">
+      <button class="active" onclick="psw('registry')">Registry versions</button>
+      <button onclick="psw('schemas')">Schema history</button>
+      <button onclick="psw('classes')">Class history</button>
+      <button onclick="psw('properties')">Property history</button>
+    </div>
+
+    <div id="psub-registry" class="prov-panel active">
+      <div id="prov-timeline" class="prov-timeline"></div>
+      <div id="prov-empty" class="empty" style="display:none">No provenance data yet.</div>
+    </div>
+
+    <div id="psub-schemas" class="prov-panel">
+      <div class="hist-layout">
+        <div>
+          <div class="hist-search"><input type="text" id="hist-schema-search" placeholder="Filter schemas…" oninput="renderHistList('schemas')"/></div>
+          <div class="hist-list" id="hist-schema-list"></div>
+        </div>
+        <div class="hist-detail" id="hist-schema-detail"><div class="empty">Pick a schema to see its version history.</div></div>
+      </div>
+    </div>
+
+    <div id="psub-classes" class="prov-panel">
+      <div class="hist-layout">
+        <div>
+          <div class="hist-search"><input type="text" id="hist-class-search" placeholder="Filter classes…" oninput="renderHistList('classes')"/></div>
+          <div class="hist-list" id="hist-class-list"></div>
+        </div>
+        <div class="hist-detail" id="hist-class-detail"><div class="empty">Pick a class to see its version history.</div></div>
+      </div>
+    </div>
+
+    <div id="psub-properties" class="prov-panel">
+      <div class="hist-layout">
+        <div>
+          <div class="hist-search"><input type="text" id="hist-prop-search" placeholder="Filter properties…" oninput="renderHistList('properties')"/></div>
+          <div class="hist-list" id="hist-prop-list"></div>
+        </div>
+        <div class="hist-detail" id="hist-prop-detail"><div class="empty">Pick a property to see its version history.</div></div>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- SUBMIT -->
+<div id="view-submit" class="view">
+  <main>
+    <div class="submit-inner">
+      <h2>Register a Schema</h2>
+      <p class="lede">Paste your LinkML YAML below. Submitting opens a pre-filled GitHub Issue — CI ingests and versions it automatically.</p>
+      <div class="form-card">
+        <div class="field">
+          <div class="row"><label>Schema name <span class="req">*</span></label><span class="hint">lowercase, no spaces</span></div>
+          <input type="text" id="schema-name" placeholder="my-schema"/>
+        </div>
+        <div class="field">
+          <div class="row"><label>LinkML YAML <span class="req">*</span></label><span class="hint">must contain <code style="font-family:var(--mono);color:var(--teal)">classes:</code></span></div>
+          <div class="editor-shell">
+            <div class="editor-toolbar"><div class="dots"><span></span><span></span><span></span></div><span style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">schema.yaml · LinkML</span></div>
+            <textarea class="yaml-editor" id="schema-yaml" spellcheck="false" placeholder="id: https://example.org/my-schema
+name: my-schema
+classes:
+  MyClass:
+    description: ...
+slots:
+  my_slot:
+    range: string"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <span class="note">Opens a GitHub Issue in a new tab.</span>
+          <button class="btn" onclick="submitSchema()">Open GitHub Issue <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg></button>
+        </div>
+      </div>
+      <div class="instructions">
+        <strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>How it works</strong>
+        <ol>
+          <li>Clicking opens a pre-filled GitHub Issue with your YAML.</li>
+          <li>CI validates, ingests, computes diffs against previous versions, runs alignment.</li>
+          <li>New versions of changed classes/properties are minted; whole-schema snapshot archived.</li>
+          <li>Registry version bumps and provenance is logged.</li>
+        </ol>
+      </div>
+    </div>
+  </main>
 </div>
 
 <script>
@@ -270,21 +551,21 @@ async function boot(){
     if(rr.status==="fulfilled"&&rr.value.ok){
       const d=await rr.value.json();
       // Normalize class/property fields across registry export formats:
-      // the meta-model export uses id / sha256_hash / value_range / is_abstract, while
+      // the meta-model export uses hash_id / value_range / is_abstract, while
       // this UI reads uid / datatype / version. Map new→old, keeping old as-is.
       allClasses=(d.classes||[]).map(c=>({
         ...c,
-        uid: c.uid||c.id||"",
+        uid: c.uid||c.hash_id||"",
         version: c.version||c.registry_version||"",
         abstract: c.abstract??c.is_abstract??false,
         source: c.source||(Array.isArray(c.sources)?c.sources[0]:"")||"",
         alignments: (c.alignments||[]).map(a=>({
           ...a,
-          target_uid: a.target_uid||a.target_id||"",
+          target_uid: a.target_uid||a.target_hash_id||"",
         })),
         properties: (c.properties||[]).map(p=>({
           ...p,
-          uid: p.uid||p.id||"",
+          uid: p.uid||p.hash_id||"",
           datatype: p.datatype||p.value_range||"",
           source: p.source||(Array.isArray(p.sources)?p.sources[0]:"")||"",
         })),
@@ -400,14 +681,14 @@ function renderDiff(){
 
 // GRAPH SCHEMA
 const GN=[
-  {id:"RegistryClass",fields:["id PK", "sha256_hash", "name*", "description*", "provenance \u2192 ProvenanceEntry[]", "skos_mappings \u2192 SkosMapping[]", "aliases", "properties \u2192 RegistryProperty[]", "is_a \u2192 RegistryClass", "mixins \u2192 RegistryClass[]", "class_uri", "abstract"],x:0.25,y:0.1},
-  {id:"RegistryProperty",fields:["id PK", "sha256_hash", "name*", "description*", "provenance \u2192 ProvenanceEntry[]", "skos_mappings \u2192 SkosMapping[]", "aliases", "range*", "ucum_code", "has_quantity_kind", "symbol", "abbreviation", "descriptive_name", "slot_uri"],x:0.5,y:0.1},
+  {id:"RegistryClass",fields:["hash_id PK", "name*", "description*", "provenance \u2192 ProvenanceEntry[]", "skos_mappings \u2192 SkosMapping[]", "aliases", "properties \u2192 RegistryProperty[]", "is_a \u2192 RegistryClass", "mixins \u2192 RegistryClass[]", "class_uri", "abstract"],x:0.25,y:0.1},
+  {id:"RegistryProperty",fields:["hash_id PK", "name*", "description*", "provenance \u2192 ProvenanceEntry[]", "skos_mappings \u2192 SkosMapping[]", "aliases", "range*", "ucum_code", "has_quantity_kind", "symbol", "abbreviation", "descriptive_name", "slot_uri"],x:0.5,y:0.1},
   {id:"ProvenanceEntry",fields:["uid PK", "source*", "source_description", "registry_version", "generated_at*", "attributed_to*", "activity", "derived_from"],x:0.17,y:0.48},
-  {id:"SkosMapping",fields:["id PK", "sha256_hash", "mapping_type \u2192 SkosMappingTypeEnum", "target"],x:0.33,y:0.48},
-  {id:"Rule",fields:["id PK", "sha256_hash", "name*", "description*"],x:0.33,y:0.86},
-  {id:"Transform",fields:["id PK", "sha256_hash", "name*", "description*"],x:0.67,y:0.86},
-  {id:"PermissibleValue",fields:["id PK", "sha256_hash", "name*", "meaning"],x:0.5,y:0.48},
-  {id:"ValueSet",fields:["id PK", "sha256_hash", "name*", "description*", "provenance \u2192 ProvenanceEntry[]", "skos_mappings \u2192 SkosMapping[]", "aliases", "permissible_values \u2192 PermissibleValue[]"],x:0.75,y:0.1},
+  {id:"SkosMapping",fields:["hash_id PK", "mapping_type \u2192 SkosMappingTypeEnum", "target"],x:0.33,y:0.48},
+  {id:"Rule",fields:["hash_id PK", "name*", "description*"],x:0.33,y:0.86},
+  {id:"Transform",fields:["hash_id PK", "name*", "description*"],x:0.67,y:0.86},
+  {id:"PermissibleValue",fields:["hash_id PK", "name*", "meaning"],x:0.5,y:0.48},
+  {id:"ValueSet",fields:["hash_id PK", "name*", "description*", "provenance \u2192 ProvenanceEntry[]", "skos_mappings \u2192 SkosMapping[]", "aliases", "permissible_values \u2192 PermissibleValue[]"],x:0.75,y:0.1},
   {id:"SchemaSource",fields:["uid PK", "label*", "title", "publisher", "contact", "homepage", "is_hub", "source_iri", "source_version", "mime_type", "created_at", "registry_version"],x:0.67,y:0.48},
   {id:"SchemaVersionSnapshot",fields:["uid PK", "schema_label*", "source_version", "yml_path", "class_count", "property_count", "changes_summary", "created_at", "registry_version"],x:0.83,y:0.48},
 ];
@@ -423,241 +704,361 @@ const GR=[
   {f:"ValueSet",t:"SkosMapping",l:"HAS_SKOS_MAPPING"},
   {f:"ValueSet",t:"PermissibleValue",l:"HAS_PERMISSIBLE_VALUES"},
 ];
-
-// Node positions as % of canvas [cx, cy]
-const POS = {
-  'RegistryEntity':         [50, 9],
-  'RegistryClass':          [8,  34],
-  'RegistryProperty':       [22, 34],
-  'RegistryValueSet':       [36, 34],
-  'Mapping':                [50, 34],
-  'RegistryRule':           [64, 34],
-  'ProvenanceEntry':        [78, 34],
-  'RegistrySchema':         [92, 34],
-  'PermissibleValue':       [8,  60],
-  'UnitOfMeasure':          [22, 60],
-  'Transform':              [36, 60],
-  'MappingProvenanceEntry': [78, 60],
-  'SchemaSource':           [92, 60],
-  'SchemaVersionSnapshot':  [92, 82],
-};
-
-const NW = 140, NH = 48; // node width/height in px
-
-function renderGraph() {
-  const canvas = document.getElementById('meta-canvas');
-  canvas.querySelectorAll('.m-node').forEach(n => n.remove());
-  const W = canvas.offsetWidth, H = canvas.offsetHeight;
-
-  CLASSES.forEach(cls => {
-    const pos = POS[cls.id]; if (!pos) return;
-    const el = document.createElement('div');
-    el.className = 'm-node' + (cls.abstract ? ' is-abstract' : '');
-    el.dataset.id = cls.id;
-    el.innerHTML = `<div class="n-name">${cls.id}</div><div class="n-tag">${cls.tag}</div>`;
-    el.style.cssText = `left:${pos[0]/100*W - NW/2}px;top:${pos[1]/100*H - NH/2}px;width:${NW}px;min-height:${NH}px;`;
-    el.addEventListener('click', () => selectClass(cls));
-    canvas.appendChild(el);
+let selNode=null;
+function renderGraph(){
+  const cv=document.getElementById("graph-canvas");if(!cv)return;
+  cv.querySelectorAll(".g-node").forEach(n=>n.remove());
+  const svg=document.getElementById("graph-svg");svg.innerHTML="";
+  const W=cv.offsetWidth||700,H=cv.offsetHeight||420;
+  const els={};
+  GN.forEach(n=>{
+    const el=document.createElement("div");el.className="g-node";
+    el.style.left=Math.round(n.x*W-75)+"px";el.style.top=Math.round(n.y*H-28)+"px";
+    el.style.borderColor="var(--teal)";
+    el.innerHTML=`<div style="color:var(--teal);font-family:var(--mono);font-size:11.5px;font-weight:700">${n.id}</div><div class="g-node-label">${n.fields.length} fields</div>`;
+    el.onclick=()=>{
+      if(selNode===n.id){selNode=null;cv.querySelectorAll(".g-node").forEach(x=>x.classList.remove("selected"));document.getElementById("graph-detail").style.display="none";}
+      else{selNode=n.id;cv.querySelectorAll(".g-node").forEach(x=>x.classList.remove("selected"));el.classList.add("selected");document.getElementById("g-detail-name").textContent=n.id;document.getElementById("g-detail-fields").innerHTML=n.fields.map(f=>`<span>${f}</span><br>`).join("");document.getElementById("graph-detail").style.display="block";}
+    };
+    cv.appendChild(el);els[n.id]=el;
   });
-
-  drawEdges(W, H);
-}
-
-function drawEdges(W, H) {
-  const svg = document.getElementById('edge-svg');
-  svg.innerHTML = '';
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-
-  const defs = svgEl('defs');
-  ['isa','rel'].forEach(t => {
-    const m = svgEl('marker');
-    m.setAttribute('id','arr-'+t); m.setAttribute('markerWidth','6'); m.setAttribute('markerHeight','6');
-    m.setAttribute('refX','5'); m.setAttribute('refY','3'); m.setAttribute('orient','auto');
-    const p = svgEl('polygon'); p.setAttribute('points','0 0, 6 3, 0 6');
-    p.setAttribute('fill', t==='isa' ? '#2a3048' : 'rgba(45,212,191,.55)');
-    m.appendChild(p); defs.appendChild(m);
-  });
-  svg.appendChild(defs);
-
-  EDGES.forEach(e => {
-    const fp = POS[e.from], tp = POS[e.to]; if (!fp||!tp) return;
-    const fx = fp[0]/100*W, fy = fp[1]/100*H;
-    const tx = tp[0]/100*W, ty = tp[1]/100*H;
-
-    // For is_a edges, connect top of child to bottom of parent
-    let sx=fx, sy=fy-NH/2, ex=tx, ey=ty+NH/2;
-    // For rel edges same vertical level, connect right→left
-    if (e.type==='rel' && Math.abs(fp[1]-tp[1]) < 5) {
-      sx = fx+NW/2; sy = fy;
-      ex = tx-NW/2; ey = ty;
-    }
-
-    const dx = ex-sx, dy = ey-sy;
-    const cpx1 = sx + dx*0.2, cpy1 = sy + dy*0.5;
-    const cpx2 = ex - dx*0.2, cpy2 = ey - dy*0.5;
-
-    const path = svgEl('path');
-    path.setAttribute('d', `M${sx},${sy} C${cpx1},${cpy1} ${cpx2},${cpy2} ${ex},${ey}`);
-    path.setAttribute('fill','none');
-    path.setAttribute('stroke', e.type==='isa' ? '#2a3048' : 'rgba(45,212,191,.4)');
-    path.setAttribute('stroke-width','1.5');
-    if (e.type==='rel') path.setAttribute('stroke-dasharray','4 3');
-    path.setAttribute('marker-end','url(#arr-'+e.type+')');
-    svg.appendChild(path);
-
-    if (e.label) {
-      const midX = (sx+ex)/2 + 3, midY = (sy+ey)/2 - 4;
-      const txt = svgEl('text');
-      txt.setAttribute('x',midX); txt.setAttribute('y',midY);
-      txt.setAttribute('fill','rgba(45,212,191,.5)');
-      txt.setAttribute('font-size','8.5'); txt.setAttribute('font-family',"'JetBrains Mono',monospace");
-      txt.textContent = e.label; svg.appendChild(txt);
-    }
+  requestAnimationFrame(()=>{
+    GR.forEach(r=>{
+      const fe=els[r.f],te=els[r.t];if(!fe||!te)return;
+      const fx=fe.offsetLeft+fe.offsetWidth/2,fy=fe.offsetTop+fe.offsetHeight/2;
+      const tx=te.offsetLeft+te.offsetWidth/2,ty=te.offsetTop+te.offsetHeight/2;
+      const line=document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute("x1",fx);line.setAttribute("y1",fy);line.setAttribute("x2",tx);line.setAttribute("y2",ty);
+      line.setAttribute("stroke","#2a3050");line.setAttribute("stroke-width","1.5");svg.appendChild(line);
+      const text=document.createElementNS("http://www.w3.org/2000/svg","text");
+      text.setAttribute("x",(fx+tx)/2);text.setAttribute("y",(fy+ty)/2-4);text.setAttribute("fill","#4a5170");
+      text.setAttribute("font-size","9");text.setAttribute("text-anchor","middle");text.setAttribute("font-family","JetBrains Mono,monospace");
+      text.textContent=r.l;svg.appendChild(text);
+    });
   });
 }
 
-function svgEl(tag) { return document.createElementNS('http://www.w3.org/2000/svg', tag); }
+// PROVENANCE — registry timeline
+function renderProvenance(){
+  const el=document.getElementById("prov-timeline");el.innerHTML="";
+  if(!provenance.length){document.getElementById("prov-empty").style.display="block";return;}
+  [...provenance].reverse().forEach(p=>{
+    const ts=p.timestamp?new Date(p.timestamp).toLocaleString():"";
+    const stats=p.stats?Object.entries(p.stats).map(([k,v])=>`<span class="prov-stat">${k}: ${v}</span>`).join(""):"";
+    const link=p.issue_number?`<a class="issue-link" href="https://github.com/${GITHUB_REPO}/issues/${p.issue_number}" target="_blank">↗ Issue #${p.issue_number}</a>`:"";
+    const div=document.createElement("div");div.className="prov-entry";
+    div.innerHTML=`
+      <div class="prov-left"><div class="ts">${ts}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:center;"><div class="prov-dot"></div><div class="prov-line"></div></div>
+      <div class="prov-right"><div class="prov-card">
+        <h4>${p.schema_ingested||"Registry update"} <span class="ver-badge">v${p.registry_version}</span><span style="font-size:10px;color:var(--muted);font-weight:400">${p.bump||""}</span></h4>
+        <div class="meta">by ${p.agent||"system"} · ${p.trigger||"manual"}</div>
+        <div class="stats">${stats}</div>${link}
+      </div></div>`;
+    el.appendChild(div);
+  });
+}
 
-function selectClass(cls) {
-  document.querySelectorAll('.m-node').forEach(n => n.classList.remove('selected'));
-  const node = document.querySelector(`.m-node[data-id="${cls.id}"]`);
-  if (node) node.classList.add('selected');
-  document.getElementById('panel-content').innerHTML = `
-    <div class="panel-inner">
-      <div class="p-name${cls.abstract?' abstract':''}">${cls.id}</div>
-      <span class="p-pill">${cls.abstract?'⬡ abstract · ':''}${cls.tag}</span>
-      <p class="p-desc">${cls.desc}</p>
-      ${cls.slots?.length ? `
-        <div class="p-slots-title">Own slots</div>
-        <div>${cls.slots.map(s=>`<span class="slot-chip">${s}</span>`).join('')}</div>
-      ` : '<div style="font-size:11.5px;color:var(--muted);">Slots inherited from parent only.</div>'}
+function psw(sub){
+  document.querySelectorAll(".prov-subtabs button").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".prov-panel").forEach(p=>p.classList.remove("active"));
+  event.target.classList.add("active");
+  document.getElementById("psub-"+sub).classList.add("active");
+}
+
+// PROVENANCE — history lists
+function renderHistList(kind){
+  const map=kind==="schemas"?schemaHistories:kind==="classes"?classHistories:propHistories;
+  const searchId=kind==="schemas"?"hist-schema-search":kind==="classes"?"hist-class-search":"hist-prop-search";
+  const listId=kind==="schemas"?"hist-schema-list":kind==="classes"?"hist-class-list":"hist-prop-list";
+  const q=(document.getElementById(searchId)?.value||"").toLowerCase();
+  const list=document.getElementById(listId);list.innerHTML="";
+  const entries=Object.entries(map);
+  if(!entries.length){list.innerHTML='<div class="empty" style="margin:12px;padding:24px 12px">No history yet.</div>';return;}
+
+  entries.forEach(([key,versions])=>{
+    const displayName=kind==="schemas"?key:versions[versions.length-1].name;
+    if(q&&!displayName.toLowerCase().includes(q))return;
+    const latestVer=versions[versions.length-1].version;
+    const item=document.createElement("div");
+    item.className="hist-list-item"+(selectedHist[kind.slice(0,-1)]===key?" active":"");
+    item.innerHTML=`<span>${displayName}</span><span class="ver">v${latestVer} · ${versions.length}</span>`;
+    item.onclick=()=>{selectedHist[kind.slice(0,-1)]=key;renderHistList(kind);renderHistDetail(kind,key);};
+    list.appendChild(item);
+  });
+}
+
+function renderHistDetail(kind,key){
+  const detailId=kind==="schemas"?"hist-schema-detail":kind==="classes"?"hist-class-detail":"hist-prop-detail";
+  const el=document.getElementById(detailId);
+  const map=kind==="schemas"?schemaHistories:kind==="classes"?classHistories:propHistories;
+  const versions=map[key]||[];
+  if(!versions.length){el.innerHTML='<div class="empty">No versions.</div>';return;}
+  const displayName=kind==="schemas"?key:versions[versions.length-1].name;
+
+  let html=`<div style="padding:12px 4px 20px">
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:4px">${displayName}</h3>
+    <div style="color:var(--muted);font-size:11.5px;font-family:var(--mono);margin-bottom:16px">${versions.length} version${versions.length>1?"s":""}</div>
+    <div class="prov-timeline">`;
+
+  [...versions].reverse().forEach(v=>{
+    const ts=v.timestamp?new Date(v.timestamp).toLocaleString():"";
+    let diffHtml="";
+    if(v.diff&&v.diff.summary){
+      diffHtml=`<div class="diff-detail">
+        <div class="diff-row"><strong>${v.diff.summary}</strong></div>`;
+      if(v.diff.changed_fields)diffHtml+=`<div class="diff-row">Fields changed: <span class="iri">${v.diff.changed_fields}</span></div>`;
+      if(v.diff.added_properties)diffHtml+=`<div class="diff-row">+ ${v.diff.added_properties.split(",").length} properties</div>`;
+      if(v.diff.removed_properties)diffHtml+=`<div class="diff-row">− ${v.diff.removed_properties.split(",").length} properties</div>`;
+      if(v.diff.definition_from&&v.diff.definition_to&&v.diff.definition_from!==v.diff.definition_to){
+        diffHtml+=`<div class="diff-row"><span class="from">${v.diff.definition_from.slice(0,80)}…</span><br><span class="to">${v.diff.definition_to.slice(0,80)}…</span></div>`;
+      }
+      diffHtml+=`</div>`;
+    }
+    if(kind==="schemas"){
+      const yml_link=v.yml_path?`<a href="https://github.com/${GITHUB_REPO}/blob/main/${v.yml_path}" target="_blank" class="issue-link">↗ ${v.yml_path}</a>`:"";
+      diffHtml=`<div class="diff-detail">
+        <div class="diff-row">${v.changes_summary||""}</div>
+        <div class="diff-row"><span class="prov-stat">${v.class_count} classes</span> <span class="prov-stat">${v.property_count} properties</span></div>
+        ${yml_link}
+      </div>`;
+    }
+    html+=`
+      <div class="prov-entry">
+        <div class="prov-left"><div class="ts">${ts}</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;"><div class="prov-dot"></div><div class="prov-line"></div></div>
+        <div class="prov-right"><div class="prov-card">
+          <h4>${displayName} <span class="ver-badge">v${v.version}</span></h4>
+          ${kind!=="schemas"?`<div class="meta">${v.source||""}</div>`:""}
+          ${diffHtml}
+        </div></div>
+      </div>`;
+  });
+  html+="</div></div>";
+  el.innerHTML=html;
+}
+
+// TRANSFORM
+function trTabSwitch(tab,btn){
+  document.querySelectorAll("#view-transform .query-tabs button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("tr-tab-demo").style.display=tab==="demo"?"block":"none";
+  document.getElementById("tr-tab-browser").style.display=tab==="browser"?"block":"none";
+  document.getElementById("tr-tab-api").style.display=tab==="api"?"block":"none";
+}
+
+// ---------------------------------------------------------------------------
+// BBQS Live Demo
+// ---------------------------------------------------------------------------
+const BBQS_ENTITIES=[
+  {type:"Investigator",icon:"👤",record:{name:"Laura Yenisa Cabrera Trujillo",email:"lcabrera@psu.edu",identifier:"0000-0002-1234-5678",affiliation:"Penn State University",researchAreas:"neuroethics, DBS"}},
+  {type:"Dataset",icon:"📊",record:{identifier:"DANDI:000123",name:"EMBER Dandiset 000123 — Human iEEG during mood tasks",species:"Human",modality:"iEEG",license:"CC-BY-4.0",url:"https://dandi.emberarchive.org/dandiset/000123"}},
+  {type:"Device",icon:"🔬",record:{name:"Neuropixels 2.0",modality:"electrophysiology",channels:384,commonIssues:"drift correction, spike sorting artifacts"}},
+  {type:"FundedProject",icon:"🏛️",record:{identifier:"1R61MH138612",name:"SeeMe: Sensing Emotion in Mood Episodes",funding:"NIMH",species:"Human",leadInstitution:"Stony Brook University"}},
+  {type:"Software",icon:"💻",record:{name:"bbqs-spike-sorter",programmingLanguage:"Python",license:"MIT",codeRepository:"https://github.com/brain-bbqs/spike-sorter"}},
+];
+let trDemoEntity=null;
+
+function initDemoCards(){
+  const wrap=document.getElementById("tr-demo-cards");
+  if(!wrap)return;
+  wrap.innerHTML=BBQS_ENTITIES.map((e,i)=>`
+    <div onclick="trSelectEntity(${i})" id="tr-demo-card-${i}" style="cursor:pointer;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;background:var(--surface);transition:border-color .15s">
+      <div style="font-size:20px;margin-bottom:6px">${e.icon}</div>
+      <div style="font-size:11.5px;font-weight:600;color:var(--text)">${e.type}</div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:3px">${Object.keys(e.record).length} fields</div>
+    </div>`).join("");
+  // populate target select
+  const sel=document.getElementById("tr-demo-tgt");
+  if(sel){sel.innerHTML="";allSources.filter(s=>s.label!=="bbqs").forEach(s=>{const o=document.createElement("option");o.value=s.label;o.textContent=s.label;sel.appendChild(o);});}
+}
+
+function trSelectEntity(idx){
+  BBQS_ENTITIES.forEach((_,i)=>{
+    const card=document.getElementById("tr-demo-card-"+i);
+    if(card)card.style.borderColor=i===idx?"var(--teal)":"var(--border)";
+  });
+  trDemoEntity=BBQS_ENTITIES[idx];
+  document.getElementById("tr-demo-step2").style.display="block";
+  document.getElementById("tr-demo-record").textContent=JSON.stringify(trDemoEntity.record,null,2);
+  trRunDemo();
+}
+
+function trRunDemo(){
+  if(!trDemoEntity)return;
+  const tgt=document.getElementById("tr-demo-tgt").value;
+  const record=trDemoEntity.record;
+
+  // Mirror Python transform_record(): find BBQS classes, follow alignment edges
+  // to target classes, match property names case-insensitively.
+  const srcClasses=allClasses.filter(c=>(c.sources||[c.source]).includes("bbqs"));
+  const tgtClassMap={};
+  allClasses.filter(c=>(c.sources||[c.source]).includes(tgt)).forEach(c=>{tgtClassMap[c.uid]=c;});
+
+  const propMap={};
+  for(const srcC of srcClasses){
+    for(const aln of (srcC.alignments||[])){
+      if(aln.distance>0.6)continue;
+      const tgtC=tgtClassMap[aln.target_uid];
+      if(!tgtC)continue;
+      const tgtProps={};
+      (tgtC.properties||[]).forEach(p=>{tgtProps[p.name.toLowerCase()]=p.name;});
+      for(const srcP of (srcC.properties||[])){
+        const sl=srcP.name.toLowerCase();
+        if(tgtProps[sl])propMap[sl]={target:tgtProps[sl],via:`${srcC.name} → ${aln.target_name}`,distance:aln.distance};
+      }
+    }
+  }
+
+  const mapped={},unmapped=[],details=[];
+  Object.entries(record).forEach(([field,value])=>{
+    const m=propMap[field.toLowerCase()];
+    if(m){mapped[m.target]=value;details.push({src:field,tgt:m.target,value,via:m.via,distance:m.distance});}
+    else unmapped.push(field);
+  });
+
+  const hasAlignments=Object.keys(propMap).length>0;
+  const mappedRows=details.map(d=>`
+    <tr>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px">${d.src}</td>
+      <td style="padding:7px 10px;color:var(--teal)">→</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px">${d.tgt}</td>
+      <td style="padding:7px 10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:var(--text-dim)">${String(d.value)}</td>
+      <td style="padding:7px 10px;font-size:10px;color:var(--muted)">${d.via} <span style="color:var(--border-soft)">(d=${d.distance.toFixed(2)})</span></td>
+    </tr>`).join("");
+
+  const unmappedHtml=unmapped.length?`
+    <div style="margin-top:14px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px">Unmapped fields (no alignment to ${tgt})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${unmapped.map(f=>`<span style="background:var(--bg-elev);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:11px;color:var(--muted)">${f}</span>`).join("")}
+      </div>
+    </div>`:"";
+
+  const warningHtml=!hasAlignments?`<div style="color:var(--yellow,#fbbf24);font-size:12px;padding:10px 0">No alignment edges found between bbqs and ${tgt}. Run the pipeline to compute cross-schema edges.</div>`:"";
+
+  document.getElementById("tr-demo-result").style.display="block";
+  document.getElementById("tr-demo-result-inner").innerHTML=warningHtml+(mappedRows?`
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="padding:6px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">bbqs field</th>
+        <th style="padding:6px 10px"></th>
+        <th style="padding:6px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">${tgt} field</th>
+        <th style="padding:6px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">value</th>
+        <th style="padding:6px 10px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">via alignment</th>
+      </tr></thead>
+      <tbody>${mappedRows}</tbody>
+    </table>`:`<div style="color:var(--muted);font-size:12.5px;padding:8px 0">No property-level mappings found for ${trDemoEntity.type} → ${tgt}.</div>`)+unmappedHtml+
+    `<div style="margin-top:14px;display:flex;gap:8px">
+      <button class="btn" onclick="dlJSON(${JSON.stringify(mapped)},'bbqs-to-${tgt}.json')" style="font-size:11.5px;padding:6px 12px">Download mapped JSON</button>
     </div>`;
 }
-
-window.addEventListener('resize', () => {
-  if (document.getElementById('view-meta').classList.contains('active')) renderGraph();
-});
-renderGraph();
-
-// ══ Ingest ════════════════════════════════════════════════════
-const dropZone   = document.getElementById('drop-zone');
-const fileInput  = document.getElementById('file-input');
-const previewBody= document.getElementById('preview-body');
-const footerMeta = document.getElementById('footer-meta');
-const ingestBtn  = document.getElementById('ingest-btn');
-const ingestLog  = document.getElementById('ingest-log');
-let currentYAML = '', currentFileName = '';
-
-dropZone.addEventListener('click', e => {
-  if (dropZone.classList.contains('has-file')) return;
-  fileInput.click();
-});
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault(); dropZone.classList.remove('over');
-  const f = e.dataTransfer.files[0]; if (f) loadFile(f);
-});
-fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
-
-function loadFile(file) {
-  currentFileName = file.name;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    currentYAML = ev.target.result;
-    const info = parseSchemaInfo(currentYAML);
-
-    // Update drop zone to "loaded" state
-    dropZone.classList.remove('full');
-    dropZone.classList.add('has-file');
-    document.getElementById('drop-inner').innerHTML = `
-      <div class="loaded-header">
-        <div class="loaded-icon">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z"/><path d="M9 2v4h4"/></svg>
-        </div>
-        <span class="loaded-name">${esc(file.name)}</span>
-        <button class="btn-ghost" id="clear-btn">✕</button>
-      </div>
-      <div class="schema-info">
-        <div class="si-row"><span class="si-label">Name</span><span class="si-val">${esc(info.name)}</span></div>
-        <div class="si-row"><span class="si-label">Classes</span><span class="si-val">${info.classes}</span></div>
-        <div class="si-row"><span class="si-label">Slots</span><span class="si-val">${info.slots}</span></div>
-        <div class="si-row"><span class="si-label">Size</span><span class="si-val">${(file.size/1024).toFixed(1)} KB</span></div>
-      </div>
-      <button class="another-btn" id="another-btn">Drop another file</button>`;
-    document.getElementById('clear-btn').addEventListener('click', clearFile);
-    document.getElementById('another-btn').addEventListener('click', clearFile);
-
-    // Show preview
-    previewBody.className = 'yaml-wrap';
-    previewBody.innerHTML = `<pre class="yaml-code">${highlightYAML(currentYAML)}</pre>`;
-    footerMeta.innerHTML = `<span style="color:var(--text-dim)">${esc(info.name)}</span> &middot; <span style="color:var(--muted)">${info.classes} classes</span>`;
-    ingestBtn.disabled = false;
-    ingestLog.classList.remove('visible');
-    ingestLog.innerHTML = '';
+function initTransform(){
+  // Demo tab is shown by default; hide the others
+  document.getElementById("tr-tab-browser").style.display="none";
+  document.getElementById("tr-tab-api").style.display="none";
+  const src=document.getElementById("tr-src"),tgt=document.getElementById("tr-tgt");
+  src.innerHTML="";tgt.innerHTML="";
+  allSources.forEach((s,i)=>{
+    const o1=document.createElement("option");o1.value=s.label;o1.textContent=s.label;src.appendChild(o1);
+    const o2=document.createElement("option");o2.value=s.label;o2.textContent=s.label;tgt.appendChild(o2);
+    if(i===1)o1.selected=true; if(i===0)o2.selected=true;
+  });
+  // Populate API tab
+  const firstSrc=allSources[0]?.label||"bbqs";
+  const secondSrc=allSources[1]?.label||"bids";
+  const getUrl=`${API_BASE}/api/transform?from=${firstSrc}&to=${secondSrc}`;
+  const urlEl=document.getElementById("tr-api-get-url");
+  if(urlEl){urlEl.textContent=`GET ${getUrl}`;urlEl.onclick=()=>cpText(getUrl);}
+  const tbody=document.getElementById("tr-api-endpoints");
+  if(tbody){
+    const endpoints=[
+      {method:"GET",url:`${API_BASE}/data/registry.json`,desc:"Full registry — all schemas, classes, alignments"},
+      {method:"GET",url:`${API_BASE}/data/versions/{ver}.json`,desc:"Frozen snapshot at a specific registry version"},
+      {method:"GET",url:`${API_BASE}/data/provenance.json`,desc:"Changelog of every schema ingestion"},
+    ];
+    tbody.innerHTML=endpoints.map(e=>`<tr style="border-bottom:1px solid var(--border-soft)">
+      <td style="padding:7px 10px"><span style="background:var(--teal-soft);color:var(--teal);border:1px solid var(--teal-line);border-radius:4px;padding:1px 6px;font-family:var(--mono);font-size:10px">${e.method}</span></td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--teal)"><a href="${e.url}" target="_blank" style="color:var(--teal);text-decoration:none">${e.url.replace(API_BASE,"")}</a></td>
+      <td style="padding:7px 10px;color:var(--text-dim);font-size:11.5px">${e.desc}</td>
+    </tr>`).join("");
+  }
+}
+function trOnFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    trCsv=ev.target.result;
+    const lines=trCsv.trim().split("\n");
+    trHeaders=lines[0].split(",").map(h=>h.trim());
+    trRows=lines.slice(1).map(l=>l.split(",").map(c=>c.trim()));
+    document.getElementById("tr-drop-label").textContent=file.name;
+    document.getElementById("tr-file-info").style.display="block";
+    document.getElementById("tr-file-info").innerHTML=`${trRows.length} rows · ${trHeaders.length} columns: <span class="iri">${trHeaders.join(", ")}</span>`;
+    document.getElementById("tr-schema-picker").style.display="block";
+    trBuildMapping();
   };
   reader.readAsText(file);
 }
+function trBuildMapping(){
+  const src=document.getElementById("tr-src").value,tgt=document.getElementById("tr-tgt").value;
+  if(!trHeaders.length||!src||!tgt)return;
+  document.getElementById("tr-mapping").style.display="block";
+  document.getElementById("tr-convert").style.display="block";
 
-function clearFile() {
-  currentYAML = ''; currentFileName = '';
-  dropZone.classList.add('full');
-  dropZone.classList.remove('has-file');
-  document.getElementById('drop-inner').innerHTML = `
-    <div class="drop-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><polyline points="9 15 12 18 15 15"/></svg>
-    </div>
-    <p class="drop-title">Drop a LinkML YAML schema</p>
-    <p class="drop-sub">or click anywhere to browse</p>
-    <p class="drop-ext">.yml · .yaml</p>`;
-  previewBody.className = 'preview-empty';
-  previewBody.innerHTML = `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;opacity:.2;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-    <span>Drop a file on the left to preview it</span>`;
-  footerMeta.innerHTML = `<span style="color:var(--muted)">No file loaded</span>`;
-  ingestBtn.disabled = true;
-  ingestLog.classList.remove('visible');
-  fileInput.value = '';
+  const srcClasses=allClasses.filter(c=>c.source===src);
+  const tgtClasses=allClasses.filter(c=>c.source===tgt);
+  const srcProps=new Set();srcClasses.forEach(c=>c.properties.forEach(p=>srcProps.add(p.name)));
+  const tgtProps=[];tgtClasses.forEach(c=>c.properties.forEach(p=>{if(!tgtProps.find(x=>x.name===p.name))tgtProps.push(p);}));
+
+  trMapping={};
+  const rows=trHeaders.map(h=>{
+    // Try direct match on property name first
+    let candidate=tgtProps.find(p=>p.name.toLowerCase()===h.toLowerCase());
+    // Otherwise look for source class alignment
+    let alnHint="";
+    if(!candidate){
+      const srcCls=srcClasses.find(c=>c.name.toLowerCase()===h.toLowerCase()||c.properties.some(p=>p.name.toLowerCase()===h.toLowerCase()));
+      if(srcCls){
+        const aln=srcCls.alignments.find(a=>a.target_source===tgt&&a.distance<.4);
+        if(aln){alnHint=` (via ${srcCls.name}↔${aln.target_name} d=${aln.distance.toFixed(2)})`;candidate=tgtProps.find(p=>true);}
+      }
+    }
+    trMapping[h]=candidate?candidate.name:"";
+    const options=[`<option value="">— skip —</option>`,...tgtProps.map(p=>`<option value="${p.name}"${candidate&&candidate.name===p.name?" selected":""}>${p.name}</option>`)].join("");
+    return `<tr><td><strong>${h}</strong>${alnHint?`<div style="color:var(--muted);font-size:10.5px;margin-top:2px">${alnHint}</div>`:""}</td><td>→</td><td><select onchange="trMapping['${h}']=this.value">${options}</select></td></tr>`;
+  }).join("");
+
+  document.getElementById("tr-mapping-table").innerHTML=`<thead><tr><th>Source column</th><th></th><th>Target property</th></tr></thead><tbody>${rows}</tbody>`;
+}
+function trConvert(){
+  const newHeaders=trHeaders.map(h=>trMapping[h]).filter(Boolean);
+  const keepIdx=trHeaders.map((h,i)=>trMapping[h]?i:-1).filter(i=>i>=0);
+  const lines=[newHeaders.join(",")];
+  trRows.forEach(row=>{lines.push(keepIdx.map(i=>row[i]||"").join(","));});
+  dlText(lines.join("\n"),"transformed.csv","text/csv");
 }
 
-ingestBtn.addEventListener('click', () => {
-  if (!currentYAML) return;
-  const info = parseSchemaInfo(currentYAML);
-  const title = encodeURIComponent(`Schema submission: ${info.name}`);
-  const body  = encodeURIComponent(
-    `## Schema submission\n\nSubmitted via NeuroGhost UI · ${new Date().toISOString().slice(0,10)}\n\n\`\`\`yaml\n${currentYAML.slice(0,8000)}\n\`\`\``
-  );
-  const url = `https://github.com/sensein/NeuroGhost/issues/new?title=${title}&body=${body}&labels=schema-submission`;
-
-  ingestLog.innerHTML = '';
-  ingestLog.classList.add('visible');
-  ingestBtn.disabled = true;
-
-  const lines = [
-    ['→ Validating schema structure…', ''],
-    [`→ Parsed: ${info.name} · ${info.classes} classes · ${info.slots} slots`, ''],
-    ['→ Opening GitHub issue to trigger CI pipeline…', ''],
-    ['✓ Issue created — GitHub Actions will validate, ingest, align, and archive.', 'log-ok'],
-  ];
-  lines.forEach(([text, cls], i) => {
-    setTimeout(() => {
-      const d = document.createElement('div');
-      d.className = 'log-line ' + cls;
-      d.textContent = text;
-      ingestLog.appendChild(d);
-      ingestLog.scrollTop = ingestLog.scrollHeight;
-      if (i === lines.length - 1) window.open(url, '_blank');
-    }, i * 420);
+// QUERY BUILDER
+function initQuery(){
+  const src=document.getElementById("q-src"),asrc=document.getElementById("q-aln-src");
+  allSources.forEach(s=>{
+    const o1=document.createElement("option");o1.value=s.label;o1.textContent=s.label;src.appendChild(o1);
+    const o2=document.createElement("option");o2.value=s.label;o2.textContent=s.label;asrc.appendChild(o2);
   });
-});
-
-function highlightYAML(raw) {
-  return raw.split('\n').map(line => {
-    if (/^\s*#/.test(line)) return `<span class="y-comment">${esc(line)}</span>`;
-    return line.replace(/^(\s*)([a-zA-Z_][a-zA-Z0-9_\-]*)(\s*:)(.*)/,
-      (_, ind, key, col, rest) => `${esc(ind)}<span class="y-key">${esc(key)}</span>${esc(col)}${colorVal(rest)}`);
-  }).join('\n');
 }
+function qmSwitch(mode){
+  document.querySelectorAll(".query-tabs button").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".query-mode").forEach(m=>m.classList.remove("active"));
+  event.target.classList.add("active");
+  document.getElementById("qm-"+mode).classList.add("active");
+}
+function runQuery(){
+  const what=document.getElementById("q-what").value;
+  const src=document.getElementById("q-src").value;
+  const alnSrc=document.getElementById("q-aln-src").value;
+  const dist=parseFloat(document.getElementById("q-dist").value);
+  const name=(document.getElementById("q-name").value||"").toLowerCase();
 
   // Build Cypher preview
   let cypher=`MATCH (n:${what==="properties"?"RegistryProperty":"RegistryClass"})`;
@@ -670,7 +1071,7 @@ function highlightYAML(raw) {
     clauses.push(`r.distance <= ${dist}`);
   }
   if(clauses.length)cypher+=`\nWHERE ${clauses.join("\n  AND ")}`;
-  cypher+=`\nRETURN n.name, n.iri, n.id${alnSrc&&what==="classes"?", t.name, r.distance":""}`;
+  cypher+=`\nRETURN n.name, n.iri, n.hash_id${alnSrc&&what==="classes"?", t.name, r.distance":""}`;
 
   document.getElementById("q-cypher").style.display="block";
   document.getElementById("q-cypher").textContent=cypher;
@@ -711,14 +1112,80 @@ function highlightYAML(raw) {
   </div>`;
 }
 
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// LLM MODE
+function copyClaudePrompt(){
+  const q=document.getElementById("llm-question").value.trim();
+  if(!q){alert("Type a question first.");return;}
+  const summary={
+    sources: allSources.map(s=>s.label),
+    class_count: allClasses.length,
+    example_class: allClasses[0]?{name:allClasses[0].name,source:allClasses[0].source,iri:allClasses[0].iri,properties:allClasses[0].properties.slice(0,3).map(p=>p.name),alignments_sample:allClasses[0].alignments.slice(0,2)}:{}
+  };
+  const prompt=`You are helping query a schema registry (NeuroRegistry). The data structure is:
 
-function parseSchemaInfo(yaml) {
-  const name    = (yaml.match(/^name:\s*(.+)/m)||[])[1]?.trim() || 'unknown';
-  const classes = (yaml.match(/^classes:/m) ? (yaml.split(/^classes:/m)[1]||'').match(/^\s{2}\w/mg)||[] : []).length;
-  const slots   = (yaml.match(/^slots:/m) ? (yaml.split(/^slots:/m)[1]||'').match(/^\s{2}\w/mg)||[] : []).length;
-  return { name, classes, slots };
+${JSON.stringify(summary,null,2)}
+
+Every class has: uid, name, iri, source, definition, version, abstract, properties[], subclass_of[], alignments[{target_name, target_source, distance, method}].
+
+USER QUESTION: ${q}
+
+Respond ONLY with a JSON object in this exact format (no other text):
+{
+  "cypher": "the equivalent Cypher query",
+  "filter": {
+    "kind": "classes|properties|alignments",
+    "source": "optional source label",
+    "aligned_to_source": "optional target source",
+    "max_distance": 0.5,
+    "name_contains": "optional string"
+  },
+  "explanation": "one sentence describing what will be returned"
+}`;
+  cpText(prompt);
+  alert("Prompt copied. Paste it into claude.ai, then paste the response back.");
 }
+function runLLMResponse(){
+  const raw=document.getElementById("llm-response").value.trim();
+  let obj;
+  try{obj=JSON.parse(raw.replace(/```json|```/g,"").trim());}
+  catch(e){alert("Not valid JSON.");return;}
+  const f=obj.filter||{};
+  document.getElementById("q-what").value=f.kind||"classes";
+  document.getElementById("q-src").value=f.source||"";
+  document.getElementById("q-aln-src").value=f.aligned_to_source||"";
+  document.getElementById("q-dist").value=f.max_distance!=null?f.max_distance:0.5;
+  document.getElementById("q-name").value=f.name_contains||"";
+  runQuery();
+  // Show explanation
+  const results=document.getElementById("qm-llm-results");
+  results.innerHTML=`<div class="claude-box"><div style="color:var(--text-dim);font-size:12.5px;margin-bottom:8px">${obj.explanation||""}</div>${obj.cypher?`<div class="cypher-preview">${obj.cypher}</div>`:""}<div style="color:var(--muted);font-size:11.5px">Results shown in builder tab.</div></div>`;
+  qmSwitch({target:document.querySelector(".query-tabs button")});
+  document.querySelectorAll(".query-tabs button").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".query-tabs button")[0].classList.add("active");
+  document.querySelectorAll(".query-mode").forEach(m=>m.classList.remove("active"));
+  document.getElementById("qm-builder").classList.add("active");
+}
+
+// SUBMIT
+function submitSchema(){
+  const name=document.getElementById("schema-name").value.trim();
+  const yaml=document.getElementById("schema-yaml").value.trim();
+  if(!name){alert("Enter a schema name.");return;}
+  if(!yaml){alert("Paste your YAML.");return;}
+  if(!yaml.includes("classes:")){alert("YAML must contain 'classes:'.");return;}
+  window.open(`https://github.com/${GITHUB_REPO}/issues/new?title=${encodeURIComponent("schema-submission:"+name)}&body=${encodeURIComponent("```yaml\n"+yaml+"\n```")}`,"_blank");
+}
+
+// NAV
+function sv(name){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("view-"+name).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b=>{if(b.getAttribute("onclick")===`sv('${name}')`)b.classList.add("active");});
+  if(name==="graph")setTimeout(renderGraph,50);
+}
+
+boot();
 </script>
 </body>
 </html>
