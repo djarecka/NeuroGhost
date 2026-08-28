@@ -1,6 +1,6 @@
 name: Generate Pydantic Models
 
-# schema_registry_utils/models.py is generated from schemas/meta_model.yaml by
+# schema_registry_utils/models.py is generated from meta_model.yaml by
 # ./scripts/gen_models.sh (which wraps `linkml gen-pydantic`). This workflow
 # keeps the two in sync:
 #
@@ -10,18 +10,18 @@ name: Generate Pydantic Models
 #
 # LinkML is pinned in requirements.txt (gen-pydantic bakes the metamodel version
 # into its output, and generator changes can shift field defaults that feed
-# compute_hash_id). Both jobs below install that pin rather than restating the
+# compute_content_hash). Both jobs below install that pin rather than restating the
 # version here, so there is only one place to bump.
 on:
   push:
     branches: [main]
     paths:
-      - "schemas/meta_model.yaml"
+      - "meta_model.yaml"
       - "scripts/gen_models.sh"
       - ".github/workflows/gen_models.yml"
   pull_request:
     paths:
-      - "schemas/meta_model.yaml"
+      - "meta_model.yaml"
       - "scripts/gen_models.sh"
       - "schema_registry_utils/models.py"
   workflow_dispatch:
@@ -82,7 +82,7 @@ jobs:
       - name: Regenerate models.py
         run: ./scripts/gen_models.sh
 
-      # The generated models are strict (hash_id/uid required, provenance
+      # The generated models are strict (id/sha256_hash required, provenance
       # inlined), so a meta-model change can invalidate the builders in
       # ingest_linkml.py / seed.py. Committing a models.py that breaks
       # ingestion would take the nightly rebuild down, so gate on the suite.

@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # GENERATED FILE — DO NOT EDIT BY HAND.
 #
-# Produced by ./scripts/gen_models.sh from schemas/meta_model.yaml.
+# Produced by ./scripts/gen_models.sh from meta_model.yaml.
 # Edit the schema and regenerate; hand edits are overwritten by
 # .github/workflows/gen_models.yml on the next schema change.
 # ---------------------------------------------------------------------------
@@ -86,13 +86,28 @@ linkml_meta = LinkMLMeta({'default_prefix': 'screg',
      'name': 'schema_registry_meta_model',
      'prefixes': {'linkml': {'prefix_prefix': 'linkml',
                              'prefix_reference': 'https://w3id.org/linkml/'},
+                  'owl': {'prefix_prefix': 'owl',
+                          'prefix_reference': 'http://www.w3.org/2002/07/owl#'},
                   'prov': {'prefix_prefix': 'prov',
                            'prefix_reference': 'http://www.w3.org/ns/prov#'},
+                  'qudt': {'prefix_prefix': 'qudt',
+                           'prefix_reference': 'http://qudt.org/schema/qudt/'},
+                  'rdfs': {'prefix_prefix': 'rdfs',
+                           'prefix_reference': 'http://www.w3.org/2000/01/rdf-schema#'},
                   'screg': {'prefix_prefix': 'screg',
                             'prefix_reference': 'https://example.org/schema-registry-utils/'},
                   'skos': {'prefix_prefix': 'skos',
                            'prefix_reference': 'http://www.w3.org/2004/02/skos/core#'}},
-     'source_file': 'schemas/meta_model.yaml'} )
+     'source_file': 'meta_model.yaml',
+     'subsets': {'HashSubset': {'description': 'Slots that are part of a '
+                                               "RegistryEntity subclass's content "
+                                               'hash (sha256_hash). '
+                                               'schema_registry_utils/hashing.py '
+                                               'derives the identity field set '
+                                               "from each field's in_subset "
+                                               'metadata.',
+                                'from_schema': 'https://example.org/schema-registry-utils/meta-model',
+                                'name': 'HashSubset'}}} )
 
 class SkosMappingTypeEnum(str, Enum):
     """
@@ -118,26 +133,188 @@ class SkosMappingTypeEnum(str, Enum):
     """
     The registry entity is related to the external concept.
     """
+    EQUIVALENT_CLASS = "EQUIVALENT_CLASS"
+    """
+    Strict logical equivalence. Exclusively human-issued and used sparingly: it is the one predicate the alignment pipeline's reasoner-based repair pass may treat as OWL equivalence, so it must never be machine-assigned.
+    """
+
+
+class ReviewStatusEnum(str, Enum):
+    """
+    Curation lifecycle of a Mapping.
+    """
+    PROPOSED = "PROPOSED"
+    """
+    Machine- or human-proposed; not yet reviewed.
+    """
+    ACCEPTED = "ACCEPTED"
+    """
+    Validated by a reviewer; safe for high-rigor queries.
+    """
+    REJECTED = "REJECTED"
+    """
+    Reviewed and refuted; retained as negative evidence.
+    """
+    SUPERSEDED = "SUPERSEDED"
+    """
+    Replaced by a newer mapping.
+    """
+
+
+class RegistryRuleTypeEnum(str, Enum):
+    """
+    The kind of constraint a RegistryRule expresses. `rule_value` (a plain string) carries the constraint's parameter, interpreted per rule_type — the grammar for each entry is given below. The declarative types are per-facet and atomic (one RegistryRule per facet) so cross-schema alignment and class-level slot_usage refinement both work facet-by-facet without the redundant restatement a bundled type would force. Facet variants that used to require a paired flag or language slot are encoded here as separate enum values instead (MIN_VALUE_EXCLUSIVE, EXPRESSION_SHACL, …), so the whole model reads as `rule_type + rule_value + applies_to + used_in_class`.
+    """
+    PATTERN = "PATTERN"
+    """
+    Value must match a regex. `rule_value` is the pattern, preserved verbatim from the source (dandi-schema `Field(pattern=NAME_PATTERN)`, LinkML `pattern:`, JSON Schema `"pattern"`).
+    """
+    FORMAT = "FORMAT"
+    """
+    Value must satisfy a named semantic format. `rule_value` is the format keyword ("email", "uri", "uuid", "date-time", "ipv4", …). Distinct from PATTERN so two schemas both declaring `"format": "email"` collapse to the same RegistryRule even if their fallback regex enforcement differs.
+    """
+    MIN_VALUE = "MIN_VALUE"
+    """
+    Numeric value must satisfy a lower bound (inclusive). `rule_value` is the bound as a decimal string. A schema stating only a lower bound produces just this RegistryRule.
+    """
+    MIN_VALUE_EXCLUSIVE = "MIN_VALUE_EXCLUSIVE"
+    """
+    Numeric value must satisfy a strict lower bound (value > rule_value rather than value >= rule_value). Separate enum value rather than a paired `exclusive_minimum` flag so "strict lower bound" reads as one atomic constraint.
+    """
+    MAX_VALUE = "MAX_VALUE"
+    """
+    Numeric value must satisfy an upper bound (inclusive). `rule_value` is the bound as a decimal string.
+    """
+    MAX_VALUE_EXCLUSIVE = "MAX_VALUE_EXCLUSIVE"
+    """
+    Numeric value must satisfy a strict upper bound (value < rule_value rather than value <= rule_value).
+    """
+    MIN_LENGTH = "MIN_LENGTH"
+    """
+    String length must satisfy a lower bound. `rule_value` is the bound as an integer string. Distinct from MIN_CARDINALITY so string-character and list-item bounds never hash to the same RegistryRule.
+    """
+    MAX_LENGTH = "MAX_LENGTH"
+    """
+    String length must satisfy an upper bound. `rule_value` is the bound as an integer string (dandi-schema's `Field(max_length=10000)` on `description`).
+    """
+    MIN_CARDINALITY = "MIN_CARDINALITY"
+    """
+    Multivalued property must carry at least `rule_value` items. Distinct from MIN_LENGTH to keep list-count and string-length constraints separable.
+    """
+    MAX_CARDINALITY = "MAX_CARDINALITY"
+    """
+    Multivalued property must carry at most `rule_value` items. Exact-one is enforced as MIN_CARDINALITY=1 plus MAX_CARDINALITY=1, two RegistryRules — dandi-schema `List[AccessRequirements] = Field(max_length=1)`.
+    """
+    REQUIRED = "REQUIRED"
+    """
+    Property must be present. `rule_value` is "true" or "false" — "false" explicitly asserts optional (some sources state this).
+    """
+    MULTIVALUED = "MULTIVALUED"
+    """
+    Property may (`rule_value` = "true") or may not (`rule_value` = "false") carry multiple values.
+    """
+    RANGE = "RANGE"
+    """
+    Property's value type is refined to a specific range in the enclosing class scope. `rule_value` is an XSD CURIE (e.g. "xsd:integer") or a RegistryValueSet id, same shape as RegistryProperty.property_range. Distinct from that slot: property_range is the property's default type, a RANGE RegistryRule with `used_in_class` set is a per-class narrowing (LinkML `slot_usage` range refinement, JSON Schema `if/then` type switches).
+    """
+    ENUM_MEMBERSHIP = "ENUM_MEMBERSHIP"
+    """
+    Value must be drawn from a RegistryValueSet. `rule_value` is the RegistryValueSet's id. Distinct from setting property_range to a RegistryValueSet — that is a type declaration; this is the enforceable check.
+    """
+    DEFAULT = "DEFAULT"
+    """
+    Property takes `rule_value` when absent. A "fill-in" rule, not a validator — retained in RegistryRuleTypeEnum because sources declare defaults alongside constraints (LinkML `ifabsent`, JSON Schema `default`, Pydantic `Field(default=...)`) and consumers read them from the same RegistryRule graph. `rule_value` preserves the source form verbatim; downstream tools parse per-source (LinkML `ifabsent` mini-expressions, JSON default as JSON text).
+    """
+    EXPRESSION_SHACL = "EXPRESSION_SHACL"
+    """
+    W3C SHACL shape body (Turtle or JSON-LD). `rule_value` is the shape source, preserved verbatim. Registry does not currently execute these.
+    """
+    EXPRESSION_SHEX = "EXPRESSION_SHEX"
+    """
+    ShEx shape expression. `rule_value` is the shape source.
+    """
+    EXPRESSION_JSON_SCHEMA = "EXPRESSION_JSON_SCHEMA"
+    """
+    JSON Schema fragment — typically the `if/then/else` or `allOf`/`anyOf`/`oneOf` composition that could not be expressed as a declarative rule_type. `rule_value` is the JSON Schema source.
+    """
+    EXPRESSION_SPARQL_ASK = "EXPRESSION_SPARQL_ASK"
+    """
+    SPARQL ASK query. `rule_value` is the query text; the constraint holds iff the query returns true.
+    """
+    EXPRESSION_PYTHON = "EXPRESSION_PYTHON"
+    """
+    Python source (dandi-schema `@model_validator` bodies, Pydantic `@field_validator` bodies). `rule_value` is the function body, preserved for record only — the registry does not execute these.
+    """
+    EXPRESSION_LINKML_RULES = "EXPRESSION_LINKML_RULES"
+    """
+    A LinkML `rules:` block (preconditions/postconditions in LinkML's own rule language). `rule_value` is the rules-block source.
+    """
+    EXPRESSION_PLAIN_TEXT = "EXPRESSION_PLAIN_TEXT"
+    """
+    Natural-language description — the source stated a constraint prose-only, with no machine-checkable form. `rule_value` is the prose.
+    """
+
+
+class RegistryRuleSeverityEnum(str, Enum):
+    """
+    How a RegistryRule failure is to be reported by a downstream validator. Mirrors SHACL's sh:severity levels; a source schema that does not state a severity ingests as ERROR (see RegistryRule.severity ifabsent).
+    """
+    ERROR = "ERROR"
+    """
+    Failure is a hard violation.
+    """
+    WARNING = "WARNING"
+    """
+    Failure is a recommendation the source encodes but does not hard-fail on.
+    """
+    INFO = "INFO"
+    """
+    Failure is advisory only — a hint, not a defect.
+    """
 
 
 
 class RegistryEntity(ConfiguredBaseModel):
     """
-    Common base for content-addressed, provenance-tracked objects registered in the schema registry. Identity (hash_id) is derived from content, so there is no separate version slot: a change produces a new hash_id, with lineage tracked via derived_from on each ProvenanceEntry.
+    Common base for provenance-tracked objects registered in the schema registry.
+    Identity vs. content-address are two separate concerns here:
+    * `id` is a UUID (uuid4) minted on first ingest — the registry's stable
+      graph handle. Cross-references (class properties, parent_class,
+      class_mixins, property_range, ProvenanceEntry.attests_to) all use
+      UUIDs, so every FK is uniform regardless of the referent's type or
+      whether it is content-addressed.
+
+    * `sha256_hash` is a content fingerprint derived from the fields marked
+      `in_subset: HashSubset` in this schema. It is not the identifier;
+      instead it drives cross-source deduplication — on ingest, an entity
+      whose sha256_hash already exists in the graph reuses its existing
+      `id` rather than minting a new UUID, so the same concept ingested
+      from two sources collapses to one row that accumulates provenance
+      from both. A content change produces a different sha256_hash (a
+      different entity), never an edit of the old one; lineage is tracked
+      via was_derived_from on each ProvenanceEntry.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'abstract': True,
          'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
-                       'SkosMapping',
-                       'Relation',
-                       'Rule',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
                        'Transform',
-                       'PermissibleValue']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
-    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'skos:definition'} })
+    provenance: list[str] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects id or sha256_hash. Mirrored by ProvenanceEntry.attests_to so the relationship round-trips in either direction — the entity owns the list, and each entry names the entity it belongs to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping'], 'inverse': 'attests_to'} })
+    skos_mappings: Optional[list[str]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences). Reference by Mapping.id (UUID) — the mapping is a separate node so it can be queried and shared across owners; SSSOM export still materializes subject_id from the owning entity's id, so exported mapping sets remain standalone, standards-conformant records.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
+    concept_uri: Optional[str] = Field(default=None, description="""Ontology IRI for this entity (class or property), preserved from the source schema on ingestion. Not part of the content hash; used for alignment and cross-source lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
 
 
 class RegistryClass(RegistryEntity):
@@ -146,111 +323,187 @@ class RegistryClass(RegistryEntity):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    properties: Optional[list[str]] = Field(default=None, description="""The set of properties that belong to this class.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass']} })
-    relations: Optional[list[str]] = Field(default=None, description="""Directed relations from this class to other registry entities.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass']} })
-    is_a: Optional[str] = Field(default=None, description="""The class this class inherits from (stored as hash_id FK).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass']} })
-    mixins: Optional[list[str]] = Field(default=None, description="""Additional classes mixed into this class.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass']} })
-    class_uri: Optional[str] = Field(default=None, description="""Ontology IRI for this class, preserved from the source schema on ingestion. Not part of the content hash; used for alignment and cross-source lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass']} })
-    abstract: Optional[bool] = Field(default=False, description="""Whether this registered class is itself declared abstract.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass'], 'ifabsent': 'false'} })
-    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
-                       'SkosMapping',
-                       'Relation',
-                       'Rule',
+    properties: Optional[list[str]] = Field(default=None, description="""The set of properties that belong to this class.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass'], 'in_subset': ['HashSubset']} })
+    parent_class: Optional[str] = Field(default=None, description="""The class this class inherits from (stored as UUID id FK).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'linkml:is_a'} })
+    class_mixins: Optional[list[str]] = Field(default=None, description="""Additional classes mixed into this class.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass'], 'in_subset': ['HashSubset']} })
+    is_abstract: Optional[bool] = Field(default=False, description="""Whether this registered class is itself declared abstract.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass'],
+         'ifabsent': 'false',
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'linkml:abstract'} })
+    is_mixin: Optional[bool] = Field(default=False, description="""Whether this registered class is itself declared a mixin (a class designed to be composed into others rather than instantiated directly). Independent of `is_abstract`; the two flags may be true simultaneously.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass'],
+         'ifabsent': 'false',
+         'slot_uri': 'linkml:mixin'} })
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
                        'Transform',
-                       'PermissibleValue']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
-    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'skos:definition'} })
+    provenance: list[str] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects id or sha256_hash. Mirrored by ProvenanceEntry.attests_to so the relationship round-trips in either direction — the entity owns the list, and each entry names the entity it belongs to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping'], 'inverse': 'attests_to'} })
+    skos_mappings: Optional[list[str]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences). Reference by Mapping.id (UUID) — the mapping is a separate node so it can be queried and shared across owners; SSSOM export still materializes subject_id from the owning entity's id, so exported mapping sets remain standalone, standards-conformant records.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
+    concept_uri: Optional[str] = Field(default=None, description="""Ontology IRI for this entity (class or property), preserved from the source schema on ingestion. Not part of the content hash; used for alignment and cross-source lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
 
 
 class RegistryProperty(RegistryEntity):
     """
-    A registered property (data element) representing a characteristic or attribute that can be attached to a RegistryClass, e.g. \"age\". Usage constraints (required, multivalued, min/max, pattern) are deliberately not here — they belong on Rule, since the same property can be required in one source's usage and optional in another's without being a different concept.
+    A registered property (data element) representing a characteristic or attribute that can be attached to a RegistryClass, e.g. \"age\". Usage constraints (required, multivalued, min/max, pattern) are deliberately not here — they belong on RegistryRule, since the same property can be required in one source's usage and optional in another's without being a different concept.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    range: str = Field(default=..., description="""The data type or value range for this property (e.g. a primitive type name such as \"string\" or \"integer\", or the hash_id of a ValueSet for enumerated values).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty']} })
-    units: Optional[str] = Field(default=None, description="""Unit of measure for this property's values, if applicable.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty']} })
-    slot_uri: Optional[str] = Field(default=None, description="""Ontology IRI for this property, preserved from the source schema on ingestion. Not part of the content hash; used for alignment and cross-source lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty']} })
-    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
-                       'SkosMapping',
-                       'Relation',
-                       'Rule',
+    property_range: str = Field(default=..., description="""The data type or value range for this property: a canonical XSD CURIE for primitives (e.g. \"xsd:string\", \"xsd:integer\"), or the id of a RegistryClass or RegistryValueSet for entity/enum references. Bare primitive names (\"string\", \"float\") are deprecated: datatype compatibility is an alignment signal and an incompatibility veto, so \"float\", \"xsd:float\" and \"double\" must not read as three unrelated types. Ingestion normalizes source-native type names to XSD CURIEs.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty'], 'slot_uri': 'linkml:range'} })
+    unit: Optional[UnitOfMeasure] = Field(default=None, description="""Structured unit of measure for this property's values, if applicable. ucum_code is the primary field for programmatic unit-compatibility checks (align.py's unit veto); the others are supplementary.
+Deliberately inlined: UnitOfMeasure is a value type (no `id` slot, no independent identity — two properties measured in \"mV\" don't need to share a graph node), so referencing by id doesn't apply here the way it does for provenance/skos_mappings. UnitOfMeasure also carries `annotations.db_inline: true` so its fields flatten into the parent's LadybugDB row instead of forming a separate table.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryProperty'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'qudt:unit'} })
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
                        'Transform',
-                       'PermissibleValue']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
-    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'skos:definition'} })
+    provenance: list[str] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects id or sha256_hash. Mirrored by ProvenanceEntry.attests_to so the relationship round-trips in either direction — the entity owns the list, and each entry names the entity it belongs to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping'], 'inverse': 'attests_to'} })
+    skos_mappings: Optional[list[str]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences). Reference by Mapping.id (UUID) — the mapping is a separate node so it can be queried and shared across owners; SSSOM export still materializes subject_id from the owning entity's id, so exported mapping sets remain standalone, standards-conformant records.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
+    concept_uri: Optional[str] = Field(default=None, description="""Ontology IRI for this entity (class or property), preserved from the source schema on ingestion. Not part of the content hash; used for alignment and cross-source lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
 
 
 class ProvenanceEntry(ConfiguredBaseModel):
     """
-    One source's attestation of a registry entity — where it came from and how/when this record was generated (W3C PROV-O fields). An entity accumulates one ProvenanceEntry per source that attests to it; identity (hash_id) never depends on provenance, so the same entity can carry many. Stored as its own node, linked via HAS_PROVENANCE / HAS_PROVENANCE_P edges (multivalued — cannot be inlined into the parent's node table). Identified by uid, not hash_id — a ProvenanceEntry is a per-attestation record, not a deduplicated, content-addressed registry entity.
+    One source's attestation of a registry entity — where it came from and how/when this record was generated (W3C PROV-O fields). An entity accumulates one ProvenanceEntry per source that attests to it; identity (id) never depends on provenance, so the same entity can carry many. Stored as its own node, linked via HAS_PROVENANCE / HAS_PROVENANCE_P edges (multivalued — cannot be inlined into the parent's node table). Identified by id — a ProvenanceEntry is a per-attestation record, not a deduplicated, content-addressed registry entity.
+    Carries `attests_to` (the reverse of `RegistryEntity.provenance`) so the entry is standalone-readable: schema regeneration can start from \"every ProvenanceEntry whose had_primary_source is this schema\" and walk `attests_to` in one hop instead of scanning every entity's provenance list. The forward edge (entity → provenance) and the reverse slot (provenance → entity) express the same fact and must be kept in sync at ingest.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    uid: str = Field(default=..., description="""Random unique identifier for this ProvenanceEntry record (not content-derived — a per-attestation record, not a deduplicated entity).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
-    source: str = Field(default=..., description="""Label of the source schema this attestation came from, e.g. \"bids\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry']} })
-    source_description: Optional[str] = Field(default=None, description="""This source's own description text for the entity, if it differs from the entity's merged description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry']} })
-    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
-    generated_at: datetime  = Field(default=..., description="""ISO-8601 timestamp this ProvenanceEntry was generated.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:generatedAtTime'} })
-    attributed_to: str = Field(default=..., description="""Agent (user or system) that generated this ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasAttributedTo'} })
-    activity: Optional[str] = Field(default=None, description="""The activity that produced this ProvenanceEntry, e.g. \"ingestion\", \"manual\", \"alignment\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasGeneratedBy'} })
-    derived_from: Optional[list[str]] = Field(default=None, description="""hash_ids of entities this entity was derived from, if any. Stored as a JSON-encoded string array in the graph database.""", json_schema_extra = { "linkml_meta": {'annotations': {'db_json': {'tag': 'db_json', 'value': True}},
-         'domain_of': ['ProvenanceEntry'],
-         'slot_uri': 'prov:wasDerivedFrom'} })
-
-
-class SkosMapping(ConfiguredBaseModel):
-    """
-    A semantic mapping from a registry entity to an external vocabulary concept (SKOS mapping relation). Stored as its own node and linked via HAS_SKOS_MAPPING / HAS_SKOS_MAPPING_P edges.
-    """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
-
-    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
-                       'SkosMapping',
-                       'Relation',
-                       'Rule',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
                        'Transform',
-                       'PermissibleValue']} })
-    mapping_type: Optional[SkosMappingTypeEnum] = Field(default=None, description="""The kind of SKOS mapping relation this represents.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SkosMapping']} })
-    target: Optional[str] = Field(default=None, description="""The external concept this mapping points to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SkosMapping']} })
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    attests_to: str = Field(default=..., description="""The RegistryEntity (or Mapping, on MappingProvenanceEntry) this attestation is about. Singular — one ProvenanceEntry belongs to exactly one entity; a schema that attested to N entities produces N separate ProvenanceEntry nodes, each with its own attests_to pointer. Redundant with the parent's `provenance` list, kept in sync at ingest — the two directions serve different consumers (top-down: `entity.provenance` for reading an entity's history; bottom-up: `attests_to` for regenerating a schema by starting from every ProvenanceEntry whose had_primary_source is that schema).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'inverse': 'provenance'} })
+    had_primary_source: str = Field(default=..., description="""The SchemaSource this attestation came from (stored as id FK, like is_a). A real Entity->Entity link, not a denormalized label copy — PROV-O's own hadPrimarySource is a relationship between entities. Mirrored by SchemaSource.attestations so the relationship round-trips: a query starting from a SchemaSource can walk forward to every ProvenanceEntry that names it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'],
+         'inverse': 'attestations',
+         'slot_uri': 'prov:hadPrimarySource'} })
+    source_version: Optional[str] = Field(default=None, description="""Version of the source schema as declared by the source itself, never invented or bumped by the registry. On SchemaSource: the version at first ingestion (known frozen-value limitation). On ProvenanceEntry: the source's version at the time of this attestation — this is what lets a query scope entities and mappings to \"BIDS 1.9 specifically\", lets re-ingestion diff by version, and makes an alignment run's inputs statable, without needing SchemaVersionSnapshot.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself. No PROV-O term — purely our own versioning concept.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    generated_at_time: datetime  = Field(default=..., description="""ISO-8601 timestamp this ProvenanceEntry was generated.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:generatedAtTime'} })
+    was_attributed_to: str = Field(default=..., description="""Agent (user or system) that generated this ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasAttributedTo'} })
+    was_generated_by: Optional[str] = Field(default=None, description="""The activity that produced this ProvenanceEntry, e.g. \"ingestion\", \"manual\", \"alignment\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasGeneratedBy'} })
+    was_derived_from: Optional[list[str]] = Field(default=None, description="""UUID ids of entities this entity was derived from, if any. Stored as a native list column in the graph database.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasDerivedFrom'} })
 
 
-class Relation(ConfiguredBaseModel):
+class MappingProvenanceEntry(ProvenanceEntry):
     """
-    A directed relationship between two registry entities (classes or properties), with its own content-addressed identity and provenance.
+    ProvenanceEntry, but had_primary_source isn't required — a Mapping is often cross-schema (comparing content from two sources) or produced by a pure algorithmic process with no single schema to attribute to, unlike a RegistryClass/RegistryProperty attestation which always traces back to exactly one SchemaSource. Also carries the fields that describe *how* the mapping was produced (justification, evidence, tool) — those belong here rather than on Mapping itself, alongside was_generated_by/generated_at_time.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model',
+         'slot_usage': {'attests_to': {'name': 'attests_to', 'range': 'Mapping'},
+                        'had_primary_source': {'name': 'had_primary_source',
+                                               'required': False}}})
+
+    mapping_justification: Optional[str] = Field(default=None, description="""How this mapping came to be. Values SHOULD be semapv CURIEs (https://w3id.org/semapv/vocab/): semapv:ManualMappingCuration for source-declared or human-curated mappings, semapv:LexicalMatching, semapv:SemanticSimilarityThresholdMatching, semapv:StructuralMatching, semapv:LogicalReasoning, semapv:CompositeMatching for computed ones. The range stays string (no enum migration forced), but free-form values (\"manual\", \"exact_class_uri\") are deprecated: the alignment pipeline keys review, predicate policy, and per-method evaluation off these terms, and SSSOM requires them — a free string collapses the distinction between statistical evidence and declared semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MappingProvenanceEntry']} })
+    match_string: Optional[list[str]] = Field(default=None, description="""The strings/evidence the match was made on, if any.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MappingProvenanceEntry']} })
+    mapping_tool: Optional[str] = Field(default=None, description="""Name of the tool/process that produced this mapping, e.g. \"align.py\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['MappingProvenanceEntry']} })
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
+                       'Transform',
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    attests_to: str = Field(default=..., description="""The RegistryEntity (or Mapping, on MappingProvenanceEntry) this attestation is about. Singular — one ProvenanceEntry belongs to exactly one entity; a schema that attested to N entities produces N separate ProvenanceEntry nodes, each with its own attests_to pointer. Redundant with the parent's `provenance` list, kept in sync at ingest — the two directions serve different consumers (top-down: `entity.provenance` for reading an entity's history; bottom-up: `attests_to` for regenerating a schema by starting from every ProvenanceEntry whose had_primary_source is that schema).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'inverse': 'provenance'} })
+    had_primary_source: Optional[str] = Field(default=None, description="""The SchemaSource this attestation came from (stored as id FK, like is_a). A real Entity->Entity link, not a denormalized label copy — PROV-O's own hadPrimarySource is a relationship between entities. Mirrored by SchemaSource.attestations so the relationship round-trips: a query starting from a SchemaSource can walk forward to every ProvenanceEntry that names it.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'],
+         'inverse': 'attestations',
+         'slot_uri': 'prov:hadPrimarySource'} })
+    source_version: Optional[str] = Field(default=None, description="""Version of the source schema as declared by the source itself, never invented or bumped by the registry. On SchemaSource: the version at first ingestion (known frozen-value limitation). On ProvenanceEntry: the source's version at the time of this attestation — this is what lets a query scope entities and mappings to \"BIDS 1.9 specifically\", lets re-ingestion diff by version, and makes an alignment run's inputs statable, without needing SchemaVersionSnapshot.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself. No PROV-O term — purely our own versioning concept.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    generated_at_time: datetime  = Field(default=..., description="""ISO-8601 timestamp this ProvenanceEntry was generated.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:generatedAtTime'} })
+    was_attributed_to: str = Field(default=..., description="""Agent (user or system) that generated this ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasAttributedTo'} })
+    was_generated_by: Optional[str] = Field(default=None, description="""The activity that produced this ProvenanceEntry, e.g. \"ingestion\", \"manual\", \"alignment\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasGeneratedBy'} })
+    was_derived_from: Optional[list[str]] = Field(default=None, description="""UUID ids of entities this entity was derived from, if any. Stored as a native list column in the graph database.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry'], 'slot_uri': 'prov:wasDerivedFrom'} })
+
+
+class Mapping(ConfiguredBaseModel):
+    """
+    A semantic mapping from a registry entity to a target — another registry entity (by id) or an external vocabulary concept (by IRI). Covers both a source-declared mapping and one align.py computes, distinguished by provenance.mapping_justification, not by class. Identified by id — not is_a RegistryEntity.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model',
+         'slot_usage': {'provenance': {'name': 'provenance',
+                                       'range': 'MappingProvenanceEntry'}}})
+
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
+                       'Transform',
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    mapping_type: Optional[SkosMappingTypeEnum] = Field(default=None, description="""The kind of SKOS mapping relation this represents.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Mapping']} })
+    target: Optional[str] = Field(default=None, description="""What this mapping points to — an external ontology concept (IRI), or another registry entity's id for align.py's computed cross-schema correspondences.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Mapping']} })
+    confidence: Optional[float] = Field(default=None, description="""Score in [0,1] assigned by whatever process produced this mapping. Not required — a manually-declared mapping may have no numeric score.""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['Mapping']} })
+    review_status: Optional[ReviewStatusEnum] = Field(default=None, description="""Curation lifecycle state. Always PROPOSED for now — nothing in this registry curates mappings yet, so this field exists to be standards-conformant (SSSOM/Proteus), not because anything sets it to ACCEPTED/REJECTED today.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Mapping']} })
+    mapping_set_id: Optional[str] = Field(default=None, description="""Identifier of the mapping set (one matcher run, one curation campaign, one source-declaration ingestion) this mapping belongs to. Optional. This is the unit of run-level provenance and wholesale supersession: a miscalibrated run is superseded by set, not mapping-by-mapping, and one run exports as one SSSOM TSV.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Mapping']} })
+    provenance: list[str] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects id or sha256_hash. Mirrored by ProvenanceEntry.attests_to so the relationship round-trips in either direction — the entity owns the list, and each entry names the entity it belongs to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping'], 'inverse': 'attests_to'} })
+
+
+class RegistryRule(RegistryEntity):
+    """
+    A validation or business rule that constrains one or more registry entities. Covers both the declarative property-level constraints a source schema states directly (regex pattern, min/max value, length/cardinality bounds, required, multivalued, enum membership — dandi-schema's `Field(pattern=..., min_length=..., max_length=...)`, LinkML's slot facets, JSON Schema's keyword set) and the class-level cross-field constraints those schemas express as model validators (dandi-schema's `@model_validator` — e.g. \"ContactPerson requires email\", \"datePublished implies publishedBy and doi\", \"identifier or url must be present\"). Both surface in the same registry so alignment can compare them: two schemas that state \"identifier matches ORCID\" about the same-hash property should recognize the equivalence.
+    Each declarative constraint is one RegistryRule — one facet, one node. A property with a lower bound of 0 and an upper bound of 120 ingests as two RegistryRules (rule_type=MIN_VALUE with rule_value=\"0\", and rule_type=MAX_VALUE with rule_value=\"120\"), not one, so a source that only sets a lower bound isn't implicitly asserting anything about an upper bound, and a class-level refinement of the lower bound doesn't sweep up the upper bound (matching LinkML slot_usage, which refines facets independently).
+    The constraint is expressed via two slots: `rule_type` names the kind of constraint and `rule_value` carries its parameter as a string, interpreted per rule_type — a regex for PATTERN, a numeric literal for MIN_VALUE/MAX_VALUE, a length for MIN_LENGTH/MAX_LENGTH, \"true\"/\"false\" for REQUIRED/MULTIVALUED, a RegistryValueSet id for ENUM_MEMBERSHIP, an XSD CURIE for RANGE, the literal default for DEFAULT, the whole validator body for EXPRESSION_*, and so on. This single-value shape is why exclusive bounds and expression languages are encoded as rule_type variants (MIN_VALUE_EXCLUSIVE, EXPRESSION_SHACL, …) rather than as supplementary flag or language slots.
+    Identity is content-addressed like any RegistryEntity and collapses across schemas: same rule_type + same rule_value + same applies_to + same used_in_class hash to the same RegistryRule, so two source schemas that state \"identifier matches ORCID\" on the same-hash property collapse to one RegistryRule node with both schemas attesting to it via `provenance` — matching the cross-schema identity behavior main restored in 534ee4b. A schema that changes only the human-readable `error_message` keeps its sha256_hash (see the HashSubset membership on each slot). RegistryRules are attached to RegistryClass/RegistryProperty through the `applies_to` slot — not inlined on the entity itself, so a RegistryRule's targets are visible as edges in the graph.
+    LinkML slot_usage (and equivalent per-class refinements in other schema languages) is modeled through the optional `used_in_class` slot — mirroring LinkML's own `slot_usage` vocabulary — rather than a separate override entity or an inheritance chain. A RegistryRule with `used_in_class` unset is a schema-level default — effective wherever its `applies_to` property is used, unless a more specific RegistryRule takes precedence. A RegistryRule with `used_in_class = ClassB` is a class-level refinement — effective only when the property is used inside ClassB, and it overrides the schema-level RegistryRule of the *same rule_type* on the *same applies_to* property (rule_type-by-rule_type, matching LinkML's slot_usage semantics: overriding PATTERN in one class does not also drop the schema-level REQUIRED). Class-level rules that aren't slot refinements at all — dandi-schema's cross-field `@model_validator` for \"identifier or url must be present\" — use the same mechanism: `used_in_class = ContactCard`, `applies_to = [identifier_property, url_property]`, `rule_type = EXPRESSION_PYTHON`; no special-casing.
+    Effective-rule resolution for property P used inside class C is therefore: for each rule_type, prefer the RegistryRule with `used_in_class = C and applies_to contains P` if one exists; otherwise fall back to the RegistryRule with `used_in_class` unset. The registry does not currently execute this resolution — it stores both the schema-level and class-level RegistryRules as data — but the model is shaped so a downstream validator (or an alignment pass that wants to compare \"the effective pattern on this slot in this class\") can do so with a single graph walk.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
-                       'SkosMapping',
-                       'Relation',
-                       'Rule',
+    used_in_class: Optional[str] = Field(default=None, description="""The RegistryClass this rule is scoped to, if any — populated for class-level refinements that ingest from LinkML `slot_usage` blocks (the slot name mirrors LinkML's own vocabulary) or the equivalent per-class overrides in other schema languages, and for standalone class-level constraints (cross-field validators, class invariants) that aren't slot refinements at all. Unset means the rule is a schema-level default: effective wherever `applies_to` matches. Set means the rule is effective *only* when the target property is used inside this class, and it overrides the schema-level rule of the same rule_type on the same applies_to property (rule_type-by-rule_type override, matching LinkML's slot_usage: refining PATTERN for a class does not drop the schema-level REQUIRED). Range is RegistryClass rather than RegistryEntity because a class-scope override is meaningful only against a class — a property doesn't have a \"slot_usage\" of its own.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryRule'], 'in_subset': ['HashSubset']} })
+    rule_type: RegistryRuleTypeEnum = Field(default=..., description="""What kind of constraint this RegistryRule expresses. Each declarative rule_type is atomic — one facet, one RegistryRule — so that a source setting only a lower bound doesn't imply anything about an upper bound, and a class-level refinement of MIN_VALUE doesn't sweep up MAX_VALUE (matching LinkML slot_usage, which refines facets independently). The constraint's parameter is carried on `rule_value` (a plain string) and interpreted per rule_type — see rule_value for the value grammar per enum entry. Facet variants that used to require a paired flag or language slot are encoded as separate enum values instead: strict bounds are MIN_VALUE_EXCLUSIVE / MAX_VALUE_EXCLUSIVE, and each supported expression language is its own EXPRESSION_* variant (EXPRESSION_SHACL, EXPRESSION_PYTHON, …). Identity-defining — a rule of type PATTERN with rule_value=\"^\\d+$\" is a different RegistryRule from a rule of type EXPRESSION_PYTHON whose value happens to embed the same regex.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryRule'], 'in_subset': ['HashSubset']} })
+    rule_value: Optional[str] = Field(default=None, description="""The constraint's parameter, as a string interpreted per `rule_type`. Everything the source declared collapses onto this one slot: a regex for PATTERN, a named format (\"email\", \"uri\", \"uuid\", …) for FORMAT, a numeric literal for MIN_VALUE / MIN_VALUE_EXCLUSIVE / MAX_VALUE / MAX_VALUE_EXCLUSIVE, an integer for MIN_LENGTH / MAX_LENGTH / MIN_CARDINALITY / MAX_CARDINALITY, \"true\"/\"false\" for REQUIRED / MULTIVALUED, an XSD CURIE or RegistryValueSet id for RANGE, a RegistryValueSet id for ENUM_MEMBERSHIP, a source-preserved default (LinkML `ifabsent` mini-expression, JSON Schema `default` as JSON text) for DEFAULT, and the whole validator body for the EXPRESSION_* variants. Kept as a plain string so LinkML slot_usage refinements are one-value swaps — no per-facet typed columns to migrate when a rule_type is added or changed. Downstream consumers parse rule_value per rule_type.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryRule'], 'in_subset': ['HashSubset']} })
+    applies_to: list[str] = Field(default=..., description="""The registry entities this rule constrains — typically one RegistryProperty for a property-level constraint (a pattern on `identifier`, a min_length on `description`), or several RegistryProperty entities for a cross-field validator (dandi-schema's `@model_validator` for \"identifier or url must be present\" names both properties here). The class this rule is scoped to, if any, goes on `used_in_class`, not here — so applies_to stays purely about the constrained targets. Range is RegistryEntity for flexibility; ingestion should only ever populate this with RegistryClass or RegistryProperty targets (PermissibleValue, RegistryValueSet, RegistryRule itself are not valid targets).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryRule'], 'in_subset': ['HashSubset']} })
+    severity: Optional[RegistryRuleSeverityEnum] = Field(default=RegistryRuleSeverityEnum.ERROR, description="""How a failure of this rule should be reported. Defaults to ERROR (the source-schema default: dandi-schema's Pydantic constraints and `@model_validator` bodies all raise). WARNING is for recommendation-style rules a source encodes but does not want to hard-fail on; INFO is for advisory/metadata rules used only to surface hints.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryRule'],
+         'ifabsent': 'ERROR',
+         'in_subset': ['HashSubset']} })
+    error_message: Optional[str] = Field(default=None, description="""Human-readable message describing what the rule requires, shown when it fails. Preserved verbatim from the source schema where one is supplied (dandi-schema's `ValueError` strings inside `@model_validator`, LinkML's `constraint_message`); otherwise populated by ingestion with a canned message derived from rule_type + parameters.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryRule']} })
+    referenced_entities: Optional[list[str]] = Field(default=None, description="""Additional entities an EXPRESSION_* rule mentions but does not apply to as its direct target — e.g. a dandi-schema `@model_validator` that reads `roleName` and `email` on Contributor would list Contributor in `applies_to` and both RegistryProperties here. Lets alignment find rules that touch a given property without conflating direct constraints with incidental references. Empty/omitted for the declarative rule_types.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryRule'], 'in_subset': ['HashSubset']} })
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
                        'Transform',
-                       'PermissibleValue']} })
-    subject: str = Field(default=..., description="""hash_id of the entity this relation points from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Relation']} })
-    predicate: str = Field(default=..., description="""The type of relationship (e.g. isPartOf, isSimilarTo, isDerivedFrom).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Relation']} })
-    object: str = Field(default=..., description="""hash_id of the entity this relation points to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Relation']} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
-
-
-class Rule(ConfiguredBaseModel):
-    """
-    STUB — a validation or business rule applicable to one or more registry entities (e.g. min/max value, pattern, required, multivalued constraints on a RegistryProperty). Slots intentionally minimal; scope TBD.
-    """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
-
-    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
-                       'SkosMapping',
-                       'Relation',
-                       'Rule',
-                       'Transform',
-                       'PermissibleValue']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'skos:definition'} })
+    provenance: list[str] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects id or sha256_hash. Mirrored by ProvenanceEntry.attests_to so the relationship round-trips in either direction — the entity owns the list, and each entry names the entity it belongs to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping'], 'inverse': 'attests_to'} })
+    skos_mappings: Optional[list[str]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences). Reference by Mapping.id (UUID) — the mapping is a separate node so it can be queried and shared across owners; SSSOM export still materializes subject_id from the owning entity's id, so exported mapping sets remain standalone, standards-conformant records.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
+    concept_uri: Optional[str] = Field(default=None, description="""Ontology IRI for this entity (class or property), preserved from the source schema on ingestion. Not part of the content hash; used for alignment and cross-source lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
 
 
 class Transform(ConfiguredBaseModel):
@@ -259,81 +512,172 @@ class Transform(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
-                       'SkosMapping',
-                       'Relation',
-                       'Rule',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
                        'Transform',
-                       'PermissibleValue']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'skos:definition'} })
 
 
-class PermissibleValue(ConfiguredBaseModel):
+class PermissibleValue(RegistryEntity):
     """
-    A single permissible value within a ValueSet enumeration. The `name` field holds the value text (e.g. \"EXACT_MATCH\"); `meaning` optionally maps it to an external ontology IRI. Identity is content-addressed on (name, meaning) — identical values across sources share one node.
+    A single permissible value within a RegistryValueSet enumeration. The `name` field holds the value text (e.g. \"EXACT_MATCH\"); `meaning` optionally maps it to an external ontology IRI. Identity is content-addressed on (name, description, meaning) — identical values across sources share one node, with provenance accumulating like any other RegistryEntity.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
-                       'SkosMapping',
-                       'Relation',
-                       'Rule',
+    meaning: Optional[str] = Field(default=None, description="""Ontology IRI this permissible value maps to (e.g. skos:exactMatch for the EXACT_MATCH value in SkosMappingTypeEnum).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PermissibleValue'], 'in_subset': ['HashSubset']} })
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
                        'Transform',
-                       'PermissibleValue']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
-    meaning: Optional[str] = Field(default=None, description="""Ontology IRI this permissible value maps to (e.g. skos:exactMatch for the EXACT_MATCH value in SkosMappingTypeEnum).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PermissibleValue']} })
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'skos:definition'} })
+    provenance: list[str] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects id or sha256_hash. Mirrored by ProvenanceEntry.attests_to so the relationship round-trips in either direction — the entity owns the list, and each entry names the entity it belongs to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping'], 'inverse': 'attests_to'} })
+    skos_mappings: Optional[list[str]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences). Reference by Mapping.id (UUID) — the mapping is a separate node so it can be queried and shared across owners; SSSOM export still materializes subject_id from the owning entity's id, so exported mapping sets remain standalone, standards-conformant records.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
+    concept_uri: Optional[str] = Field(default=None, description="""Ontology IRI for this entity (class or property), preserved from the source schema on ingestion. Not part of the content hash; used for alignment and cross-source lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
 
 
-class ValueSet(RegistryEntity):
+class RegistryValueSet(RegistryEntity):
     """
-    A controlled set of permissible values, usable as a RegistryProperty range. LinkML enums ingest as ValueSet nodes; each permissible value becomes a separate PermissibleValue node linked via HAS_PERMISSIBLE_VALUE edges.
+    A controlled set of permissible values, usable as a RegistryProperty range. LinkML enums ingest as RegistryValueSet nodes; each permissible value becomes a separate PermissibleValue node linked via HAS_PERMISSIBLE_VALUE edges.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    permissible_values: Optional[list[str]] = Field(default=None, description="""The set of permissible values for this ValueSet. Stored as hash_id references; HAS_PERMISSIBLE_VALUE edges are the graph traversal.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ValueSet']} })
-    hash_id: str = Field(default=..., description="""Content-hash-derived identifier (format sha256:<hex>). A change in any identity-defining field produces a new hash_id; lineage is preserved via derived_from.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
-                       'SkosMapping',
-                       'Relation',
-                       'Rule',
+    permissible_values: Optional[list[str]] = Field(default=None, description="""The set of permissible values for this RegistryValueSet. Stored as id references; HAS_PERMISSIBLE_VALUE edges are the graph traversal.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryValueSet'], 'in_subset': ['HashSubset']} })
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
                        'Transform',
-                       'PermissibleValue']} })
-    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform', 'PermissibleValue']} })
-    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Rule', 'Transform']} })
-    provenance: list[ProvenanceEntry] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects hash_id.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Relation']} })
-    skos_mappings: Optional[list[SkosMapping]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'skos:definition'} })
+    provenance: list[str] = Field(default=..., description="""One ProvenanceEntry per source attesting to this entity. Accumulates as more sources are ingested — never affects id or sha256_hash. Mirrored by ProvenanceEntry.attests_to so the relationship round-trips in either direction — the entity owns the list, and each entry names the entity it belongs to.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Mapping'], 'inverse': 'attests_to'} })
+    skos_mappings: Optional[list[str]] = Field(default=None, description="""Semantic mappings to external vocabulary concepts, or to other registry entities (align.py's computed correspondences). Reference by Mapping.id (UUID) — the mapping is a separate node so it can be queried and shared across owners; SSSOM export still materializes subject_id from the owning entity's id, so exported mapping sets remain standalone, standards-conformant records.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+    aliases: Optional[list[str]] = Field(default=None, description="""Alternate names/synonyms/abbreviations for this entity (e.g. \"lfp\" for \"local field potential\"), preserved from the source schema. Used as alignment evidence (align.py's alias_overlap signal) — not part of the schema's own semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity'], 'slot_uri': 'skos:altLabel'} })
+    concept_uri: Optional[str] = Field(default=None, description="""Ontology IRI for this entity (class or property), preserved from the source schema on ingestion. Not part of the content hash; used for alignment and cross-source lookup.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
+
+
+class UnitOfMeasure(ConfiguredBaseModel):
+    """
+    A structured unit of measure for a RegistryProperty, inlined (not its own content-addressed entity). Field names/slot_uri follow LinkML's own linkml:units module — defined locally rather than imported, since db.py's DDL generator reads meta_model.yaml's own classes directly and doesn't resolve LinkML imports (see git history for the import-vs- repeat discussion). LinkML's own alignment for units *is* QUDT/rdfs — there's no separate \"linkml:\" URI for these concepts to also target.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'annotations': {'db_inline': {'tag': 'db_inline', 'value': True}},
+         'class_uri': 'qudt:Unit',
+         'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
+
+    ucum_code: Optional[str] = Field(default=None, description="""UCUM (Unified Code for Units of Measure) code, e.g. \"mV\", \"deg\", \"Hz\". Compact and machine-parseable — the primary field for programmatic unit-compatibility checks (align.py's unit veto).""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'qudt:ucumCode'} })
+    has_quantity_kind: Optional[str] = Field(default=None, description="""IRI naming the dimension/kind of quantity being measured, e.g. a QUDT quantity-kind IRI for \"ElectricPotential\" or \"PlaneAngle\". Lets incommensurable units (different quantity kinds) be vetoed outright, independent of whether a conversion factor is known.""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'qudt:hasQuantityKind'} })
+    symbol: Optional[str] = Field(default=None, description="""Name of the unit encoded as a symbol (e.g. \"Ω\", \"°\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'qudt:symbol'} })
+    abbreviation: Optional[str] = Field(default=None, description="""Short ASCII abbreviation for the unit, for contexts where non-ASCII symbols would be problematic.""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'qudt:abbreviation'} })
+    descriptive_name: Optional[str] = Field(default=None, description="""The spelled-out name of the unit, e.g. \"millivolt\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitOfMeasure'], 'slot_uri': 'rdfs:label'} })
 
 
 class SchemaSource(ConfiguredBaseModel):
     """
-    Registry record for a schema source (one node per ingested schema label). Tracks the source's IRI, MIME type, and the registry version it was first added under. Identity uses uid (not hash_id) because this is a mutable administrative record, not a content-addressed entity.
+    Registry record for a schema source (one node per ingested schema label). A stable label used to attribute registry entities to where they came from — nothing more. Every attestation about a registry entity that names this schema as its primary source is surfaced on `attestations`, the inverse of ProvenanceEntry.had_primary_source, so a schema-regen query can walk forward from a SchemaSource to every entity it defined in one hop.
+    Deliberately does NOT model the ingested schema's shape metadata (default_prefix, default_range, declared prefix bindings, imports). RegistrySchema owns the \"schema-shape\" concerns for schemas the registry emits; SchemaSource is only a provenance record. Reconstructing the source schema verbatim isn't a registry use case today, so those fields don't need to be captured on the input side.
+    Identity uses id (a UUID, as everywhere) because this is a mutable administrative record, not a content-addressed entity. `source_id` is the persistent IRI the source schema declared as its own `id:` — distinct from `id` so that re-ingestion under a different registry UUID (or across registries) still resolves to the same source-of-truth identifier.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    uid: str = Field(default=..., description="""Random unique identifier for this ProvenanceEntry record (not content-derived — a per-attestation record, not a deduplicated entity).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
+                       'Transform',
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    source_id: Optional[str] = Field(default=None, description="""The persistent IRI the source schema declared as its own `id:` (in LinkML: `schema.id`; the equivalent in other formats). Distinct from SchemaSource.id — that is the registry's internal UUID primary key, needed as a stable graph handle for FKs. `source_id` preserves the author's own identifier for the schema so a round-trip export can reconstruct `id:` losslessly.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
     label: str = Field(default=..., description="""Short identifier label for this schema source (e.g. \"bids\", \"nwb\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
+    title: Optional[str] = Field(default=None, description="""Human-readable full name of the schema (e.g. \"Brain Imaging Data Structure\"), distinct from the short `label` used as its identifier.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
+    publisher: Optional[str] = Field(default=None, description="""Organization or group that maintains this schema.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
+    contact: Optional[str] = Field(default=None, description="""Contact point for this schema (person, mailing list, or URL).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
+    homepage: Optional[str] = Field(default=None, description="""Documentation or landing page for this schema.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
+    is_hub: Optional[bool] = Field(default=False, description="""True if this schema is (part of) the registry's core/bridge vocabulary that other schemas are matched against, rather than matching every schema pairwise. Not auto-derived — set deliberately, since which schema serves as the hub is a curatorial decision.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource'], 'ifabsent': 'false'} })
     source_iri: Optional[str] = Field(default=None, description="""Canonical IRI for this schema source.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
-    source_version: Optional[str] = Field(default=None, description="""Semantic version of the schema at the time of ingestion.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot']} })
+    source_version: Optional[str] = Field(default=None, description="""Version of the source schema as declared by the source itself, never invented or bumped by the registry. On SchemaSource: the version at first ingestion (known frozen-value limitation). On ProvenanceEntry: the source's version at the time of this attestation — this is what lets a query scope entities and mappings to \"BIDS 1.9 specifically\", lets re-ingestion diff by version, and makes an alignment run's inputs statable, without needing SchemaVersionSnapshot.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
     mime_type: Optional[str] = Field(default=None, description="""MIME type of the schema file (e.g. \"application/yaml\").""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource']} })
-    created_at: Optional[datetime ] = Field(default=None, description="""ISO-8601 timestamp when this record was created.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot']} })
-    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    created_at: Optional[datetime ] = Field(default=None, description="""ISO-8601 timestamp when this record was created.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot', 'RegistrySchema']} })
+    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself. No PROV-O term — purely our own versioning concept.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    attestations: Optional[list[str]] = Field(default=None, description="""Every ProvenanceEntry that names this schema as its primary source. Inverse of ProvenanceEntry.had_primary_source, and the one-hop path for schema regeneration: starting from a SchemaSource, walk `attestations` and then each entry's `attests_to` to reach every registry entity the schema ever defined. Grows unbounded with ingest — implementations that export SchemaSource nodes standalone should page or omit this list rather than serializing thousands of ids into one field.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource'], 'inverse': 'had_primary_source'} })
 
 
 class SchemaVersionSnapshot(ConfiguredBaseModel):
     """
     An immutable snapshot of a schema at a specific version, created each time a schema ingestion produces new or changed content. Records the class and property counts and a human-readable summary of changes.
+    QUESTIONABLE (as of 2026-08-04): likely unnecessary. It's write-only — nothing outside ingest_linkml.py's own _prev_schema_version() ever reads it back (not export_json.py, not mcp_server.py, not any CI workflow). Its source_version is a self-invented semver bump (_bump_semver()) that, after the first ingestion, ignores the source file's real declared meta[\"version\"] entirely — and it duplicates SchemaSource.source_version, which has its own bug (frozen at first-ingestion value, never updated). The one thing it enables (the \"schema unchanged, skip\" short-circuit) doesn't need stored history: write_registry_entities() is already idempotent, so stats (classes_new/properties_new/provenance_added) tell you the same thing fresh on every run. Added incidentally in a1dba23 (\"Auto-sync graph schema from meta_model.yaml via CI\"), not from a deliberate versioning design. Candidate for removal — same category as the Relation class (removed in c599c2b): present in the schema, never actually needed.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    uid: str = Field(default=..., description="""Random unique identifier for this ProvenanceEntry record (not content-derived — a per-attestation record, not a deduplicated entity).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
+                       'Transform',
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
     schema_label: str = Field(default=..., description="""Label of the schema this snapshot belongs to (FK to SchemaSource.label).""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
-    source_version: Optional[str] = Field(default=None, description="""Semantic version of the schema at the time of ingestion.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot']} })
+    source_version: Optional[str] = Field(default=None, description="""Version of the source schema as declared by the source itself, never invented or bumped by the registry. On SchemaSource: the version at first ingestion (known frozen-value limitation). On ProvenanceEntry: the source's version at the time of this attestation — this is what lets a query scope entities and mappings to \"BIDS 1.9 specifically\", lets re-ingestion diff by version, and makes an alignment run's inputs statable, without needing SchemaVersionSnapshot.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
     yml_path: Optional[str] = Field(default=None, description="""Relative path to the schema YAML file at snapshot time.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
     class_count: Optional[int] = Field(default=None, description="""Number of classes in the schema at this version.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
     property_count: Optional[int] = Field(default=None, description="""Number of properties in the schema at this version.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
     changes_summary: Optional[str] = Field(default=None, description="""Human-readable summary of what changed in this version.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaVersionSnapshot']} })
-    created_at: Optional[datetime ] = Field(default=None, description="""ISO-8601 timestamp when this record was created.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot']} })
-    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+    created_at: Optional[datetime ] = Field(default=None, description="""ISO-8601 timestamp when this record was created.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot', 'RegistrySchema']} })
+    registry_version: Optional[str] = Field(default=None, description="""Registry snapshot version in effect when this ProvenanceEntry was generated. Not on RegistryClass/RegistryProperty directly — the same entity can be attested by different sources at different times, each under a different registry version, so it belongs on the per-source attestation, not the entity itself. No PROV-O term — purely our own versioning concept.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProvenanceEntry', 'SchemaSource', 'SchemaVersionSnapshot']} })
+
+
+class RegistrySchema(ConfiguredBaseModel):
+    """
+    A schema composed from existing registry content — a named, curated subset of RegistryClasses/RegistryProperties/RegistryRules/RegistryValueSets that can be exported as a standalone schema file (LinkML today; other output formats are a serialization concern, not modeled here). Unlike SchemaSource, which records where an *ingested* schema came from, membership here is an explicit curatorial selection — there is no attestation trail to derive it from, since composing this schema is the act that creates the selection in the first place.
+    Exported as full IRIs, not CURIEs: the registry already expands every CURIE to a full IRI at ingest time (see resolve_prefix() in ingest_linkml.py), so there is no original prefix mapping left to preserve, and inventing a fresh one here would just be another map to keep in sync. A full IRI is valid wherever LinkML accepts a CURIE, so this is a v1 scope choice, not a limitation of the format.
+    Identified by id: two people composing an identical subset of content for different purposes are not the same entity.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
+
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+                       'ProvenanceEntry',
+                       'Mapping',
+                       'Transform',
+                       'SchemaSource',
+                       'SchemaVersionSnapshot',
+                       'RegistrySchema']} })
+    name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset']} })
+    description: str = Field(default=..., description="""Human-readable description of this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
+         'in_subset': ['HashSubset'],
+         'slot_uri': 'skos:definition'} })
+    namespace_iri: str = Field(default=..., description="""Base namespace for this schema — becomes its own `id:` when exported to LinkML (or the equivalent namespace declaration in another output format).""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistrySchema']} })
+    default_range: Optional[str] = Field(default=None, description="""Default range for slots that don't declare one explicitly, carried into the exported schema's `default_range:`. Optional — a composed schema may leave every RegistryProperty's own property_range explicit and not need a default.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistrySchema']} })
+    imports: Optional[list[str]] = Field(default=None, description="""Import statements to carry into the exported schema verbatim (e.g. \"linkml:types\"). Not resolved or validated by the registry — passed through as-is.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistrySchema']} })
+    registry_classes: Optional[list[str]] = Field(default=None, description="""The RegistryClass entities (by id) included in this schema.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistrySchema']} })
+    registry_properties: Optional[list[str]] = Field(default=None, description="""The RegistryProperty entities (by id) included in this schema. Not implied by registry_classes' own `properties` — a composed schema may include a standalone property not attached to any included class, or omit one of an included class's properties.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistrySchema']} })
+    registry_rules: Optional[list[str]] = Field(default=None, description="""The RegistryRule entities (by id) included in this schema.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistrySchema']} })
+    registry_value_sets: Optional[list[str]] = Field(default=None, description="""The RegistryValueSet entities (by id) included in this schema.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistrySchema']} })
+    created_by: Optional[str] = Field(default=None, description="""Agent (user or system) that composed this schema.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistrySchema']} })
+    created_at: Optional[datetime ] = Field(default=None, description="""ISO-8601 timestamp when this record was created.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SchemaSource', 'SchemaVersionSnapshot', 'RegistrySchema']} })
 
 
 # Model rebuild
@@ -342,11 +686,13 @@ RegistryEntity.model_rebuild()
 RegistryClass.model_rebuild()
 RegistryProperty.model_rebuild()
 ProvenanceEntry.model_rebuild()
-SkosMapping.model_rebuild()
-Relation.model_rebuild()
-Rule.model_rebuild()
+MappingProvenanceEntry.model_rebuild()
+Mapping.model_rebuild()
+RegistryRule.model_rebuild()
 Transform.model_rebuild()
 PermissibleValue.model_rebuild()
-ValueSet.model_rebuild()
+RegistryValueSet.model_rebuild()
+UnitOfMeasure.model_rebuild()
 SchemaSource.model_rebuild()
 SchemaVersionSnapshot.model_rebuild()
+RegistrySchema.model_rebuild()

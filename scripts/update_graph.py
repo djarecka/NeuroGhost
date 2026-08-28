@@ -2,12 +2,12 @@
 """
 scripts/update_graph.py
 -----------------------
-Parse schemas/meta_model.yaml and regenerate the GN / GR constants in
+Parse meta_model.yaml and regenerate the GN / GR constants in
 index.html so the "Graph Schema" view always reflects the current meta model.
 
 Run locally:  python scripts/update_graph.py
 Called by CI: .github/workflows/update_graph.yml (on push that touches
-              schemas/meta_model.yaml)
+              meta_model.yaml)
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ except ImportError:
     sys.exit("PyYAML required: pip install pyyaml")
 
 ROOT       = Path(__file__).parent.parent
-META_MODEL = ROOT / "schemas" / "meta_model.yaml"
+META_MODEL = ROOT / "meta_model.yaml"
 INDEX_HTML = ROOT / "index.html"
 
 # Classes whose slots are "rolled up" into their concrete children for display.
@@ -35,8 +35,8 @@ _EDGE_LABELS: dict[str, str] = {
     "skos_mappings": "HAS_SKOS_MAPPING",
     "properties":    "HAS_PROPERTY",
     "relations":     "HAS_RELATION",
-    "is_a":          "SUBCLASS_OF",
-    "mixins":        "MIXES_IN",
+    "parent_class":  "SUBCLASS_OF",
+    "class_mixins":  "MIXES_IN",
 }
 
 
@@ -76,15 +76,34 @@ def build(mm: dict) -> tuple[list[dict], list[dict]]:
     classes   = mm.get("classes", {}) or {}
     slot_defs = mm.get("slots",   {}) or {}
 
+    # db_inline classes (e.g. UnitOfMeasure) flatten onto their referencing
+    # class's own node — matching db.py's _build_registry_ddl(), which never
+    # gives them their own table or a real edge. No node, no edge for these.
+    inline_classes = {
+        name for name, cdef in classes.items()
+        if cdef.get("annotations", {}).get("db_inline")
+    }
+
+    def _field_labels(cname: str) -> list[str]:
+        labels = []
+        for s in _all_slots(cname, classes):
+            sdef = slot_defs.get(s, {})
+            rng  = sdef.get("range", "")
+            if rng in inline_classes:
+                labels.extend(
+                    _slot_label(sub_s, slot_defs.get(sub_s, {}))
+                    for sub_s in _own_slots(classes[rng])
+                )
+            else:
+                labels.append(_slot_label(s, sdef))
+        return labels
+
     # --- Nodes ---------------------------------------------------------------
     nodes: list[dict] = []
     for cname, cdef in classes.items():
-        if cdef.get("abstract") or cname in ABSTRACT_BASES:
+        if cdef.get("abstract") or cname in ABSTRACT_BASES or cname in inline_classes:
             continue
-        fields = [
-            _slot_label(s, slot_defs.get(s, {}))
-            for s in _all_slots(cname, classes)
-        ]
+        fields = _field_labels(cname)
         is_stub = (cdef.get("description") or "").lstrip().startswith("STUB")
         nodes.append({
             "id":     cname,
@@ -95,8 +114,8 @@ def build(mm: dict) -> tuple[list[dict], list[dict]]:
 
     # --- Layout --------------------------------------------------------------
     # Tier 0: concrete classes that inherit from an abstract base (core entities)
-    # Tier 1: standalone classes (ProvenanceEntry, SkosMapping, Relation …)
-    # Tier 2: stubs (Rule, Transform, ValueSet)
+    # Tier 1: standalone classes (ProvenanceEntry, Mapping, RegistryValueSet …)
+    # Tier 2: stubs (RegistryRule, Transform)
     def _tier(n: dict) -> int:
         if n["_stub"]:
             return 2

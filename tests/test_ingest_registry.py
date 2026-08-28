@@ -10,20 +10,53 @@ def _conn(tmp_path):
     return get_connection(str(tmp_path / "test.lbug"))
 
 
-def test_identical_property_from_two_sources_shares_one_hash_id(tmp_path):
+def test_identical_property_from_two_sources_collapses_to_one_entity(tmp_path):
+    """
+    Identity is content-derived only — no source-anchoring field is part of
+    the sha256_hash — so identical content ingested from two different schemas
+    collapses to one RegistryProperty node (dedup reuses its id), which accumulates one
+    ProvenanceEntry per attesting source. This is how identity stays
+    separate from provenance: nothing about the entity's sha256_hash depends on
+    where it came from, and the shared id follows.
+    """
     conn = _conn(tmp_path)
 
     insert_schema(conn, parse_linkml(FIXTURES / "source_a.yml"), "source_a", agent="tester")
     insert_schema(conn, parse_linkml(FIXTURES / "source_b.yml"), "source_b", agent="tester")
 
-    rows = conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.hash_id").get_all()
-    assert len(rows) == 1
+    rows = conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.sha256_hash").get_all()
+    shas = {r[0] for r in rows}
+    assert len(shas) == 1
 
-    sources = conn.execute("""
-        MATCH (:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry)
-        RETURN pe.source
+    labels = conn.execute("""
+        MATCH (p:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
+        RETURN ss.label
     """).get_all()
-    assert {r[0] for r in sources} == {"source_a", "source_b"}
+    assert {r[0] for r in labels} == {"source_a", "source_b"}
+
+
+def test_aliases_round_trip_through_the_graph(tmp_path):
+    """
+    aliases is a plain multivalued string field (not a UUID-reference list
+    like properties), so it's written to a native list column
+    (STRING[] — see db.py's _build_registry_ddl()) rather than an edge, and
+    NOT JSON-encoded into a STRING column: a bound string that looks like a
+    Cypher list literal gets silently reparsed and corrupted by the DB
+    engine. Confirm it survives the write/read round trip through the real
+    graph, not just in-memory.
+    """
+    conn = _conn(tmp_path)
+    insert_schema(conn, parse_linkml(FIXTURES / "comprehensive.yml"), "comprehensive", agent="tester")
+
+    prop_rows = conn.execute(
+        "MATCH (p:RegistryProperty {name: 'orcid'}) RETURN p.aliases"
+    ).get_all()
+    assert prop_rows[0][0] == ["ORCID iD"]
+
+    class_rows = conn.execute(
+        "MATCH (c:RegistryClass {name: 'Person'}) RETURN c.aliases"
+    ).get_all()
+    assert class_rows[0][0] == ["Investigator"]
 
 
 def test_reingesting_same_source_is_idempotent(tmp_path):
@@ -64,44 +97,52 @@ def test_required_does_not_affect_property_identity(tmp_path):
     required_a.yml and required_b.yml declare the exact same "age" slot
     (same name/description/range/units) except one marks it `required: true`
     and the other doesn't. RegistryProperty doesn't model required at all
-    (deferred to a future Rule — see test_registry_property_does_not_retain_
-    usage_constraints in test_ingest_linkml.py), so this must not create a
-    second node: same hash_id, one node, provenance from both sources.
+    (deferred to a future RegistryRule — see test_registry_property_does_not_retain_
+    usage_constraints in test_ingest_linkml.py), so within a single source
+    this must not create a second node: same sha256_hash, one node.
+
+    Both YAMLs are ingested under the same source label, isolating the
+    `required` flag as the only differing input, which is what the test
+    asserts is irrelevant to identity.
     """
     conn = _conn(tmp_path)
 
-    stats_a = insert_schema(conn, parse_linkml(FIXTURES / "required_a.yml"), "required_a", agent="tester")
-    stats_b = insert_schema(conn, parse_linkml(FIXTURES / "required_b.yml"), "required_b", agent="tester")
+    stats_a = insert_schema(conn, parse_linkml(FIXTURES / "required_a.yml"), "required", agent="tester")
+    stats_b = insert_schema(conn, parse_linkml(FIXTURES / "required_b.yml"), "required", agent="tester")
 
     assert stats_a["properties_new"] == 1
-    assert stats_b["properties_new"] == 0        # not a new node — same hash as required_a's
+    assert stats_b["properties_new"] == 0        # not a new node — same hash within one source
     assert stats_b["properties_existing"] == 1
 
-    rows = conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.hash_id").get_all()
+    rows = conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.sha256_hash").get_all()
     assert len(rows) == 1                         # no duplicate node
 
-    sources = conn.execute("""
-        MATCH (:RegistryProperty {name: 'age'})-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry)
-        RETURN pe.source
-    """).get_all()
-    assert {r[0] for r in sources} == {"required_a", "required_b"}
 
+def test_content_change_produces_different_entity(tmp_path):
+    """
+    Same source, edited content → new hash. Both ingests use the same
+    source label ("source_a"), isolating the description edit as the sole
+    driver of the hash change.
 
-def test_content_change_produces_different_hash_id(tmp_path):
+    A range edit is deliberately NOT tested here — property_range is not
+    in HashSubset (see meta_model.yaml), so a range change is metadata,
+    not identity. Per-usage range refinements land on RegistryRule
+    (rule_type=RANGE), which does carry range in its own HashSubset.
+    """
     conn = _conn(tmp_path)
     insert_schema(conn, parse_linkml(FIXTURES / "source_a.yml"), "source_a", agent="tester")
 
-    original_hash = conn.execute(
-        "MATCH (p:RegistryProperty {name: 'age'}) RETURN p.hash_id"
+    original_sha = conn.execute(
+        "MATCH (p:RegistryProperty {name: 'age'}) RETURN p.sha256_hash"
     ).get_next()[0]
 
     edited = parse_linkml(FIXTURES / "source_a.yml")
-    edited["slots"]["age"]["value_range"] = "float"  # was "integer"
-    insert_schema(conn, edited, "source_a_v2", agent="tester")
+    edited["slots"]["age"]["definition"] = "Age of the subject in years"  # was "Age of the subject"
+    insert_schema(conn, edited, "source_a", agent="tester")
 
-    hashes = {
+    shas = {
         row[0] for row in
-        conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.hash_id").get_all()
+        conn.execute("MATCH (p:RegistryProperty {name: 'age'}) RETURN p.sha256_hash").get_all()
     }
-    assert len(hashes) == 2
-    assert original_hash in hashes
+    assert len(shas) == 2
+    assert original_sha in shas

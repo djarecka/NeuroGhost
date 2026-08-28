@@ -2,7 +2,7 @@
 converters/run_all.py — Run all external schema converters
 ----------------------------------------------------------
 Fetches and converts BIDS, NWB, DANDI, openMINDS, and AIND schemas
-to LinkML YAML in the schemas/ directory.
+to LinkML YAML in the registry_schemas/ directory.
 
 Usage:
     python converters/run_all.py
@@ -35,7 +35,7 @@ CONVERTERS = {
               help="Run only these converters (e.g. --only bids --only nwb)")
 @click.option("--skip", multiple=True,
               help="Skip these converters")
-@click.option("--out-dir", default="schemas", show_default=True,
+@click.option("--out-dir", default="registry_schemas", show_default=True,
               help="Output directory for .yml files")
 def cli(only: tuple, skip: tuple, out_dir: str) -> None:
     """Fetch and convert all external neuroscience schemas to LinkML."""

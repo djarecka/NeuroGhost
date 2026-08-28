@@ -3,46 +3,62 @@ import json
 
 from schema_registry_utils.models import RegistryClass, RegistryProperty
 
-_EXCLUDED_FIELDS = {
-    "hash_id", "provenance", "skos_mappings",
-    # Operational/origin metadata, not identity-defining content: an entity's
-    # hash_id must stay the same regardless of which source(s) attest to it.
-    "class_uri", "slot_uri",
-}
+HASH_SUBSET = "HashSubset"
 
 
-def compute_hash_id(entity: RegistryClass | RegistryProperty) -> str:
-    """Compute a content-based hash_id for a RegistryClass or RegistryProperty.
-
-    Everything but hash_id, provenance, skos_mappings, and class_uri/slot_uri
-    is treated as identity-defining content.
+def _identity_fields(model_cls: type) -> set[str]:
     """
-    return _digest(entity.model_dump(exclude=_EXCLUDED_FIELDS))
+    The content-fingerprint fields of a RegistryEntity subclass — everything
+    tagged `in_subset: [HashSubset]` in meta_model.yaml.
 
-
-def compute_hash_id_for(model_cls: type, fields: dict) -> str:
-    """Compute the hash_id for an entity that has not been constructed yet.
-
-    hash_id is the identifier in schemas/meta_model.yaml, so the generated
-    models require it at construction — but a content hash can only be derived
-    from the content itself. Builders therefore hash the field values they are
-    about to pass, then construct once with the real hash_id, rather than
-    constructing with a placeholder and mutating afterwards.
-
-    `fields` must carry every identity-defining slot of `model_cls`; anything
-    in _EXCLUDED_FIELDS may be present and is ignored. Omitting an identity
-    slot raises, because the alternative is a silently different hash the next
-    time the meta-model grows a slot — which would invalidate every stored
-    hash_id in the registry without anything failing.
+    The schema is the single source of truth for what counts as content, not a
+    hand-maintained Python allowlist/denylist that could drift out of sync with
+    it. gen-pydantic carries in_subset into each field's generated
+    json_schema_extra['linkml_meta'], so this is a pure introspection of the
+    already-generated model — no live SchemaView/YAML load needed here.
     """
-    identity = set(model_cls.model_fields) - _EXCLUDED_FIELDS
+    identity = set()
+    for name, field in model_cls.model_fields.items():
+        linkml_meta = (field.json_schema_extra or {}).get("linkml_meta", {})
+        if HASH_SUBSET in linkml_meta.get("in_subset", []):
+            identity.add(name)
+    return identity
+
+
+def compute_content_hash(entity: RegistryClass | RegistryProperty) -> str:
+    """Compute a content sha256 from entity's HashSubset fields.
+
+    This is the fingerprint that goes into RegistryEntity.sha256_hash — not
+    the identifier (which is a UUID) but the value ingestion looks up to
+    reuse an existing id for content that already appears in the registry.
+    """
+    identity = _identity_fields(type(entity))
+    return _digest({k: v for k, v in entity.model_dump().items() if k in identity})
+
+
+def compute_content_hash_for(model_cls: type, fields: dict) -> str:
+    """Compute the sha256_hash for an entity that has not been constructed yet.
+
+    Builders need the content hash to look up (and dedup against) any existing
+    entity carrying the same content, before they know what `id` to construct
+    with — mint a fresh UUID only if no existing entity's sha256_hash matches.
+    So the hash is computed from a plain dict, before the pydantic instance
+    exists.
+
+    `fields` must carry every HashSubset slot of `model_cls`; anything else
+    may be present and is ignored. Omitting an identity slot raises, because
+    the alternative is a silently different fingerprint the next time the
+    meta-model grows a slot — which would invalidate every stored
+    sha256_hash in the registry without anything failing.
+    """
+    identity = _identity_fields(model_cls)
     missing = identity - set(fields)
     if missing:
         raise ValueError(
             f"{model_cls.__name__}: cannot hash — identity-defining field(s) "
             f"missing from `fields`: {sorted(missing)}"
         )
-    return _digest({k: v for k, v in fields.items() if k not in _EXCLUDED_FIELDS})
+    return _digest({k: v for k, v in fields.items() if k in identity})
 
 
 def _digest(content: dict) -> str:
@@ -51,17 +67,17 @@ def _digest(content: dict) -> str:
     return f"sha256:{digest}"
 
 
-def assign_hash_id(entity: RegistryClass | RegistryProperty) -> RegistryClass | RegistryProperty:
-    """Compute entity's hash_id from its current content, then suffix its name
-    with the first 4 hex characters of the digest (e.g. "age" -> "age_a1b2").
+def assign_content_hash(entity: RegistryClass | RegistryProperty) -> RegistryClass | RegistryProperty:
+    """Compute entity's sha256_hash from its current content, then suffix its
+    name with the first 4 hex characters of the digest (e.g. "age" -> "age_a1b2").
 
     Mutates entity in place and returns it. Note: since name is part of the
-    hashed content, the resulting hash_id will no longer match a fresh
-    compute_hash_id() call on the entity after this mutation.
+    hashed content, the resulting sha256_hash will no longer match a fresh
+    compute_content_hash() call on the entity after this mutation.
     """
-    hash_id = compute_hash_id(entity)
-    digest = hash_id.split(":", 1)[1]
-    entity.hash_id = hash_id
+    sha = compute_content_hash(entity)
+    digest = sha.split(":", 1)[1]
+    entity.sha256_hash = sha
     entity.name = f"{entity.name}_{digest[:4]}"
     return entity
 
@@ -72,7 +88,7 @@ def _normalize(value):
     if isinstance(value, list):
         normalized = [_normalize(val) for val in value]
         if all(isinstance(val, str) for val in normalized):
-            # reference lists (properties/relations/mixins) are unordered sets
+            # reference lists (properties/mixins) are unordered sets
             return sorted(normalized)
         return normalized
     return value

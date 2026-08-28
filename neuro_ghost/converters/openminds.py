@@ -16,7 +16,7 @@ from pathlib import Path
 # Correct org: openMetadataInitiative, not HBP-MINDS
 GITHUB_API = "https://api.github.com/repos/openMetadataInitiative/openMINDS_json-schema/contents/schemas"
 GITHUB_RAW = "https://raw.githubusercontent.com/openMetadataInitiative/openMINDS_json-schema/main/schemas"
-OUT_PATH   = Path("schemas/openminds.yml")
+OUT_PATH   = Path("registry_schemas/openminds.yml")
 
 OPENMINDS_TYPE_MAP = {
     "string":  "xsd:string",

@@ -2839,7 +2839,7 @@ slots:
       to detect different nuclei.
 
       The label is the name of the nucleus or nuclei, which corresponds to DICOM Tag
-      `0018, 9100`.
+      (0018,9100).
 
       If present in the filename, `"ResonantNucleus"` MUST also be included in
 
@@ -2854,7 +2854,7 @@ slots:
 
       The `part-<label>` entity is associated with the DICOM Tag
 
-      `0008, 9208`.
+      (0008,9208).
 
       Allowed label values for this entity are `phase`, `mag`, `real` and `imag`,
 
@@ -3296,7 +3296,7 @@ slots:
     description: 'Duration (in seconds) of scan acquisition, including all volumes
       for multi-volume scans.
 
-      Corresponds to [DICOM Tag 0018, 9073](http://www.dicomlookup.com/dicomtags/(0018,9073))
+      Corresponds to [DICOM Tag (0018,9073)](https://www.dicomlookup.com/dicomtags/(0018,9073))
 
       `Acquisition Duration`.'
     multivalued: false
@@ -3465,7 +3465,7 @@ slots:
   metadata__AttenuationCorrection:
     description: 'Short description of the attenuation correction method used.
 
-      Corresponds to [DICOM Tag 0054, 1101](http://www.dicomlookup.com/dicomtags/(0054,1101))
+      Corresponds to [DICOM Tag (0054,1101)](https://www.dicomlookup.com/dicomtags/(0054,1101))
 
       `Attenuation Correction Method`.'
     multivalued: false
@@ -3501,9 +3501,9 @@ slots:
 
       It is RECOMMENDED to derive this identifier from DICOM Tags, for example,
 
-      DICOM tag 0018, 1030 `Protocol Name`, or DICOM tag 0018, 0024 `Sequence Name`
+      DICOM Tag (0018,1030) `Protocol Name`, or DICOM Tag (0018,0024) `Sequence Name`
 
-      when the former is not defined (for example, in GE devices.)'
+      when the former is not defined (for example, on GE devices).'
     multivalued: false
     range: string
     slot_uri: https://bids-specification.readthedocs.io/en/stable/glossary.html#B0FieldIdentifier
@@ -3596,7 +3596,7 @@ slots:
   metadata__BodyPart:
     description: 'Body part of the organ / body region scanned.
 
-      Corresponds to [DICOM Tag 0018, 0015](http://www.dicomlookup.com/dicomtags/(0018,0015))
+      Corresponds to [DICOM Tag (0018,0015)](https://www.dicomlookup.com/dicomtags/(0018,0015))
       `Body Part Examined`.'
     multivalued: false
     range: string
@@ -3631,7 +3631,7 @@ slots:
 
       pulses are provided.
 
-      Based on [DICOM Tag 0018, 925F](http://www.dicomlookup.com/dicomtags/(0018,925F))
+      Based on [DICOM Tag (0018,925F)](https://www.dicomlookup.com/dicomtags/(0018,925F))
 
       `ASL Bolus Cut-off Delay Time`.'
     multivalued: false
@@ -3640,7 +3640,7 @@ slots:
   metadata__BolusCutOffFlag:
     description: 'Boolean indicating if a bolus cut-off technique is used.
 
-      Corresponds to [DICOM Tag 0018, 925C](http://www.dicomlookup.com/dicomtags/(0018,925C))
+      Corresponds to [DICOM Tag (0018,925C)](https://www.dicomlookup.com/dicomtags/(0018,925C))
 
       `ASL Bolus Cut-off Flag`.'
     multivalued: false
@@ -3650,7 +3650,7 @@ slots:
     description: 'Name of the technique used, for example `"Q2TIPS"`, `"QUIPSS"`,
       `"QUIPSSII"`.
 
-      Corresponds to [DICOM Tag 0018, 925E](http://www.dicomlookup.com/dicomtags/(0018,925E))
+      Corresponds to [DICOM Tag (0018,925E)](https://www.dicomlookup.com/dicomtags/(0018,925E))
 
       `ASL Bolus Cut-off Technique`.'
     multivalued: false
@@ -3743,7 +3743,7 @@ slots:
     description: 'The chemical shift at the transmitter frequency, specified in ppm
       (for example, `2.68`).
 
-      Corresponds to [DICOM Tag 0018, 9053](http://www.dicomlookup.com/dicomtags/(0018,9053))
+      Corresponds to [DICOM Tag (0018,9053)](https://www.dicomlookup.com/dicomtags/(0018,9053))
 
       `Chemical Shift Reference`.'
     multivalued: false
@@ -3792,7 +3792,7 @@ slots:
     description: 'Text that has meaning to a human and conveys the meaning of the
       term
 
-      Corresponds to [DICOM Tag 0008, 0104](http://www.dicomlookup.com/dicomtags/(0008,0104))
+      Corresponds to [DICOM Tag (0008,0104)](https://www.dicomlookup.com/dicomtags/(0008,0104))
 
       `Code Meaning`.'
     multivalued: false
@@ -3808,7 +3808,7 @@ slots:
 
       denoted by Coding Scheme Designator and Coding Scheme Version.
 
-      Corresponds to [DICOM Tag 0008, 0100](http://www.dicomlookup.com/dicomtags/(0008,0100))
+      Corresponds to [DICOM Tag (0008,0100)](https://www.dicomlookup.com/dicomtags/(0008,0100))
 
       `Code Value`.'
     multivalued: false
@@ -3818,7 +3818,7 @@ slots:
     description: 'The identifier of the coding scheme in which the coded entry is
       defined.
 
-      Corresponds to [DICOM Tag 0008, 0102](http://www.dicomlookup.com/dicomtags/(0008,0102))
+      Corresponds to [DICOM Tag (0008,0102)](https://www.dicomlookup.com/dicomtags/(0008,0102))
 
       `Coding Scheme Designator`.'
     multivalued: false
@@ -3828,7 +3828,7 @@ slots:
     description: 'An identifier of the version of the coding scheme if necessary to
       resolve ambiguity.
 
-      Corresponds to [DICOM Tag 0008, 0103](http://www.dicomlookup.com/dicomtags/(0008,0103))
+      Corresponds to [DICOM Tag (0008,0103)](https://www.dicomlookup.com/dicomtags/(0008,0103))
 
       `Coding Scheme Version`.'
     multivalued: false
@@ -3904,7 +3904,7 @@ slots:
   metadata__ContrastBolusIngredient:
     description: 'Active ingredient of agent.
 
-      Corresponds to [DICOM Tag 0018, 1048](http://www.dicomlookup.com/dicomtags/(0018,1048))
+      Corresponds to [DICOM Tag (0018,1048)](https://www.dicomlookup.com/dicomtags/(0018,1048))
 
       `Contrast/Bolus Ingredient`.'
     multivalued: false
@@ -3993,7 +3993,7 @@ slots:
   metadata__DecayCorrectionFactor:
     description: 'Decay correction factor for each frame.
 
-      Corresponds to [DICOM Tag 0054, 1321](http://www.dicomlookup.com/dicomtags/(0054,1321))
+      Corresponds to [DICOM Tag (0054,1321)](https://www.dicomlookup.com/dicomtags/(0054,1321))
       `Decay Factor`.'
     multivalued: true
     range: string
@@ -4002,7 +4002,7 @@ slots:
     description: 'A description of the mechanism or method used to remove the Patient''s
       identity.
 
-      Corresponds to [DICOM Tag 0012, 0063](http://www.dicomlookup.com/dicomtags/(0012,0063))
+      Corresponds to [DICOM Tag (0012,0063)](https://www.dicomlookup.com/dicomtags/(0012,0063))
 
       `De-identification Method`.'
     multivalued: true
@@ -4012,7 +4012,7 @@ slots:
     description: 'A sequence of code objects describing the mechanism or method use
       to remove the Patient''s identity.
 
-      Corresponds to [DICOM Tag 0012, 0064](http://www.dicomlookup.com/dicomtags/(0012,0064))
+      Corresponds to [DICOM Tag (0012,0064)](https://www.dicomlookup.com/dicomtags/(0012,0064))
 
       `De-identification Method Code Sequence`.'
     multivalued: true
@@ -4217,7 +4217,7 @@ slots:
     description: 'Multiplication factor used to transform raw data (in counts/sec)
       to meaningful unit (Bq/ml).
 
-      Corresponds to [DICOM Tag 0054, 1322](http://www.dicomlookup.com/dicomtags/(0054,1322))
+      Corresponds to [DICOM Tag (0054,1322)](https://www.dicomlookup.com/dicomtags/(0054,1322))
 
       `Dose Calibration Factor`.'
     multivalued: false
@@ -4455,7 +4455,7 @@ slots:
   metadata__EchoTime:
     description: 'The echo time (TE) for the acquisition, specified in seconds.
 
-      Corresponds to [DICOM Tag 0018, 0081](http://www.dicomlookup.com/dicomtags/(0018,0081))
+      Corresponds to [DICOM Tag (0018,0081)](https://www.dicomlookup.com/dicomtags/(0018,0081))
 
       `Echo Time`
 
@@ -4739,7 +4739,7 @@ slots:
   metadata__FlipAngle:
     description: 'Flip angle (FA) for the acquisition, specified in degrees.
 
-      Corresponds to: [DICOM Tag 0018, 1314](http://www.dicomlookup.com/dicomtags/(0018,1314))
+      Corresponds to: [DICOM Tag (0018,1314)](https://www.dicomlookup.com/dicomtags/(0018,1314))
 
       `Flip Angle`.
 
@@ -4763,14 +4763,14 @@ slots:
   metadata__FrameAcquisitionDuration:
     description: 'Duration (in seconds) of volume acquisition.
 
-      Corresponds to DICOM Tag 0018, 9220 `Frame Acquisition Duration`.'
+      Corresponds to DICOM Tag (0018,9220) `Frame Acquisition Duration`.'
     multivalued: false
     range: float
     slot_uri: https://bids-specification.readthedocs.io/en/stable/glossary.html#FrameAcquisitionDuration
   metadata__FrameDuration:
     description: 'Time duration of each frame in default unit seconds.
 
-      This corresponds to [DICOM Tag 0018, 1242](http://www.dicomlookup.com/dicomtags/(0018,1242))
+      This corresponds to [DICOM Tag (0018,1242)](https://www.dicomlookup.com/dicomtags/(0018,1242))
 
       `Actual Frame Duration` converted to seconds.'
     multivalued: true
@@ -4874,7 +4874,7 @@ slots:
 
       Hardcopy Image (the printer).
 
-      Corresponds to [DICOM Tag 0018, 101A](http://www.dicomlookup.com/dicomtags/(0018,101A))
+      Corresponds to [DICOM Tag (0018,101A)](https://www.dicomlookup.com/dicomtags/(0018,101A))
 
       `Hardcopy Device Software Version`.'
     multivalued: false
@@ -5090,7 +5090,7 @@ slots:
 
       radioactivity originating from both bolus and infusion.
 
-      Corresponds to [DICOM Tag 0018, 1074](http://www.dicomlookup.com/dicomtags/(0018,1074))
+      Corresponds to [DICOM Tag (0018,1074)](https://www.dicomlookup.com/dicomtags/(0018,1074))
 
       `Radionuclide Total Dose`.'
     multivalued: false
@@ -5110,7 +5110,7 @@ slots:
   metadata__InjectionEnd:
     description: 'Time of end of injection with respect to `"TimeZero"`, in seconds.
 
-      Corresponds to [DICOM Tag 0018, 1073](http://www.dicomlookup.com/dicomtags/(0018,1073))
+      Corresponds to [DICOM Tag (0018,1073)](https://www.dicomlookup.com/dicomtags/(0018,1073))
 
       `Radiopharmaceutical Stop Time` converted to seconds relative to TimeZero.'
     multivalued: false
@@ -5119,7 +5119,7 @@ slots:
   metadata__InjectionStart:
     description: 'Time of start of injection with respect to `"TimeZero"`, in seconds.
 
-      This corresponds to [DICOM Tag 0018, 1072](http://www.dicomlookup.com/dicomtags/(0018,1072))
+      This corresponds to [DICOM Tag (0018,1072)](https://www.dicomlookup.com/dicomtags/(0018,1072))
 
       `Contrast/Bolus Start Time` converted to seconds relative to `"TimeZero"`.'
     multivalued: false
@@ -5211,7 +5211,7 @@ slots:
 
       of excitation pulse to detect the amount of longitudinal magnetization.
 
-      Corresponds to [DICOM Tag 0018, 0082](http://www.dicomlookup.com/dicomtags/(0018,0082))
+      Corresponds to [DICOM Tag (0018,0082)](https://www.dicomlookup.com/dicomtags/(0018,0082))
 
       `Inversion Time`
 
@@ -5276,7 +5276,7 @@ slots:
 
       `*_aslcontext.tsv`.
 
-      Corresponds to [DICOM Tag 0018, 9258](http://www.dicomlookup.com/dicomtags/(0018,9258))
+      Corresponds to [DICOM Tag (0018,9258)](https://www.dicomlookup.com/dicomtags/(0018,9258))
 
       `ASL Pulse Train Duration`.'
     multivalued: false
@@ -5314,7 +5314,7 @@ slots:
 
       slab or plane with respect to the patient.
 
-      Corresponds to [DICOM Tag 0018, 9255](http://www.dicomlookup.com/dicomtags/(0018,9255))
+      Corresponds to [DICOM Tag (0018,9255)](https://www.dicomlookup.com/dicomtags/(0018,9255))
 
       `ASL Slab Orientation`.'
     multivalued: true
@@ -5362,7 +5362,7 @@ slots:
 
       For non-selective FAIR a zero is entered.
 
-      Corresponds to [DICOM Tag 0018, 9254](http://www.dicomlookup.com/dicomtags/(0018,9254))
+      Corresponds to [DICOM Tag (0018,9254)](https://www.dicomlookup.com/dicomtags/(0018,9254))
 
       `ASL Slab Thickness`.'
     multivalued: false
@@ -5491,7 +5491,7 @@ slots:
   metadata__MRAcquisitionType:
     description: 'Type of sequence readout.
 
-      Corresponds to [DICOM Tag 0018, 0023](http://www.dicomlookup.com/dicomtags/(0018,0023))
+      Corresponds to [DICOM Tag (0018,0023)](https://www.dicomlookup.com/dicomtags/(0018,0023))
 
       `MR Acquisition Type`.'
     multivalued: false
@@ -5500,7 +5500,7 @@ slots:
   metadata__MRTransmitCoilSequence:
     description: 'This is a relevant field if a non-standard transmit coil is used.
 
-      Corresponds to [DICOM Tag 0018, 9049](http://www.dicomlookup.com/dicomtags/(0018,9049))
+      Corresponds to [DICOM Tag (0018,9049)](https://www.dicomlookup.com/dicomtags/(0018,9049))
 
       `MR Transmit Coil Sequence`.'
     multivalued: false
@@ -5545,7 +5545,7 @@ slots:
   metadata__MTState:
     description: 'Boolean stating whether the magnetization transfer pulse is applied.
 
-      Corresponds to [DICOM Tag 0018, 9020](http://www.dicomlookup.com/dicomtags/(0018,9020))
+      Corresponds to [DICOM Tag (0018,9020)](https://www.dicomlookup.com/dicomtags/(0018,9020))
 
       `Magnetization Transfer`.'
     multivalued: false
@@ -5554,7 +5554,7 @@ slots:
   metadata__MagneticFieldStrength:
     description: 'Nominal field strength of MR magnet in Tesla.
 
-      Corresponds to [DICOM Tag 0018, 0087](http://www.dicomlookup.com/dicomtags/(0018,0087))
+      Corresponds to [DICOM Tag (0018,0087)](https://www.dicomlookup.com/dicomtags/(0018,0087))
 
       `Magnetic Field Strength`.'
     multivalued: false
@@ -5706,7 +5706,7 @@ slots:
   metadata__MolarActivity:
     description: 'Molar activity of compound injected.
 
-      Corresponds to [DICOM Tag 0018, 1077](http://www.dicomlookup.com/dicomtags/(0018,1077))
+      Corresponds to [DICOM Tag (0018,1077)](https://www.dicomlookup.com/dicomtags/(0018,1077))
 
       `Radiopharmaceutical Specific Activity`.'
     multivalued: false
@@ -6004,7 +6004,7 @@ slots:
   metadata__ParallelAcquisitionTechnique:
     description: 'The type of parallel imaging used (for example `"GRAPPA"`, `"SENSE"`).
 
-      Corresponds to [DICOM Tag 0018, 9078](http://www.dicomlookup.com/dicomtags/(0018,9078))
+      Corresponds to [DICOM Tag (0018,9078)](https://www.dicomlookup.com/dicomtags/(0018,9078))
 
       `Parallel Acquisition Technique`.'
     multivalued: false
@@ -6017,7 +6017,7 @@ slots:
 
       For example, 2 means half of k-space is encoded.
 
-      Corresponds to [DICOM Tag 0018, 9069](http://www.dicomlookup.com/dicomtags/(0018,9069))
+      Corresponds to [DICOM Tag (0018,9069)](https://www.dicomlookup.com/dicomtags/(0018,9069))
 
       `Parallel Reduction Factor In-plane`.'
     multivalued: false
@@ -6039,7 +6039,7 @@ slots:
 
       as they imply different methods of accelerating the acquisition.
 
-      Corresponds to [DICOM Tag 0018, 9155](http://www.dicomlookup.com/dicomtags/(0018,9155))
+      Corresponds to [DICOM Tag (0018,9155)](https://www.dicomlookup.com/dicomtags/(0018,9155))
 
       `Parallel Reduction Factor out-of-plane`.'
     multivalued: false
@@ -6061,7 +6061,7 @@ slots:
   metadata__PartialFourierDirection:
     description: 'The direction where only partial Fourier information was collected.
 
-      Corresponds to [DICOM Tag 0018, 9036](http://www.dicomlookup.com/dicomtags/(0018,9036))
+      Corresponds to [DICOM Tag (0018,9036)](https://www.dicomlookup.com/dicomtags/(0018,9036))
 
       `Partial Fourier Direction`.'
     multivalued: false
@@ -6070,7 +6070,7 @@ slots:
   metadata__PharmaceuticalDoseAmount:
     description: 'Dose amount of administered pharmaceutical.
 
-      Corresponds to [DICOM Tag 0018, 0028](http://www.dicomlookup.com/dicomtags/(0018,0028))
+      Corresponds to [DICOM Tag (0018,0028)](https://www.dicomlookup.com/dicomtags/(0018,0028))
       `Intervention Drug Dose`.'
     multivalued: false
     range: float
@@ -6098,12 +6098,12 @@ slots:
 
       Unit format of the specified pharmaceutical dose time MUST be seconds.
 
-      Corresponds to a combination of DICOM Tags
+      Corresponds to a combination of
 
-      [0018, 0027](http://www.dicomlookup.com/dicomtags/(0018,0027)) `Intervention
+      [DICOM Tag (0018,0027)](https://www.dicomlookup.com/dicomtags/(0018,0027)) `Intervention
       Drug Stop Time` and
 
-      [0018, 0035](http://www.dicomlookup.com/dicomtags/(0018,0035)) `Intervention
+      [DICOM Tag (0018,0035)](https://www.dicomlookup.com/dicomtags/(0018,0035)) `Intervention
       Drug Start Time`.'
     multivalued: false
     range: float
@@ -6121,7 +6121,7 @@ slots:
       Note that this is distinct from any radiotracer or contrast agent used in the
       scan protocol.
 
-      This partly matches [DICOM Tag 0018, 0034](http://www.dicomlookup.com/dicomtags/(0018,0034))
+      This partly matches [DICOM Tag (0018,0034)](https://www.dicomlookup.com/dicomtags/(0018,0034))
 
       `Intervention Drug Name`.'
     multivalued: false
@@ -6232,9 +6232,9 @@ slots:
 
       is indicated by a zero.
 
-      Based on DICOM Tags 0018, 9079 `Inversion Times` and 0018, 0082
+      Based on DICOM Tags (0018,9079) `Inversion Times` and (0018,0082)
 
-      `InversionTime`.'
+      `Inversion Time`.'
     multivalued: false
     range: float
     slot_uri: https://bids-specification.readthedocs.io/en/stable/glossary.html#PostLabelingDelay
@@ -6367,7 +6367,7 @@ slots:
   metadata__ReceiveCoilName:
     description: 'Information describing the receiver coil.
 
-      Corresponds to [DICOM Tag 0018, 1250](http://www.dicomlookup.com/dicomtags/(0018,1250))
+      Corresponds to [DICOM Tag (0018,1250)](https://www.dicomlookup.com/dicomtags/(0018,1250))
 
       `Receive Coil Name`,
 
@@ -6387,7 +6387,7 @@ slots:
   metadata__ReconFilterSize:
     description: 'Kernel size of post-recon filter (FWHM) in default units `"mm"`.
 
-      This partly matches the [DICOM Tag 0018, 1210](http://www.dicomlookup.com/dicomtags/(0018,1210))
+      This partly matches the [DICOM Tag (0018,1210)](https://www.dicomlookup.com/dicomtags/(0018,1210))
 
       `Convolution Kernel`.'
     multivalued: false
@@ -6396,7 +6396,7 @@ slots:
   metadata__ReconFilterType:
     description: 'Type of post-recon smoothing (for example, `["Shepp"]`).
 
-      This partly matches the [DICOM Tag 0018, 1210](http://www.dicomlookup.com/dicomtags/(0018,1210))
+      This partly matches the [DICOM Tag (0018,1210)](https://www.dicomlookup.com/dicomtags/(0018,1210))
 
       `Convolution Kernel`.'
     multivalued: false
@@ -6410,7 +6410,7 @@ slots:
   metadata__ReconMethodName:
     description: 'Reconstruction method or algorithm (for example, `"3d-op-osem"`).
 
-      This partly matches the [DICOM Tag 0054, 1103](http://www.dicomlookup.com/dicomtags/(0054,1103))
+      This partly matches the [DICOM Tag (0054,1103)](https://www.dicomlookup.com/dicomtags/(0054,1103))
 
       `Reconstruction Method`.'
     multivalued: false
@@ -6419,7 +6419,7 @@ slots:
   metadata__ReconMethodParameterLabels:
     description: 'Names of reconstruction parameters (for example, `["subsets", "iterations"]`).
 
-      This partly matches the [DICOM Tag 0054, 1103](http://www.dicomlookup.com/dicomtags/(0054,1103))
+      This partly matches the [DICOM Tag (0054,1103)](https://www.dicomlookup.com/dicomtags/(0054,1103))
 
       `Reconstruction Method`.'
     multivalued: true
@@ -6428,7 +6428,7 @@ slots:
   metadata__ReconMethodParameterUnits:
     description: 'Unit of reconstruction parameters (for example, `["none", "none"]`).
 
-      This partly matches the [DICOM Tag 0054, 1103](http://www.dicomlookup.com/dicomtags/(0054,1103))
+      This partly matches the [DICOM Tag (0054,1103)](https://www.dicomlookup.com/dicomtags/(0054,1103))
 
       `Reconstruction Method`.'
     multivalued: true
@@ -6437,7 +6437,7 @@ slots:
   metadata__ReconMethodParameterValues:
     description: 'Values of reconstruction parameters (for example, `[21, 3]`).
 
-      This partly matches the [DICOM Tag 0054, 1103](http://www.dicomlookup.com/dicomtags/(0054,1103))
+      This partly matches the [DICOM Tag (0054,1103)](https://www.dicomlookup.com/dicomtags/(0054,1103))
 
       `Reconstruction Method`.'
     multivalued: true
@@ -6497,13 +6497,13 @@ slots:
 
       corresponds to
 
-      [DICOM Tag 0020, 0110](http://www.dicomlookup.com/dicomtags/(0020,0110)):
+      [DICOM Tag (0020,0110)](https://www.dicomlookup.com/dicomtags/(0020,0110)):
 
       the "time delta between images in a
 
       dynamic of functional set of images" but may also be found in
 
-      [DICOM Tag 0018, 0080](http://www.dicomlookup.com/dicomtags/(0018,0080)):
+      [DICOM Tag (0018,0080)](https://www.dicomlookup.com/dicomtags/(0018,0080)):
 
       "the period of time in msec between the beginning
 
@@ -6526,7 +6526,7 @@ slots:
   metadata__RepetitionTimeExcitation:
     description: 'The interval, in seconds, between two successive excitations.
 
-      [DICOM Tag 0018, 0080](http://www.dicomlookup.com/dicomtags/(0018,0080))
+      [DICOM Tag (0018,0080)](https://www.dicomlookup.com/dicomtags/(0018,0080))
 
       best refers to this parameter.
 
@@ -6593,7 +6593,7 @@ slots:
 
       an array can be used: `["1H", "13C"]`.
 
-      Corresponds to [DICOM Tag 0018, 9100](http://www.dicomlookup.com/dicomtags/(0018,9100))
+      Corresponds to [DICOM Tag (0018,9100)](https://www.dicomlookup.com/dicomtags/(0018,9100))
 
       `Resonant Nucleus`.'
     multivalued: false
@@ -6764,7 +6764,7 @@ slots:
   metadata__ScanDate:
     description: 'Date of scan in the format `"YYYY-MM-DD[Z]"`.
 
-      Corresponds to [DICOM Tag 0008, 0022](http://www.dicomlookup.com/dicomtags/(0008,0022))
+      Corresponds to [DICOM Tag (0008,0022)](https://www.dicomlookup.com/dicomtags/(0008,0022))
       `Acquisition Date`.
 
       This field is DEPRECATED, and this metadata SHOULD be recorded in the `acq_time`
@@ -6777,7 +6777,7 @@ slots:
   metadata__ScanOptions:
     description: 'Parameters of ScanningSequence.
 
-      Corresponds to [DICOM Tag 0018, 0022](http://www.dicomlookup.com/dicomtags/(0018,0022))
+      Corresponds to [DICOM Tag (0018,0022)](https://www.dicomlookup.com/dicomtags/(0018,0022))
 
       `Scan Options`.'
     multivalued: false
@@ -6792,7 +6792,7 @@ slots:
   metadata__ScanningSequence:
     description: 'Description of the type of data acquired.
 
-      Corresponds to [DICOM Tag 0018, 0020](http://www.dicomlookup.com/dicomtags/(0018,0020))
+      Corresponds to [DICOM Tag (0018,0020)](https://www.dicomlookup.com/dicomtags/(0018,0020))
 
       `Scanning Sequence`.'
     multivalued: false
@@ -6806,7 +6806,7 @@ slots:
   metadata__ScatterFraction:
     description: 'Scatter fraction for each frame (Units: 0-100%).
 
-      Corresponds to [DICOM Tag 0054, 1323](http://www.dicomlookup.com/dicomtags/(0054,1323))
+      Corresponds to [DICOM Tag (0054,1323)](https://www.dicomlookup.com/dicomtags/(0054,1323))
 
       `Scatter Fraction Factor`.'
     multivalued: true
@@ -6873,7 +6873,7 @@ slots:
   metadata__SequenceName:
     description: 'Manufacturer''s designation of the sequence name.
 
-      Corresponds to [DICOM Tag 0018, 0024](http://www.dicomlookup.com/dicomtags/(0018,0024))
+      Corresponds to [DICOM Tag (0018,0024)](https://www.dicomlookup.com/dicomtags/(0018,0024))
 
       `Sequence Name`.'
     multivalued: false
@@ -6882,7 +6882,7 @@ slots:
   metadata__SequenceVariant:
     description: 'Variant of the ScanningSequence.
 
-      Corresponds to [DICOM Tag 0018, 0021](http://www.dicomlookup.com/dicomtags/(0018,0021))
+      Corresponds to [DICOM Tag (0018,0021)](https://www.dicomlookup.com/dicomtags/(0018,0021))
 
       `Sequence Variant`.'
     multivalued: false
@@ -7142,7 +7142,7 @@ slots:
     description: 'The spectral bandwidth of the MR signal that is sampled, specified
       in Hz.
 
-      Corresponds to [DICOM Tag 0018, 9052](http://www.dicomlookup.com/dicomtags/(0018,9052))
+      Corresponds to [DICOM Tag (0018,9052)](https://www.dicomlookup.com/dicomtags/(0018,9052))
 
       `Spectral Width`.'
     multivalued: false
@@ -7347,15 +7347,15 @@ slots:
   metadata__TracerName:
     description: 'Name of the tracer compound used (for example, `"CIMBI-36"`)
 
-      Corresponds to [DICOM Tag 0054, 0300](http://www.dicomlookup.com/dicomtags/(0054,0300))
+      Corresponds to [DICOM Tag (0054,0300)](https://www.dicomlookup.com/dicomtags/(0054,0300))
 
       `Radionuclide Code Sequence`,
 
-      extracted from the fields [0008, 0122](http://www.dicomlookup.com/dicomtags/(0008,0122))
+      extracted from the fields [(0008,0122)](https://www.dicomlookup.com/dicomtags/(0008,0122))
 
       `Mapping Resource Name`
 
-      and/or [0008, 0105](http://www.dicomlookup.com/dicomtags/(0008,0105)) `Mapping
+      and/or [(0008,0105)](https://www.dicomlookup.com/dicomtags/(0008,0105)) `Mapping
       Resource`.'
     multivalued: false
     range: string
@@ -7368,14 +7368,15 @@ slots:
   metadata__TracerRadionuclide:
     description: 'Radioisotope labeling tracer (for example, `"C11"`).
 
-      Corresponds to [DICOM Tag 0054, 0300](http://www.dicomlookup.com/dicomtags/(0054,0300))
+      Corresponds to [DICOM Tag (0054,0300)](https://www.dicomlookup.com/dicomtags/(0054,0300))
 
       `Radionuclide Code Sequence`,
 
-      extracted from the fields [0008, 0100](http://www.dicomlookup.com/dicomtags/(0008,0100))
-      `Code Value`
+      extracted from the fields
 
-      and/or [0008, 0104](http://www.dicomlookup.com/dicomtags/(0008,0104)) `Code
+      [(0008,0100)](https://www.dicomlookup.com/dicomtags/(0008,0100)) `Code Value`
+
+      and/or [(0008,0104)](https://www.dicomlookup.com/dicomtags/(0008,0104)) `Code
       Meaning`.'
     multivalued: false
     range: string
@@ -7462,7 +7463,7 @@ slots:
   metadata__VascularCrushing:
     description: 'Boolean indicating if Vascular Crushing is used.
 
-      Corresponds to [DICOM Tag 0018, 9259](http://www.dicomlookup.com/dicomtags/(0018,9259))
+      Corresponds to [DICOM Tag (0018,9259)](https://www.dicomlookup.com/dicomtags/(0018,9259))
 
       `ASL Crusher Flag`.'
     multivalued: false
@@ -7477,7 +7478,7 @@ slots:
 
       volumes for which `VascularCrushing` was turned off.
 
-      Corresponds to [DICOM Tag 0018, 925A](http://www.dicomlookup.com/dicomtags/(0018,925A))
+      Corresponds to [DICOM Tag (0018,925A)](https://www.dicomlookup.com/dicomtags/(0018,925A))
 
       `ASL Crusher Flow Limit`.'
     multivalued: false

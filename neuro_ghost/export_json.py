@@ -33,26 +33,26 @@ DB_PATH  = "./registry.lbug"
 # Export helpers
 # ---------------------------------------------------------------------------
 
-def _attesting_sources(conn, label: str, rel: str, hash_id: str) -> list[str]:
+def _attesting_sources(conn, label: str, rel: str, id: str) -> list[str]:
     """Every distinct source that has a ProvenanceEntry for this entity."""
     return sorted({
         r[0] for r in conn.execute(f"""
-            MATCH (:{label} {{hash_id: $hash_id}})-[:{rel}]->(pe:ProvenanceEntry)
-            RETURN pe.source
-        """, {"hash_id": hash_id}).get_all()
+            MATCH (:{label} {{id: $node_id}})-[:{rel}]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(ss:SchemaSource)
+            RETURN ss.label
+        """, {"id": node_id}).get_all()
     })
 
 
 def export_snapshot(conn, registry_version: str) -> dict:
     # ---- sources -----------------------------------------------------------
     src_rows = conn.execute(
-        "MATCH (s:SchemaSource) RETURN s.uid, s.label, s.source_version"
+        "MATCH (s:SchemaSource) RETURN s.id, s.label, s.source_version"
     ).get_all()
 
     sources = []
     for _, label, ver in src_rows:
         count = conn.execute("""
-            MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry {source: $src})
+            MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: $src})
             RETURN count(DISTINCT n)
         """, {"src": label}).get_next()[0]
         sources.append({"label": label, "version": ver or "1.0.0",
@@ -63,50 +63,52 @@ def export_snapshot(conn, registry_version: str) -> dict:
     # has a single "source" — it has a `sources` list, one per ProvenanceEntry.
     cls_rows = conn.execute("""
         MATCH (n:RegistryClass)
-        RETURN n.hash_id, n.class_uri, n.name, n.description, n.abstract
+        RETURN n.id, n.sha256_hash, n.concept_uri, n.name, n.description, n.is_abstract
         ORDER BY n.name
     """).get_all()
 
     classes = []
     for row in cls_rows:
-        hash_id, class_uri, name, desc, is_abstract = row
+        node_id, sha256_hash, concept_uri, name, desc, is_abstract = row
 
         props = conn.execute("""
-            MATCH (c:RegistryClass {hash_id: $hash_id})-[:HAS_PROPERTY]->(p:RegistryProperty)
-            RETURN p.hash_id, p.slot_uri, p.name, p.description, p.range, p.units
+            MATCH (c:RegistryClass {id: $id})-[:HAS_PROPERTY]->(p:RegistryProperty)
+            RETURN p.id, p.sha256_hash, p.concept_uri, p.name, p.description, p.property_range, p.ucum_code
             ORDER BY p.name
-        """, {"hash_id": hash_id}).get_all()
+        """, {"id": node_id}).get_all()
 
         subclass_of = [
             r[0] for r in conn.execute("""
-                MATCH (c:RegistryClass {hash_id: $hash_id})-[:SUBCLASS_OF]->(p:RegistryClass)
-                RETURN p.class_uri
-            """, {"hash_id": hash_id}).get_all() if r[0]
+                MATCH (c:RegistryClass {id: $id})-[:SUBCLASS_OF]->(p:RegistryClass)
+                RETURN p.concept_uri
+            """, {"id": node_id}).get_all() if r[0]
         ]
 
         align_rows = conn.execute("""
-            MATCH (c:RegistryClass {hash_id: $hash_id})-[a:ALIGNED_TO]->(t:RegistryClass)
-            RETURN t.hash_id, t.name, t.class_uri,
+            MATCH (c:RegistryClass {id: $id})-[a:ALIGNED_TO]->(t:RegistryClass)
+            RETURN t.id, t.name, t.concept_uri,
                    a.distance, a.method,
                    a.score_iri, a.score_name, a.score_desc, a.score_slot
             ORDER BY a.distance
-        """, {"hash_id": hash_id}).get_all()
+        """, {"id": node_id}).get_all()
 
         classes.append({
-            "hash_id":          hash_id,
-            "iri":              class_uri or "",
+            "id":               node_id,
+            "sha256_hash":      sha256_hash or "",
+            "iri":              concept_uri or "",
             "name":             name or "",
             "definition":       desc or "",
             "is_abstract":      bool(is_abstract),
-            "sources":          _attesting_sources(conn, "RegistryClass", "HAS_PROVENANCE", hash_id),
+            "sources":          _attesting_sources(conn, "RegistryClass", "HAS_PROVENANCE", node_id),
             "properties": [
                 {
-                    "hash_id":     r[0],
-                    "iri":         r[1] or "",
-                    "name":        r[2] or "",
-                    "definition":  r[3] or "",
-                    "value_range": r[4] or "",
-                    "units":       r[5] or "",
+                    "id":          r[0],
+                    "sha256_hash": r[1] or "",
+                    "iri":         r[2] or "",
+                    "name":        r[3] or "",
+                    "definition":  r[4] or "",
+                    "value_range": r[5] or "",
+                    "units":       r[6] or "",
                     "sources":     _attesting_sources(conn, "RegistryProperty", "HAS_PROVENANCE_P", r[0]),
                 }
                 for r in props
@@ -114,7 +116,7 @@ def export_snapshot(conn, registry_version: str) -> dict:
             "subclass_of": subclass_of,
             "alignments": [
                 {
-                    "target_hash_id": r[0],
+                    "target_id": r[0],
                     "target_name":    r[1] or "",
                     "target_iri":     r[2] or "",
                     "distance":       float(r[3]) if r[3] is not None else 1.0,

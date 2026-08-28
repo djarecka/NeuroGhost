@@ -28,8 +28,8 @@ This script does real LinkML validation, in two passes:
 
 USAGE
 -----
-  python validate_schema.py schemas/bbqs.yml
-  python validate_schema.py schemas/bbqs.yml --strict   # also fail on lint warnings
+  python validate_schema.py registry_schemas/bbqs.yml
+  python validate_schema.py registry_schemas/bbqs.yml --strict   # also fail on lint warnings
 """
 
 from __future__ import annotations

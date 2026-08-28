@@ -143,11 +143,60 @@ nav{display:flex;gap:2px;flex:1;}
   </div>
 </header>
 
-<!-- ══ META-MODEL VIEW ══ -->
-<div id="view-meta" class="view active">
-  <div class="meta-main">
-    <div id="meta-canvas">
-      <svg id="edge-svg" aria-hidden="true"></svg>
+<nav>
+  <button class="active" onclick="sv('concepts')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>Concepts</button>
+  <button onclick="sv('diff')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Diff</button>
+  <button onclick="sv('graph')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Graph Schema</button>
+  <button onclick="sv('transform')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M13 6l6 6-6 6"/></svg>Transform</button>
+  <button onclick="sv('query')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Query</button>
+  <button onclick="sv('provenance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>Provenance</button>
+  <button onclick="sv('submit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Register</button>
+</nav>
+
+<!-- CONCEPTS -->
+<div id="view-concepts" class="view active">
+  <div class="view-inner">
+    <aside><h2>Filter by source</h2><div id="concepts-src"></div></aside>
+    <main>
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="text" id="concepts-search" placeholder="Search concepts, IRIs, definitions, aligned names…" oninput="renderConcepts()"/>
+        </div>
+      </div>
+      <div id="concepts-list"></div>
+    </main>
+  </div>
+</div>
+
+<!-- DIFF -->
+<div id="view-diff" class="view">
+  <div class="section-pad">
+    <div class="diff-toolbar">
+      <select id="diff-a" onchange="renderDiff()"></select>
+      <span style="color:var(--muted)">vs</span>
+      <select id="diff-b" onchange="renderDiff()"></select>
+      <button class="btn-ghost" onclick="dlDiffCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export diff CSV
+      </button>
+    </div>
+    <div class="diff-grid" id="diff-grid"></div>
+  </div>
+</div>
+
+<!-- GRAPH SCHEMA -->
+<div id="view-graph" class="view">
+  <div class="section-pad">
+    <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Node types and relationships in the LadybugDB graph. Every entity has a UUID <code style="font-family:var(--mono);color:var(--teal)">id</code> (primary key) and a <code style="font-family:var(--mono);color:var(--teal)">sha256_hash</code> content fingerprint that drives cross-source dedup. Click a node to inspect its fields.</p>
+    <div id="graph-canvas">
+      <svg class="graph-svg" id="graph-svg"></svg>
+      <div class="g-legend"><h4>Legend</h4><div class="g-legend-item"><div class="g-legend-dot" style="background:var(--teal)"></div>Node table</div><div class="g-legend-item"><div class="g-legend-dot" style="background:var(--purple)"></div>Relationship</div></div>
+    </div>
+    <div id="graph-detail" style="margin-top:12px;display:none">
+      <div class="concept-col" style="max-width:600px">
+        <h5 id="g-detail-name" style="color:var(--teal);font-size:13px"></h5>
+        <div id="g-detail-fields" style="font-family:var(--mono);font-size:11.5px;line-height:2;color:var(--text-dim)"></div>
+      </div>
     </div>
   </div>
   <div class="meta-panel">
@@ -207,74 +256,172 @@ nav{display:flex;gap:2px;flex:1;}
 </div>
 
 <script>
-// ══ Tab switching ══════════════════════════════════════════════
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('view-' + btn.dataset.view).classList.add('active');
-    if (btn.dataset.view === 'meta') setTimeout(renderGraph, 0);
+const REGISTRY_JSON="./data/registry.json";
+const PROVENANCE_JSON="./data/provenance.json";
+const GITHUB_REPO="sensein/NeuroGhost";
+const API_BASE="https://sensein.group/NeuroGhost";
+
+let allClasses=[],allSources=[],provenance=[],classHistories={},propHistories={},schemaHistories={};
+let activeSource="all",treeSrc="all",trCsv=null,trHeaders=[],trRows=[],trMapping={},selectedHist={schema:null,class:null,property:null};
+
+async function boot(){
+  try{
+    const [rr,pr]=await Promise.allSettled([fetch(REGISTRY_JSON),fetch(PROVENANCE_JSON)]);
+    if(rr.status==="fulfilled"&&rr.value.ok){
+      const d=await rr.value.json();
+      // Normalize class/property fields across registry export formats:
+      // the meta-model export uses id / sha256_hash / value_range / is_abstract, while
+      // this UI reads uid / datatype / version. Map new→old, keeping old as-is.
+      allClasses=(d.classes||[]).map(c=>({
+        ...c,
+        uid: c.uid||c.id||"",
+        version: c.version||c.registry_version||"",
+        abstract: c.abstract??c.is_abstract??false,
+        source: c.source||(Array.isArray(c.sources)?c.sources[0]:"")||"",
+        alignments: (c.alignments||[]).map(a=>({
+          ...a,
+          target_uid: a.target_uid||a.target_id||"",
+        })),
+        properties: (c.properties||[]).map(p=>({
+          ...p,
+          uid: p.uid||p.id||"",
+          datatype: p.datatype||p.value_range||"",
+          source: p.source||(Array.isArray(p.sources)?p.sources[0]:"")||"",
+        })),
+      }));
+      allSources=d.sources||[];
+      classHistories=d.class_histories||{};
+      propHistories=d.property_histories||{};
+      schemaHistories=d.schema_histories||{};
+      const ts=d.generated_at?new Date(d.generated_at).toLocaleString():"";
+      const ver=d.registry_version?` · v${d.registry_version}`:"";
+      document.getElementById("status").innerHTML=`<span class="status-dot"></span>${allClasses.length} classes · ${allSources.length} sources${ver} · ${ts}`;
+    }else document.getElementById("status").innerHTML='<span class="status-dot err"></span>Could not load registry.json';
+    if(pr.status==="fulfilled"&&pr.value.ok)provenance=await pr.value.json();
+    renderConceptsSrc();renderConcepts();renderDiffSelects();renderGraph();renderProvenance();
+    renderHistList("schemas");renderHistList("classes");renderHistList("properties");
+    initQuery();initTransform();initDemoCards();
+  }catch(e){document.getElementById("status").innerHTML='<span class="status-dot err"></span>Failed to load';}
+}
+
+// utils
+function srcCls(s){return s==="schema.org"?"schemaorg":s==="bbqs"?"bbqs":"other";}
+function srcBadge(s){return`<span class="badge ${srcCls(s)}">${s||"—"}</span>`;}
+function distBadge(d){const c=d<=.1?"dist-0":d<=.5?"dist-05":"dist-1";return`<span class="dist-badge ${c}">${d.toFixed(3)}</span>`;}
+function dlBlob(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();}
+function dlJSON(data,name){dlBlob(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),name);}
+function dlText(text,name,mime="text/plain"){dlBlob(new Blob([text],{type:mime}),name);}
+function cpText(t){navigator.clipboard.writeText(t).catch(()=>{});}
+function dlAll(){fetch(REGISTRY_JSON).then(r=>r.blob()).then(b=>dlBlob(b,"registry.json"));}
+function dlProv(){fetch(PROVENANCE_JSON).then(r=>r.blob()).then(b=>dlBlob(b,"provenance.json")).catch(()=>dlJSON(provenance,"provenance.json"));}
+function dlClass(uid){const c=allClasses.find(x=>x.uid===uid);if(c)dlJSON(c,c.name+".json");}
+function dlClassYAML(uid){
+  const c=allClasses.find(x=>x.uid===uid);if(!c)return;
+  const lines=[`# ${c.name} · ${c.source}`,`# IRI: ${c.iri}`,``,`classes:`,`  ${c.name}:`,`    description: "${(c.definition||"").replace(/"/g,'\\"')}"`,`    class_uri: "${c.iri}"`];
+  if(c.abstract)lines.splice(5,0,`    abstract: true`);
+  if(c.properties.length){lines.push(`    slots:`);c.properties.forEach(p=>lines.push(`      - ${p.name}`));lines.push(``,`slots:`);c.properties.forEach(p=>{lines.push(`  ${p.name}:`);if(p.definition)lines.push(`    description: "${p.definition.replace(/"/g,'\\"')}"`);const rng=(p.datatype||p.value_range||"").replace("xsd:","");if(rng)lines.push(`    range: ${rng}`);if(p.multivalued)lines.push(`    multivalued: true`);});}
+  dlText(lines.join("\n"),c.name+".yml","application/yaml");
+}
+function dlDiffCSV(){
+  const a=document.getElementById("diff-a")?.value,b=document.getElementById("diff-b")?.value;if(!a||!b)return;
+  const ca=allClasses.filter(c=>c.source===a),cb=allClasses.filter(c=>c.source===b);
+  const nb=new Set(cb.map(c=>c.name));
+  const lines=["name,source,status"];
+  ca.forEach(c=>lines.push(`${c.name},${a},${nb.has(c.name)?"matched":"unique"}`));
+  cb.filter(c=>!ca.find(x=>x.name===c.name)).forEach(c=>lines.push(`${c.name},${b},unique`));
+  dlText(lines.join("\n"),`diff-${a}-vs-${b}.csv`,"text/csv");
+}
+
+// CONCEPTS
+function renderConceptsSrc(){
+  const el=document.getElementById("concepts-src");el.innerHTML="";
+  const mk=(lbl,val)=>{const b=document.createElement("button");b.className="source-pill"+(treeSrc===val?" active":"");b.innerHTML=`<span>${lbl}</span>`;b.onclick=()=>{treeSrc=val;renderConceptsSrc();renderConcepts();};el.appendChild(b);};
+  mk("All","all");allSources.forEach(s=>mk(s.label,s.label));
+}
+function renderConcepts(){
+  const q=(document.getElementById("concepts-search").value||"").toLowerCase();
+  const el=document.getElementById("concepts-list");el.innerHTML="";
+  const seen=new Set(),clusters=[];
+  allClasses.forEach(c=>{
+    if(seen.has(c.uid))return;
+    const cluster=[c];seen.add(c.uid);
+    c.alignments.filter(a=>a.distance<=.2).forEach(a=>{
+      if(!seen.has(a.target_uid)){const t=allClasses.find(x=>x.uid===a.target_uid);if(t){cluster.push({...t,_aln:a});seen.add(a.target_uid);}}
+    });
+    clusters.push(cluster);
   });
-});
+  clusters.forEach(cluster=>{
+    const p=cluster[0];
+    if(treeSrc!=="all"&&!cluster.some(c=>c.source===treeSrc))return;
+    if(q&&!cluster.some(c=>c.name.toLowerCase().includes(q)||(c.definition||"").toLowerCase().includes(q)))return;
+    const div=document.createElement("div");div.className="concept-card";
+    const srcs=cluster.map(c=>srcBadge(c.source)).join("");
+    div.innerHTML=`<div class="concept-header" onclick="this.nextElementSibling.classList.toggle('open')">
+      <div class="concept-name">${p.name}</div>
+      <div class="concept-sources">${srcs}</div>
+      <svg style="width:12px;height:12px;color:var(--muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+    <div class="concept-body">
+      <div class="concept-row">${cluster.map(c=>{const d=c._aln?c._aln.distance:null;return`<div class="concept-col">
+        <h5>${srcBadge(c.source)} ${c.name} <span style="color:var(--muted);font-family:var(--mono)">v${c.version}</span></h5>
+        <div class="def">${c.definition||"No description."}</div>
+        <div class="iri">${(c.iri||"").replace("https://schema.org/","schema:")}</div>
+        ${d!==null?`<div class="align-score"><span style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em">Distance</span>${distBadge(d)}</div>`:""}
+        <div class="export-bar">
+          <button class="export-btn" onclick="dlClass('${c.uid}')">JSON</button>
+          <button class="export-btn" onclick="dlClassYAML('${c.uid}')">YAML</button>
+          <button class="export-btn" onclick="cpText('${c.iri||""}')">Copy IRI</button>
+        </div>
+      </div>`;}).join("")}</div>
+    </div>`;
+    el.appendChild(div);
+  });
+  if(!el.children.length)el.innerHTML='<div class="empty">No concepts match.</div>';
+}
 
-// ══ Meta-model data ═══════════════════════════════════════════
-const CLASSES = [
-  { id:'RegistryEntity', abstract:true, tag:'abstract base',
-    desc:'Common base for all provenance-tracked registry objects. Provides content-addressed identity (sha256_hash) and a stable UUID (id). Entities with identical content across sources collapse to a single node that accumulates provenance from each source.',
-    slots:['id','sha256_hash','name','description','provenance','skos_mappings','aliases','concept_uri'] },
-  { id:'RegistryClass', tag:'schema class',
-    desc:'A registered class (object type) from an ingested schema — e.g. "Patient". Identity is determined by name, description, and the full induced property set. Two classes from different schemas with identical content share one node.',
-    slots:['properties','parent_class','class_mixins','is_abstract','is_mixin'] },
-  { id:'RegistryProperty', tag:'schema property',
-    desc:'A registered property (data element) that attaches to a RegistryClass — e.g. "age". Usage constraints like required/multivalued live on RegistryRule, not here, so the same concept is shared across schemas regardless of local constraints.',
-    slots:['property_range','unit'] },
-  { id:'RegistryValueSet', tag:'enum container',
-    desc:'An enumeration type from a schema — a named set of controlled vocabulary terms. Identity is determined by the name and full set of permissible values. Used for standardizing categorical fields across schemas.',
-    slots:['permissible_values'] },
-  { id:'Mapping', tag:'alignment edge',
-    desc:'A SKOS alignment between two RegistryEntity nodes from different schemas. Stores the relation type (exactMatch, closeMatch, …), the confidence distance score (0.0 = identical, 1.0 = unrelated), and per-signal sub-scores from the Proteus pipeline.',
-    slots:['subject','object','predicate','distance','method','provenance'] },
-  { id:'RegistryRule', tag:'validation rule',
-    desc:'A constraint on a property\'s usage in a specific schema context — required, multivalued, min/max value, regex pattern. Rules are separate from RegistryProperty so the same property can be required in one schema and optional in another.',
-    slots:['rule_type','severity','target_property','expression'] },
-  { id:'ProvenanceEntry', tag:'provenance',
-    desc:'One attestation record per source per ingest run. A RegistryClass or RegistryProperty accumulates one ProvenanceEntry per source that defines the same content — identity is separate from provenance.',
-    slots:['source','attributed_to','generated_at','activity','derived_from','registry_version','attests_to'] },
-  { id:'PermissibleValue', tag:'enum value',
-    desc:'One term in a RegistryValueSet. Content-addressed on name + meaning (IRI). Multiple schemas using the same controlled vocabulary term share one node.',
-    slots:['meaning','text','description'] },
-  { id:'UnitOfMeasure', tag:'unit',
-    desc:'A unit of measurement linked to a RegistryProperty. Enables dimensional veto during alignment — properties with incompatible SI dimensions (e.g. Hz vs V) are never aligned regardless of name similarity.',
-    slots:['ucum_code','si_dimension','label'] },
-  { id:'Transform', tag:'transform',
-    desc:'A data transformation mapping a value from one schema\'s representation to another\'s. May reference a Mapping edge to indicate which alignment it implements.',
-    slots:['from_schema','to_schema','transform_fn'] },
-  { id:'MappingProvenanceEntry', tag:'provenance · child', parent:'ProvenanceEntry',
-    desc:'Provenance record specific to a cross-schema Mapping — records the alignment method, confidence, and the signal scores that produced the edge.',
-    slots:['alignment_method','confidence','score_breakdown'] },
-  { id:'RegistrySchema', tag:'schema',
-    desc:'A top-level registered schema (e.g. BBQS, DANDI, BICAN). Tracks the schema\'s source, version, and all classes and properties it contributes to the registry.',
-    slots:['source_label','version','class_count','ingest_date'] },
-  { id:'SchemaSource', tag:'source',
-    desc:'The origin of a registered schema — a GitHub repo, URL, or file path — along with the fetch timestamp and any pinned version reference.',
-    slots:['url','ref','fetched_at'] },
-  { id:'SchemaVersionSnapshot', tag:'version snapshot',
-    desc:'A point-in-time snapshot of a schema version as ingested. Used for provenance tracking and diff computation between registry versions.',
-    slots:['registry_version','snapshot_date','source'] },
+// DIFF
+function renderDiffSelects(){
+  ["diff-a","diff-b"].forEach((id,i)=>{
+    const sel=document.getElementById(id);sel.innerHTML="";
+    allSources.forEach((s,j)=>{const o=document.createElement("option");o.value=s.label;o.textContent=s.label;if(j===i)o.selected=true;sel.appendChild(o);});
+  });
+  renderDiff();
+}
+function renderDiff(){
+  const a=document.getElementById("diff-a")?.value,b=document.getElementById("diff-b")?.value;if(!a||!b)return;
+  const ca=allClasses.filter(c=>c.source===a),cb=allClasses.filter(c=>c.source===b);
+  const mb=new Map(cb.map(c=>[c.name,c])),ma=new Map(ca.map(c=>[c.name,c]));
+  document.getElementById("diff-grid").innerHTML=`
+    <div class="diff-col"><div class="diff-col-header"><h3>${srcBadge(a)}</h3><span class="iri">${ca.length} classes</span></div>
+      <div class="diff-list">${ca.map(c=>{const aln=c.alignments.find(x=>x.target_source===b&&x.distance<.5);return`<div class="diff-item"><span>${c.name}</span><span class="${mb.has(c.name)?"matched":"unique"}">${mb.has(c.name)?"= matched":aln?("~ d="+aln.distance.toFixed(2)):"unique"}</span></div>`;}).join("")}</div></div>
+    <div class="diff-col"><div class="diff-col-header"><h3>${srcBadge(b)}</h3><span class="iri">${cb.length} classes</span></div>
+      <div class="diff-list">${cb.map(c=>{const aln=c.alignments.find(x=>x.target_source===a&&x.distance<.5);return`<div class="diff-item"><span>${c.name}</span><span class="${ma.has(c.name)?"matched":"unique"}">${ma.has(c.name)?"= matched":aln?("~ d="+aln.distance.toFixed(2)):"unique"}</span></div>`;}).join("")}</div></div>`;
+}
+
+// GRAPH SCHEMA
+const GN=[
+  {id:"RegistryClass",fields:["id PK", "sha256_hash", "name*", "description*", "provenance \u2192 ProvenanceEntry[]", "skos_mappings \u2192 SkosMapping[]", "aliases", "properties \u2192 RegistryProperty[]", "is_a \u2192 RegistryClass", "mixins \u2192 RegistryClass[]", "class_uri", "abstract"],x:0.25,y:0.1},
+  {id:"RegistryProperty",fields:["id PK", "sha256_hash", "name*", "description*", "provenance \u2192 ProvenanceEntry[]", "skos_mappings \u2192 SkosMapping[]", "aliases", "range*", "ucum_code", "has_quantity_kind", "symbol", "abbreviation", "descriptive_name", "slot_uri"],x:0.5,y:0.1},
+  {id:"ProvenanceEntry",fields:["uid PK", "source*", "source_description", "registry_version", "generated_at*", "attributed_to*", "activity", "derived_from"],x:0.17,y:0.48},
+  {id:"SkosMapping",fields:["id PK", "sha256_hash", "mapping_type \u2192 SkosMappingTypeEnum", "target"],x:0.33,y:0.48},
+  {id:"Rule",fields:["id PK", "sha256_hash", "name*", "description*"],x:0.33,y:0.86},
+  {id:"Transform",fields:["id PK", "sha256_hash", "name*", "description*"],x:0.67,y:0.86},
+  {id:"PermissibleValue",fields:["id PK", "sha256_hash", "name*", "meaning"],x:0.5,y:0.48},
+  {id:"ValueSet",fields:["id PK", "sha256_hash", "name*", "description*", "provenance \u2192 ProvenanceEntry[]", "skos_mappings \u2192 SkosMapping[]", "aliases", "permissible_values \u2192 PermissibleValue[]"],x:0.75,y:0.1},
+  {id:"SchemaSource",fields:["uid PK", "label*", "title", "publisher", "contact", "homepage", "is_hub", "source_iri", "source_version", "mime_type", "created_at", "registry_version"],x:0.67,y:0.48},
+  {id:"SchemaVersionSnapshot",fields:["uid PK", "schema_label*", "source_version", "yml_path", "class_count", "property_count", "changes_summary", "created_at", "registry_version"],x:0.83,y:0.48},
 ];
-
-// Edge types: is_a = inheritance, rel = named relationship
-const EDGES = [
-  ...['RegistryClass','RegistryProperty','RegistryValueSet','Mapping',
-      'RegistryRule','ProvenanceEntry','PermissibleValue','UnitOfMeasure',
-      'Transform','RegistrySchema'].map(c => ({from:c, to:'RegistryEntity', type:'isa'})),
-  {from:'MappingProvenanceEntry', to:'ProvenanceEntry', type:'isa'},
-  {from:'RegistryClass',    to:'RegistryProperty',    type:'rel', label:'HAS_PROPERTY'},
-  {from:'RegistryValueSet', to:'PermissibleValue',    type:'rel', label:'HAS_PERMISSIBLE_VALUE'},
-  {from:'Mapping',          to:'MappingProvenanceEntry', type:'rel', label:'HAS_PROVENANCE'},
-  {from:'RegistrySchema',   to:'SchemaSource',        type:'rel', label:'SOURCED_FROM'},
-  {from:'SchemaSource',     to:'SchemaVersionSnapshot', type:'rel', label:'HAS_SNAPSHOT'},
+const GR=[
+  {f:"RegistryClass",t:"ProvenanceEntry",l:"HAS_PROVENANCE"},
+  {f:"RegistryClass",t:"SkosMapping",l:"HAS_SKOS_MAPPING"},
+  {f:"RegistryClass",t:"RegistryProperty",l:"HAS_PROPERTY"},
+  {f:"RegistryClass",t:"RegistryClass",l:"SUBCLASS_OF"},
+  {f:"RegistryClass",t:"RegistryClass",l:"MIXES_IN"},
+  {f:"RegistryProperty",t:"ProvenanceEntry",l:"HAS_PROVENANCE"},
+  {f:"RegistryProperty",t:"SkosMapping",l:"HAS_SKOS_MAPPING"},
+  {f:"ValueSet",t:"ProvenanceEntry",l:"HAS_PROVENANCE"},
+  {f:"ValueSet",t:"SkosMapping",l:"HAS_SKOS_MAPPING"},
+  {f:"ValueSet",t:"PermissibleValue",l:"HAS_PERMISSIBLE_VALUES"},
 ];
 
 // Node positions as % of canvas [cx, cy]
@@ -512,12 +659,56 @@ function highlightYAML(raw) {
   }).join('\n');
 }
 
-function colorVal(text) {
-  if (!text.trim()) return esc(text);
-  if (/^\s*(true|false|null)\s*$/.test(text)) return `<span class="y-bool">${esc(text)}</span>`;
-  if (/^\s*\d/.test(text)) return esc(text);
-  if (/^\s*[A-Z][a-zA-Z]{2,}/.test(text.trim())) return `<span class="y-class">${esc(text)}</span>`;
-  return `<span class="y-str">${esc(text)}</span>`;
+  // Build Cypher preview
+  let cypher=`MATCH (n:${what==="properties"?"RegistryProperty":"RegistryClass"})`;
+  const clauses=[];
+  if(src)clauses.push(`'${src}' IN n.sources`);
+  if(name)clauses.push(`n.name CONTAINS '${name}'`);
+  if(alnSrc&&what==="classes"){
+    cypher+=`-[r:ALIGNED_TO]->(t:RegistryClass)`;
+    clauses.push(`'${alnSrc}' IN t.sources`);
+    clauses.push(`r.distance <= ${dist}`);
+  }
+  if(clauses.length)cypher+=`\nWHERE ${clauses.join("\n  AND ")}`;
+  cypher+=`\nRETURN n.name, n.iri, n.id${alnSrc&&what==="classes"?", t.name, r.distance":""}`;
+
+  document.getElementById("q-cypher").style.display="block";
+  document.getElementById("q-cypher").textContent=cypher;
+
+  // Run against JSON
+  let rows=[];
+  if(what==="classes"||what==="properties"){
+    const source=what==="properties"?allClasses.flatMap(c=>c.properties):allClasses;
+    rows=source.filter(x=>{
+      if(src&&x.source!==src)return false;
+      if(name&&!x.name.toLowerCase().includes(name))return false;
+      if(alnSrc&&what==="classes"){
+        return x.alignments.some(a=>a.target_source===alnSrc&&a.distance<=dist);
+      }
+      return true;
+    });
+  }else{
+    // alignments
+    allClasses.forEach(c=>{
+      if(src&&c.source!==src)return;
+      c.alignments.forEach(a=>{
+        if(alnSrc&&a.target_source!==alnSrc)return;
+        if(a.distance>dist)return;
+        rows.push({from:c.name,from_src:c.source,to:a.target_name,to_src:a.target_source,distance:a.distance,method:a.method});
+      });
+    });
+  }
+
+  const el=document.getElementById("q-results");
+  el.innerHTML=`<div class="query-results">
+    <div class="query-results-header"><h4>${rows.length} result${rows.length!==1?"s":""}</h4>
+      <button class="btn-ghost" onclick='dlJSON(${JSON.stringify(rows).replace(/'/g,"\\'")},"query-results.json")'>Download JSON</button>
+    </div>
+    <div class="query-results-body">${rows.slice(0,200).map(r=>{
+      if(what==="alignments")return`<div class="query-result-row">${srcBadge(r.from_src)} <strong>${r.from}</strong> → ${srcBadge(r.to_src)} <strong>${r.to}</strong> ${distBadge(r.distance)}</div>`;
+      return`<div class="query-result-row"><strong>${r.name}</strong> ${srcBadge(r.source||r.source_label||"")} <span class="iri">${r.iri||""}</span></div>`;
+    }).join("")}${rows.length>200?`<div class="query-result-row" style="color:var(--muted)">…and ${rows.length-200} more (download for full list)</div>`:""}</div>
+  </div>`;
 }
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

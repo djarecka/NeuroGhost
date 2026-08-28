@@ -24,7 +24,7 @@ import httpx, yaml
 from pathlib import Path
 
 GITHUB_RAW = "https://raw.githubusercontent.com/bids-standard/bids-specification/master/src/schema/objects"
-OUT_PATH   = Path("schemas/bids.yml")
+OUT_PATH   = Path("registry_schemas/bids.yml")
 
 # Object files whose entries become slots (properties), keyed by the class
 # that will own them and a human description of that class.

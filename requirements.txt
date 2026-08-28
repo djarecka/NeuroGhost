@@ -8,17 +8,15 @@ pydantic>=2.0.0
 click>=8.0.0
 pyyaml>=6.0
 # Exact pin, not a range: schema_registry_utils/models.py is generated from
-# schemas/meta_model.yaml by scripts/gen_models.sh, and gen-pydantic bakes the
+# meta_model.yaml by scripts/gen_models.sh, and gen-pydantic bakes the
 # metamodel version into its output. A different LinkML therefore produces
 # different bytes for an unchanged schema, which fails `gen_models.sh --check`
 # for reasons unrelated to the change under review. More importantly, the
 # generator decides field optionality and defaults, and those feed
-# compute_hash_id() — so a generator change could silently shift every stored
-# hash_id. .github/workflows/gen_models.yml installs this exact line; bump it
+# compute_content_hash() — so a generator change could silently shift every stored
+# sha256_hash. .github/workflows/gen_models.yml installs this exact line; bump it
 # here and regenerate models.py in the same commit.
 linkml==1.11.1
-# Pinned <3.0.0 to avoid torchcodec + FFmpeg system dependency
-sentence-transformers>=2.7.0,<3.0.0
 pytest>=8.0.0
 # Upper bound matches pyproject.toml: mcp 2.0.0 dropped mcp.server.fastmcp,
 # which neuro_ghost/mcp_server.py imports.

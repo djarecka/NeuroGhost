@@ -23,7 +23,7 @@ from pathlib import Path
 
 UNDATA_SCHEMAS_API  = "https://api.github.com/repos/sensein/undata/contents/backend/seed/schemas"
 UNDATA_ELEMENTS_API = "https://api.github.com/repos/sensein/undata/contents/backend/seed/elements"
-OUT_PATH   = Path("schemas/aind.yml")
+OUT_PATH   = Path("registry_schemas/aind.yml")
 DOCS       = "https://aind-data-schema.readthedocs.io/en/stable/"
 
 JSON_TYPE_MAP = {
