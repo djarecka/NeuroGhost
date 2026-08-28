@@ -146,3 +146,49 @@ def test_content_change_produces_different_entity(tmp_path):
     }
     assert len(shas) == 2
     assert original_sha in shas
+
+
+def test_bican_prov_ingests_expected_classes_and_properties(tmp_path):
+    """
+    bican_prov.yaml (github.com/brain-bican/models) is a small, real-world
+    schema: two classes, three properties, and — notably — a slot whose
+    range is another class in the same schema (used: range ProvEntity).
+    Confirms build_registry_entities()'s "second pass" (see ingest_linkml.py)
+    correctly rewrites that property_range from the synthetic make_iri()
+    placeholder to the real RegistryClass id, not just a string that
+    happens to look right.
+
+    Known gap, not asserted here: both source classes declare `mixin: true`
+    in the LinkML file, but nothing in parse_linkml()/RegistryClass tracks
+    mixin-ness — it's silently dropped on ingest.
+    """
+    conn = _conn(tmp_path)
+    insert_schema(conn, parse_linkml(FIXTURES / "bican_prov.yaml"), "bican_prov", agent="tester")
+
+    classes = {
+        row[0]: row[1] for row in
+        conn.execute("MATCH (c:RegistryClass) RETURN c.name, c.id").get_all()
+    }
+    assert set(classes) == {"ProvActivity", "ProvEntity"}
+
+    props = conn.execute(
+        "MATCH (p:RegistryProperty) RETURN p.name, p.property_range"
+    ).get_all()
+    range_by_name = {name: rng for name, rng in props}
+    assert set(range_by_name) == {"used", "was_derived_from", "was_generated_by"}
+
+    # property_range must be the real RegistryClass id, not the synthetic
+    # make_iri("ProvEntity")-style placeholder _slot_to_dict() starts with.
+    assert range_by_name["used"] == classes["ProvEntity"]
+    assert range_by_name["was_derived_from"] == classes["ProvEntity"]
+    assert range_by_name["was_generated_by"] == classes["ProvActivity"]
+
+    has_property = conn.execute("""
+        MATCH (c:RegistryClass)-[:HAS_PROPERTY]->(p:RegistryProperty)
+        RETURN c.name, p.name
+    """).get_all()
+    assert set(map(tuple, has_property)) == {
+        ("ProvActivity", "used"),
+        ("ProvEntity", "was_derived_from"),
+        ("ProvEntity", "was_generated_by"),
+    }

@@ -176,13 +176,15 @@ def write_provenance(conn, label: str, node_id: str, prov) -> bool:
     pe_id = prov.id or make_id()
     conn.execute("""
         CREATE (:ProvenanceEntry {
-            id: $id, had_primary_source: $had_primary_source, source_version: $source_version,
+            id: $id, attests_to: $attests_to,
+            had_primary_source: $had_primary_source, source_version: $source_version,
             registry_version: $registry_version,
             generated_at_time: $generated_at_time, was_attributed_to: $was_attributed_to,
             was_generated_by: $was_generated_by, was_derived_from: $was_derived_from
         })
     """, {
         "id":                  pe_id,
+        "attests_to":         prov.attests_to,
         "had_primary_source": prov.had_primary_source,
         "source_version":     prov.source_version,
         "registry_version":   prov.registry_version,

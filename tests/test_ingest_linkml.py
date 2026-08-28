@@ -89,6 +89,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "definition": "Mixin providing a creation timestamp.",
                 "is_a": None,
                 "is_abstract": False,
+                "is_mixin": True,
                 "slots": ["created_at"],
                 "aliases": [],
             },
@@ -97,6 +98,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "definition": "Abstract base for all registry entities.",
                 "is_a": None,
                 "is_abstract": True,
+                "is_mixin": False,
                 "slots": ["name"],
                 "aliases": [],
             },
@@ -105,6 +107,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "definition": "A research investigator.",
                 "is_a": "Entity",
                 "is_abstract": False,
+                "is_mixin": False,
                 "slots": ["orcid", "role", "created_at", "name"],
                 "aliases": ["Investigator"],
             },
@@ -346,7 +349,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "skos_mappings": [],
             "concept_uri": None,
             "is_abstract": False,
-            "is_mixin": False,
+            "is_mixin": True,
             "class_mixins": [],
             "aliases": [],
         },
@@ -383,6 +386,73 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     assert registry_classes["Person"].properties == sorted([
         properties["name"].id, properties["orcid"].id,
         properties["role"].id, properties["created_at"].id,
+    ])
+
+
+# See the comment on EXPECTED_PROP_SHAS above re: why property sha256_hashes
+# are asserted exactly but class ones aren't.
+EXPECTED_BICAN_PROP_SHAS = {
+    "used":             "sha256:1a7929fb43d1f9ab937f2f353ce3087a5152bd04bcd1489d7a06eebc29b8ba03",
+    "was_derived_from": "sha256:161c74e7f1e64c198bc04a08549a4e1b2465ce7b97c91def323d05048ff9303e",
+    "was_generated_by": "sha256:162b6a1e584c5b70d29396f9d4c94c8414b1e2893a7a736ac865ec2dad4cc017",
+}
+
+
+def test_build_registry_entities_maps_bican_prov_onto_the_meta_model():
+    """
+    Same check as test_build_registry_entities_produces_exactly_the_expected_objects,
+    on bican_prov.yaml — this is the "mapping onto the meta-model" step:
+    parse_linkml()'s raw LinkML dict (tested separately by
+    test_parse_linkml_extracts_bican_prov_exactly) becomes real
+    RegistryClass/RegistryProperty instances here.
+
+    The interesting case this fixture exercises that comprehensive.yml
+    doesn't: `used`'s range is `ProvEntity`, a class in the same schema.
+    property_range must come out as ProvEntity's real id — proof that the
+    "second pass" rewrite in build_registry_entities() (synthetic
+    make_iri() placeholder -> real class id) already ran by the time this
+    function returns, not just later at DB-write time.
+    """
+    parsed = parse_linkml(FIXTURES / "bican_prov.yaml")
+    properties, registry_classes, value_sets, permissible_values, provenance_entries = build_registry_entities(
+        parsed, "bican_prov", "tester"
+    )
+    assert value_sets == {}
+    assert permissible_values == {}
+
+    assert set(properties) == {"used", "was_derived_from", "was_generated_by"}
+    assert set(registry_classes) == {"ProvActivity", "ProvEntity"}
+
+    for entity in (*properties.values(), *registry_classes.values()):
+        assert len(entity.provenance) == 1
+        prov = provenance_entries[entity.provenance[0]]
+        assert prov.had_primary_source == "bican_prov"
+        assert prov.was_attributed_to == "tester"
+        assert prov.was_generated_by == "ingestion"
+        assert prov.was_derived_from == []
+
+    # Property sha256_hashes are exactly what's expected.
+    for name, prop in properties.items():
+        assert prop.sha256_hash == EXPECTED_BICAN_PROP_SHAS[name], name
+        assert _is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
+
+    # Both source classes declare `mixin: true` — is_mixin must carry
+    # through, not silently default to False.
+    for name, rc in registry_classes.items():
+        assert rc.is_mixin is True, name
+        assert rc.is_abstract is False, name
+
+    # property_range must be the real class id, not the synthetic
+    # make_iri("ProvEntity")-style placeholder parse_linkml() starts with.
+    assert properties["used"].property_range == registry_classes["ProvEntity"].id
+    assert properties["was_derived_from"].property_range == registry_classes["ProvEntity"].id
+    assert properties["was_generated_by"].property_range == registry_classes["ProvActivity"].id
+
+    # Cross-reference wiring: each class's properties list matches the
+    # target property's own id.
+    assert registry_classes["ProvActivity"].properties == [properties["used"].id]
+    assert registry_classes["ProvEntity"].properties == sorted([
+        properties["was_derived_from"].id, properties["was_generated_by"].id,
     ])
 
 

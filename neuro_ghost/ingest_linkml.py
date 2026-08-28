@@ -288,6 +288,7 @@ def parse_linkml(path: Path) -> dict[str, Any]:
             "definition":  cls_def.description or "",
             "is_a":        is_a,
             "is_abstract": bool(cls_def.abstract),
+            "is_mixin":    bool(cls_def.mixin),
             "slots":       [slot.name for slot in induced_slots],
             "aliases":     list(cls_def.aliases or []),
         }
@@ -477,6 +478,7 @@ def build_registry_entities(
             description=cls["definition"] or "",
             concept_uri=cls["iri"] or None,
             is_abstract=cls["is_abstract"],
+            is_mixin=cls["is_mixin"],
             parent_class=parent_id,
             properties=prop_ids,
             class_mixins=[],
@@ -755,25 +757,96 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
 # CLI
 # ---------------------------------------------------------------------------
 
+def _print_entities(properties: dict, registry_classes: dict,
+                    value_sets: dict, permissible_values: dict,
+                    provenance_entries: dict) -> None:
+    """
+    Pretty-print the entities build_registry_entities() would create, for
+    visual inspection (--verbose). Resolves id-reference fields
+    (properties, parent_class, attests_to) back to human-readable names,
+    since the stored FKs are UUIDs.
+    """
+    name_by_id = {p.id: name for name, p in properties.items()}
+    name_by_id.update({c.id: name for name, c in registry_classes.items()})
+    name_by_id.update({vs.id: name for name, vs in value_sets.items()})
+
+    if registry_classes:
+        click.echo("  --- RegistryClass ---")
+        for name, c in registry_classes.items():
+            click.echo(f"  {name}")
+            click.echo(f"      id:            {c.id}")
+            click.echo(f"      sha256_hash:   {c.sha256_hash}")
+            click.echo(f"      description:   {c.description}")
+            click.echo(f"      concept_uri:   {c.concept_uri}")
+            click.echo(f"      is_abstract:   {c.is_abstract}")
+            click.echo(f"      is_mixin:      {c.is_mixin}")
+            click.echo(f"      parent_class:  {name_by_id.get(c.parent_class, c.parent_class)}")
+            click.echo(f"      class_mixins:  {[name_by_id.get(m, m) for m in c.class_mixins]}")
+            click.echo(f"      properties:    {[name_by_id.get(p, p) for p in c.properties]}")
+            click.echo(f"      aliases:       {c.aliases}")
+
+    if properties:
+        click.echo("  --- RegistryProperty ---")
+        for name, p in properties.items():
+            click.echo(f"  {name}")
+            click.echo(f"      id:            {p.id}")
+            click.echo(f"      sha256_hash:   {p.sha256_hash}")
+            click.echo(f"      description:   {p.description}")
+            click.echo(f"      concept_uri:   {p.concept_uri}")
+            click.echo(f"      property_range:{name_by_id.get(p.property_range, p.property_range)}")
+            click.echo(f"      unit:          {p.unit}")
+            click.echo(f"      aliases:       {p.aliases}")
+
+    if value_sets:
+        click.echo("  --- RegistryValueSet ---")
+        for name, vs in value_sets.items():
+            pv_names = [pv.name for pv in permissible_values.values()
+                        if pv.id in vs.permissible_values]
+            click.echo(f"  {name}")
+            click.echo(f"      id:                 {vs.id}")
+            click.echo(f"      sha256_hash:        {vs.sha256_hash}")
+            click.echo(f"      permissible_values: {pv_names}")
+
+    if provenance_entries:
+        click.echo("  --- ProvenanceEntry ---")
+        for pe in provenance_entries.values():
+            click.echo(f"  {pe.id}")
+            click.echo(f"      attests_to:         {name_by_id.get(pe.attests_to, pe.attests_to)}")
+            click.echo(f"      had_primary_source: {pe.had_primary_source}")
+            click.echo(f"      source_version:     {pe.source_version}")
+            click.echo(f"      registry_version:   {pe.registry_version}")
+            click.echo(f"      generated_at_time:  {pe.generated_at_time}")
+            click.echo(f"      was_attributed_to:  {pe.was_attributed_to}")
+            click.echo(f"      was_generated_by:   {pe.was_generated_by}")
+            click.echo(f"      was_derived_from:   {pe.was_derived_from}")
+
+    # RegistryRule intentionally omitted: nothing in build_registry_entities()
+    # constructs one yet, regardless of source schema content.
+
+
 @click.command()
 @click.option("--file",    default=None,
               help="Path to a specific .yml file. Default: all registry_schemas/*.yml")
 @click.option("--db",      default=DB_PATH, show_default=True)
 @click.option("--dry-run", is_flag=True,
               help="Parse and count without writing to DB.")
+@click.option("--verbose", is_flag=True,
+              help="Print each built RegistryClass/RegistryProperty/RegistryValueSet in full "
+                   "(pairs well with --dry-run).")
 @click.option("--wipe",    is_flag=True,
               help="Remove this source's attestations before re-ingesting.")
 @click.option("--registry-version", default="",
               help="Registry semver to stamp on created nodes.")
 @click.option("--issue",   default="", help="GitHub issue number (for provenance).")
 @click.option("--agent",   default="anonymous", help="Who submitted this schema.")
-def cli(file, db, dry_run, wipe, registry_version, issue, agent) -> None:
+def cli(file, db, dry_run, verbose, wipe, registry_version, issue, agent) -> None:
     """
     Ingest one or more LinkML .yml schemas into the NeuroGhost graph.
 
     Examples:
       python ingest_linkml.py --file registry_schemas/bbqs.yml
       python ingest_linkml.py --file registry_schemas/bids.yml --dry-run
+      python ingest_linkml.py --file registry_schemas/bbqs.yml --dry-run --verbose
       python ingest_linkml.py --wipe --file registry_schemas/nwb.yml
     """
     conn = get_connection(db)
@@ -816,6 +889,21 @@ def cli(file, db, dry_run, wipe, registry_version, issue, agent) -> None:
                 MATCH (:RegistryProperty)-[:HAS_PROVENANCE_P]->(pe:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(:SchemaSource {label: $src})
                 DETACH DELETE pe
             """, {"src": source_label})
+
+        if verbose:
+            # Read-only preview build — uses the real ensure_schema_source
+            # (safe: it only reads/creates the SchemaSource, no
+            # RegistryClass/RegistryProperty writes happen here) and the
+            # real conn for dedup lookups, so ids shown here match what a
+            # subsequent non-dry-run insert_schema() would actually produce.
+            preview_source_id = ensure_schema_source(
+                conn, source_label, parsed["meta"]["version"],
+                registry_version, dry_run=dry_run,
+            )
+            p_props, p_classes, p_vs, p_pvs, p_provs = build_registry_entities(
+                parsed, preview_source_id, agent, issue, registry_version, conn=conn,
+            )
+            _print_entities(p_props, p_classes, p_vs, p_pvs, p_provs)
 
         stats = insert_schema(
             conn, parsed, source_label, agent=agent, issue=issue,
