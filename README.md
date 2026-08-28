@@ -73,6 +73,14 @@ Options: `--fresh` (wipe DB), `--skip-converters` (skip BIDS/NWB/DANDI/openMINDS
 
 Open `index.html` in a browser when done.
 
+To inspect a single schema without running the full pipeline:
+
+```bash
+python neuro_ghost/ingest_linkml.py --file registry_schemas/bbqs.yml --dry-run --verbose
+```
+
+`--dry-run` parses and reports counts without writing to the DB; `--verbose` additionally prints every `RegistryClass`/`RegistryProperty`/`RegistryValueSet`/`ProvenanceEntry` that would be created, in full.
+
 ---
 
 ## Stack
