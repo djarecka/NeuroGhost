@@ -601,12 +601,13 @@ slots:
     range: boolean
     slot_uri: linkml:mixin
     ifabsent: 'false'
+    in_subset:
+      - HashSubset
     # Semantically identity-defining (a mixin class is a different concept
-    # from a non-mixin with otherwise identical content), so this slot
-    # eventually belongs in HashSubset alongside is_abstract. Held out for
-    # this PR because promoting it would shift every stored RegistryClass
-    # sha256_hash — coordinate that in the follow-up that plumbs the actual
-    # `mixin: true` value through parse_linkml + build_registry_entities.
+    # from a non-mixin with otherwise identical content), same as
+    # is_abstract. Now plumbed through parse_linkml + build_registry_entities
+    # (previously always defaulted to false regardless of the source's own
+    # `mixin: true`).
     description: >-
       Whether this registered class is itself declared a mixin (a class
       designed to be composed into others rather than instantiated directly).

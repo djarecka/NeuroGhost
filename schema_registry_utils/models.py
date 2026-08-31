@@ -334,6 +334,7 @@ class RegistryClass(RegistryEntity):
          'slot_uri': 'linkml:abstract'} })
     is_mixin: Optional[bool] = Field(default=False, description="""Whether this registered class is itself declared a mixin (a class designed to be composed into others rather than instantiated directly). Independent of `is_abstract`; the two flags may be true simultaneously.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryClass'],
          'ifabsent': 'false',
+         'in_subset': ['HashSubset'],
          'slot_uri': 'linkml:mixin'} })
     id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',

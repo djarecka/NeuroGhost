@@ -5,7 +5,8 @@ import pytest
 
 from ingest_linkml import parse_linkml, build_registry_entities
 from schema_registry_utils import (
-    RegistryProperty, RegistryClass, RegistryValueSet, PermissibleValue, compute_content_hash_for,
+    RegistryProperty, RegistryClass, RegistryValueSet, PermissibleValue, RegistryRule,
+    compute_content_hash_for,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -89,6 +90,8 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "definition": "Mixin providing a creation timestamp.",
                 "is_a": None,
                 "is_abstract": False,
+                "is_mixin": True,
+                "mixins": [],
                 "slots": ["created_at"],
                 "aliases": [],
             },
@@ -97,6 +100,8 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "definition": "Abstract base for all registry entities.",
                 "is_a": None,
                 "is_abstract": True,
+                "is_mixin": False,
+                "mixins": [],
                 "slots": ["name"],
                 "aliases": [],
             },
@@ -105,6 +110,8 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "definition": "A research investigator.",
                 "is_a": "Entity",
                 "is_abstract": False,
+                "is_mixin": False,
+                "mixins": ["Timestamped"],
                 "slots": ["orcid", "role", "created_at", "name"],
                 "aliases": ["Investigator"],
             },
@@ -118,6 +125,8 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": "",
+                "minimum_value": None,
+                "maximum_value": None,
                 "aliases": [],
             },
             "name": {
@@ -128,6 +137,8 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": "",
+                "minimum_value": None,
+                "maximum_value": None,
                 "aliases": [],
             },
             "orcid": {
@@ -138,6 +149,8 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": False,
                 "required": False,
                 "pattern": r"^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$",
+                "minimum_value": None,
+                "maximum_value": None,
                 "aliases": ["ORCID iD"],
             },
             "role": {
@@ -148,6 +161,8 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "multivalued": True,
                 "required": True,
                 "pattern": "^[A-Za-z ]+$",
+                "minimum_value": None,
+                "maximum_value": None,
                 "aliases": [],
             },
         },
@@ -158,11 +173,13 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
 def test_registry_property_does_not_retain_usage_constraints():
     """
     parse_linkml()'s dict has multivalued/required/pattern (see above) — but
-    RegistryProperty deliberately doesn't model them at all (deferred to a
-    future RegistryRule, since the same property can be required in one source's
-    usage and optional in another's without being a different concept).
-    Assert this at the model level, not just "the dict I built doesn't have
-    it" — if someone re-adds these fields to RegistryProperty, this fails.
+    RegistryProperty deliberately doesn't model them at all: they belong on
+    RegistryRule instead (see test_build_registry_entities_maps_person_
+    classes_properties_and_rules), since the same property can be required
+    in one source's usage and optional in another's without being a
+    different concept. Assert this at the model level, not just "the dict
+    I built doesn't have it" — if someone re-adds these fields to
+    RegistryProperty, this fails.
     """
     for field in ("required", "multivalued", "pattern"):
         assert field not in RegistryProperty.model_fields
@@ -251,7 +268,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     ProvenanceEntry.id/generated_at_time are non-deterministic per run.
     """
     parsed = parse_linkml(FIXTURES / "comprehensive.yml")
-    properties, registry_classes, value_sets, permissible_values, provenance_entries = build_registry_entities(
+    properties, registry_classes, value_sets, permissible_values, rules, provenance_entries = build_registry_entities(
         parsed, "comprehensive", "tester"
     )
     assert value_sets == {}  # comprehensive.yml has no enums
@@ -332,11 +349,12 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
         assert _is_uuid(rc.id), f"{name}.id not a UUID: {rc.id}"
 
     # 2b. Class content dumps (excluding id/sha256_hash/provenance/properties/
-    #     parent_class — the reference fields hold non-deterministic UUIDs
-    #     verified separately below) are exactly the expected shape.
+    #     parent_class/class_mixins — the reference fields hold
+    #     non-deterministic UUIDs verified separately below) are exactly
+    #     the expected shape.
     class_dump = {
         name: c.model_dump(exclude={"provenance", "id", "sha256_hash",
-                                    "properties", "parent_class"})
+                                    "properties", "parent_class", "class_mixins"})
         for name, c in registry_classes.items()
     }
     assert class_dump == {
@@ -346,8 +364,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "skos_mappings": [],
             "concept_uri": None,
             "is_abstract": False,
-            "is_mixin": False,
-            "class_mixins": [],
+            "is_mixin": True,
             "aliases": [],
         },
         "Entity": {
@@ -357,7 +374,6 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "concept_uri": "https://example.org/schema#Entity",
             "is_abstract": True,
             "is_mixin": False,
-            "class_mixins": [],
             "aliases": [],
         },
         "Person": {
@@ -367,22 +383,93 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "concept_uri": "https://schema.org/Person",
             "is_abstract": False,
             "is_mixin": False,
-            "class_mixins": [],
             "aliases": ["Investigator"],
         },
     }
 
-    # 3. Cross-reference wiring: Person is_a Entity, and each class's
-    #    properties list matches the target property ids.
+    # 3. Cross-reference wiring: Person is_a Entity, Person mixins
+    #    Timestamped, and each class's properties list matches the target
+    #    property ids.
     assert registry_classes["Person"].parent_class == registry_classes["Entity"].id
     assert registry_classes["Timestamped"].parent_class is None
     assert registry_classes["Entity"].parent_class is None
+
+    assert registry_classes["Person"].class_mixins == sorted([registry_classes["Timestamped"].id])
+    assert registry_classes["Timestamped"].class_mixins == []
+    assert registry_classes["Entity"].class_mixins == []
 
     assert registry_classes["Timestamped"].properties == sorted([properties["created_at"].id])
     assert registry_classes["Entity"].properties == sorted([properties["name"].id])
     assert registry_classes["Person"].properties == sorted([
         properties["name"].id, properties["orcid"].id,
         properties["role"].id, properties["created_at"].id,
+    ])
+
+
+# See the comment on EXPECTED_PROP_SHAS above re: why property sha256_hashes
+# are asserted exactly but class ones aren't.
+EXPECTED_BICAN_PROP_SHAS = {
+    "used":             "sha256:1a7929fb43d1f9ab937f2f353ce3087a5152bd04bcd1489d7a06eebc29b8ba03",
+    "was_derived_from": "sha256:161c74e7f1e64c198bc04a08549a4e1b2465ce7b97c91def323d05048ff9303e",
+    "was_generated_by": "sha256:162b6a1e584c5b70d29396f9d4c94c8414b1e2893a7a736ac865ec2dad4cc017",
+}
+
+
+def test_build_registry_entities_maps_bican_prov_onto_the_meta_model():
+    """
+    Same check as test_build_registry_entities_produces_exactly_the_expected_objects,
+    on bican_prov.yaml — this is the "mapping onto the meta-model" step:
+    parse_linkml()'s raw LinkML dict (tested separately by
+    test_parse_linkml_extracts_bican_prov_exactly) becomes real
+    RegistryClass/RegistryProperty instances here.
+
+    The interesting case this fixture exercises that comprehensive.yml
+    doesn't: `used`'s range is `ProvEntity`, a class in the same schema.
+    property_range must come out as ProvEntity's real id — proof that the
+    "second pass" rewrite in build_registry_entities() (synthetic
+    make_iri() placeholder -> real class id) already ran by the time this
+    function returns, not just later at DB-write time.
+    """
+    parsed = parse_linkml(FIXTURES / "bican_prov.yaml")
+    properties, registry_classes, value_sets, permissible_values, rules, provenance_entries = build_registry_entities(
+        parsed, "bican_prov", "tester"
+    )
+    assert value_sets == {}
+    assert permissible_values == {}
+
+    assert set(properties) == {"used", "was_derived_from", "was_generated_by"}
+    assert set(registry_classes) == {"ProvActivity", "ProvEntity"}
+
+    for entity in (*properties.values(), *registry_classes.values()):
+        assert len(entity.provenance) == 1
+        prov = provenance_entries[entity.provenance[0]]
+        assert prov.had_primary_source == "bican_prov"
+        assert prov.was_attributed_to == "tester"
+        assert prov.was_generated_by == "ingestion"
+        assert prov.was_derived_from == []
+
+    # Property sha256_hashes are exactly what's expected.
+    for name, prop in properties.items():
+        assert prop.sha256_hash == EXPECTED_BICAN_PROP_SHAS[name], name
+        assert _is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
+
+    # Both source classes declare `mixin: true` — is_mixin must carry
+    # through, not silently default to False.
+    for name, rc in registry_classes.items():
+        assert rc.is_mixin is True, name
+        assert rc.is_abstract is False, name
+
+    # property_range must be the real class id, not the synthetic
+    # make_iri("ProvEntity")-style placeholder parse_linkml() starts with.
+    assert properties["used"].property_range == registry_classes["ProvEntity"].id
+    assert properties["was_derived_from"].property_range == registry_classes["ProvEntity"].id
+    assert properties["was_generated_by"].property_range == registry_classes["ProvActivity"].id
+
+    # Cross-reference wiring: each class's properties list matches the
+    # target property's own id.
+    assert registry_classes["ProvActivity"].properties == [properties["used"].id]
+    assert registry_classes["ProvEntity"].properties == sorted([
+        properties["was_derived_from"].id, properties["was_generated_by"].id,
     ])
 
 
@@ -421,7 +508,7 @@ def test_class_hash_dedup_makes_a_re_ingest_deterministic(monkeypatch):
     from ingest_linkml import build_registry_entities, parse_linkml
 
     parsed = parse_linkml(FIXTURES / "comprehensive.yml")
-    props1, classes1, _, _, _ = build_registry_entities(parsed, "comprehensive", "tester")
+    props1, classes1, _, _, _, _ = build_registry_entities(parsed, "comprehensive", "tester")
 
     # After first ingest: build the (label, sha256) -> id map that a
     # populated registry would return from find_id_by_sha256.
@@ -438,7 +525,7 @@ def test_class_hash_dedup_makes_a_re_ingest_deterministic(monkeypatch):
 
     # Second ingest, this time with `conn` set to any non-None sentinel — the
     # patched find_id_by_sha256 doesn't touch it. Every id must match.
-    props2, classes2, _, _, _ = build_registry_entities(
+    props2, classes2, _, _, _, _ = build_registry_entities(
         parsed, "comprehensive", "tester", conn=object(),
     )
     for name, p1 in props1.items():
@@ -474,7 +561,7 @@ def test_build_registry_entities_produces_value_sets():
     rather than tied to one source name.
     """
     parsed = parse_linkml(FIXTURES / "schema_with_enums.yml")
-    properties, registry_classes, value_sets, permissible_values, provenance_entries = build_registry_entities(
+    properties, registry_classes, value_sets, permissible_values, rules, provenance_entries = build_registry_entities(
         parsed, "enum_test", "tester"
     )
 
@@ -501,3 +588,97 @@ def test_build_registry_entities_produces_value_sets():
         assert pv.sha256_hash.startswith("sha256:")
         assert len(pv.provenance) == 1
         assert provenance_entries[pv.provenance[0]].had_primary_source == "enum_test"
+
+
+EXPECTED_PERSON_PROP_SHAS = {
+    "name":      "sha256:0510770b2a85321802bb3d7d6616893c81d94dc69e4b78149565a93a762ab893",
+    "last_name": "sha256:09f88d7393e0659562062b8750fdc683d5f4cdbd92e9de669e8d624062585bd4",
+    "age":       "sha256:fedfc9376e594cee36240dac2ac47b723356c77888e14f64562de01e4ae0df7f",
+}
+
+
+def test_build_registry_entities_maps_person_classes_properties_and_rules():
+    """
+    person.yml: one class (Person), three plain-scalar properties
+    (name/last_name: string, age: integer), and four declared constraints —
+    a pattern on `name`, `required: true` on `last_name`, minimum_value/
+    maximum_value on `age` — the first real exercise of RegistryRule
+    construction in build_registry_entities(). All at the
+    build_registry_entities() stage: no DB involved, this is
+    "did parse_linkml()'s dict get mapped onto the meta-model correctly,"
+    not "did LinkML read the file correctly" (that's parse_linkml()'s own
+    tests) and not "did it get written correctly" (that's
+    test_ingest_registry.py, against a real graph).
+    """
+    parsed = parse_linkml(FIXTURES / "person.yml")
+    properties, registry_classes, value_sets, permissible_values, rules, provenance_entries = (
+        build_registry_entities(parsed, "person", "tester")
+    )
+    assert value_sets == {}
+    assert permissible_values == {}
+
+    # Classes
+    assert set(registry_classes) == {"Person"}
+    person = registry_classes["Person"]
+    assert person.description == "An individual human being."
+    assert person.is_abstract is False
+    assert person.is_mixin is False
+
+    # Properties
+    assert set(properties) == {"name", "last_name", "age"}
+    for name, prop in properties.items():
+        assert prop.sha256_hash == EXPECTED_PERSON_PROP_SHAS[name], name
+        assert _is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
+    assert properties["name"].property_range == "xsd:string"
+    assert properties["last_name"].property_range == "xsd:string"
+    assert properties["age"].property_range == "xsd:integer"
+    assert person.properties == sorted([
+        properties["name"].id, properties["last_name"].id, properties["age"].id,
+    ])
+
+    # Rules — the actual point of this test. `name` (pattern), `last_name`
+    # (required), and `age` (min + max value) each produce RegistryRule(s).
+    #
+    # sha256_hash isn't asserted with an exact value (same reasoning as
+    # class sha256_hashes above): `applies_to` is in HashSubset and holds
+    # a property's id, a freshly-minted UUID with no conn to dedup
+    # against here, so it isn't deterministic across runs. Checked
+    # structurally instead.
+    assert set(rules) == {
+        "name:PATTERN", "last_name:REQUIRED", "age:MIN_VALUE", "age:MAX_VALUE",
+    }
+    for key, rule in rules.items():
+        assert isinstance(rule, RegistryRule)
+        assert rule.sha256_hash.startswith("sha256:"), key
+        assert _is_uuid(rule.id), f"{key}.id not a UUID: {rule.id}"
+        assert rule.severity == "ERROR"
+        assert rule.used_in_class is None
+        assert rule.referenced_entities == []
+
+    name_rule = rules["name:PATTERN"]
+    assert name_rule.rule_type == "PATTERN"
+    assert name_rule.rule_value == "^[A-Za-z ]+$"
+    assert name_rule.applies_to == [properties["name"].id]
+
+    last_name_rule = rules["last_name:REQUIRED"]
+    assert last_name_rule.rule_type == "REQUIRED"
+    assert last_name_rule.rule_value == "true"
+    assert last_name_rule.applies_to == [properties["last_name"].id]
+
+    age_min_rule = rules["age:MIN_VALUE"]
+    assert age_min_rule.rule_type == "MIN_VALUE"
+    assert age_min_rule.rule_value == "0"
+    assert age_min_rule.applies_to == [properties["age"].id]
+
+    age_max_rule = rules["age:MAX_VALUE"]
+    assert age_max_rule.rule_type == "MAX_VALUE"
+    assert age_max_rule.rule_value == "120"
+    assert age_max_rule.applies_to == [properties["age"].id]
+
+    # Provenance: every property, class, and rule gets one ProvenanceEntry
+    # from this ingestion.
+    for entity in (*properties.values(), person, *rules.values()):
+        assert len(entity.provenance) == 1
+        prov = provenance_entries[entity.provenance[0]]
+        assert prov.had_primary_source == "person"
+        assert prov.was_attributed_to == "tester"

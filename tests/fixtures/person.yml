@@ -1,0 +1,30 @@
+id: https://example.org/person
+name: person
+prefixes:
+  linkml: https://w3id.org/linkml/
+imports:
+  - linkml:types
+default_range: string
+
+classes:
+  Person:
+    description: An individual human being.
+    slots:
+      - name
+      - last_name
+      - age
+
+slots:
+  name:
+    description: Given (first) name.
+    range: string
+    pattern: "^[A-Za-z ]+$"
+  last_name:
+    description: Family (last) name.
+    range: string
+    required: true
+  age:
+    description: Age in years.
+    range: integer
+    minimum_value: 0
+    maximum_value: 120

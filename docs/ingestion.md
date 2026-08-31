@@ -83,6 +83,27 @@ RegistryProperty / RegistryClass / RegistryValueSet / PermissibleValue instances
 LadybugDB graph
 ```
 
+### Running it
+
+```bash
+# Ingest one schema for real
+python neuro_ghost/ingest_linkml.py --file registry_schemas/bbqs.yml
+
+# Preview without writing anything
+python neuro_ghost/ingest_linkml.py --file registry_schemas/bbqs.yml --dry-run
+
+# Preview *and* print every RegistryClass/RegistryProperty/RegistryValueSet/
+# ProvenanceEntry that would be created, in full (id, sha256_hash, all
+# fields, id-references resolved back to human-readable names)
+python neuro_ghost/ingest_linkml.py --file registry_schemas/bbqs.yml --dry-run --verbose
+```
+
+`--verbose` works without `--dry-run` too — it uses the real DB connection
+for its dedup lookup, so the ids it prints match what actually gets written
+right after. Other flags: `--wipe` (remove this source's attestations before
+re-ingesting), `--registry-version`, `--issue`, `--agent`. Omit `--file` to
+ingest every `.yml` in `registry_schemas/`.
+
 ### 1. `parse_linkml()` (`neuro_ghost/ingest_linkml.py`)
 
 Loads the YAML via `linkml_runtime`'s `SchemaView`, not a hand-rolled YAML
@@ -270,8 +291,13 @@ registry_version` stays `None` for now, pending a decision on the above.
 - **`was_derived_from`** on `ProvenanceEntry` is never populated — nothing yet
   detects "this hash supersedes that one" (would need an anchor like
   `(name, source)` to correlate an edit against prior content).
-- **`RegistryRule`/`Transform`** are still stubs (`id`/`name`/`description`
-  only) — `RegistryValueSet` and `PermissibleValue` are real now.
+- **`RegistryRule` is fully modeled but nothing populates it yet.** The
+  class itself is real (`rule_type`/`rule_value`/`applies_to`/
+  `used_in_class`/`severity`/`error_message`/`referenced_entities`) — but
+  `build_registry_entities()` doesn't construct a single `RegistryRule`
+  instance from any source schema's constraints (`pattern`, `min_length`,
+  `required`, ...) yet. `Transform` is still a genuine stub (`id`/`name`/
+  `description` only).
 - **`SemanticIdentity`/`PRIOR_VERSION*`** tables in `db.py`'s DDL are dead
   (superseded by content-hash identity) but not yet removed.
 - **`pandas`** isn't in `requirements.txt`, so `align.py`'s embedding cache
