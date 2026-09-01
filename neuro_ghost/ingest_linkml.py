@@ -65,12 +65,18 @@ USAGE
 """
 
 from __future__ import annotations
-import re, sys
+import re, sys, tempfile
 from pathlib import Path
 from typing import Any
 
 import click
 from linkml_runtime.utils.schemaview import SchemaView
+
+# Same-directory import — Python puts the script's own dir on sys.path[0]
+# when this file is invoked as `python neuro_ghost/ingest_linkml.py`, which
+# is how the CLI is run today. `from db import ...` below relies on the
+# same mechanism.
+from import_resolver import resolve_external_imports
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from schema_registry_utils import (
@@ -255,8 +261,23 @@ def parse_linkml(path: Path) -> dict[str, Any]:
         }
       }
     """
-    sv = SchemaView(str(path))
+    # If the submitted schema declares an `annotations.imports_source`
+    # URL, fetch every external import (recursively) into a temp
+    # directory alongside a copy of the schema before SchemaView sees it.
+    # A schema without that annotation returns from resolve_external_imports
+    # unchanged, so pre-annotation schemas (bbqs, bids, …) go through as
+    # before. See neuro_ghost/import_resolver.py for the contract.
+    with tempfile.TemporaryDirectory(prefix="ng-imports-") as _work:
+        resolved_path = resolve_external_imports(path, Path(_work))
+        sv = SchemaView(str(resolved_path))
+        parsed = _parse_schemaview(sv, path)
+    return parsed
 
+
+def _parse_schemaview(sv, path: Path) -> dict[str, Any]:
+    """The core of parse_linkml — pulled out so the SchemaView instance
+    can be built inside a temp-dir context and this body runs before the
+    temp dir is cleaned up."""
     prefixes = {k: v.prefix_reference for k, v in (sv.schema.prefixes or {}).items()}
 
     meta = {

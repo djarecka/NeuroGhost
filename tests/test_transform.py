@@ -12,14 +12,12 @@ expected cross-schema property overlaps.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
+from conftest import FIXTURES
 from neuro_ghost.mcp_server import transform_record
-
-FIXTURES = Path(__file__).parent / "fixtures"
 
 # ---------------------------------------------------------------------------
 # Minimal registry fixture

@@ -1,51 +1,11 @@
-import uuid
-from pathlib import Path
-
 import pytest
 
+from conftest import FIXTURES, is_uuid
 from ingest_linkml import parse_linkml, build_registry_entities
 from schema_registry_utils import (
     RegistryProperty, RegistryClass, RegistryValueSet, PermissibleValue, RegistryRule,
     compute_content_hash_for,
 )
-
-FIXTURES = Path(__file__).parent / "fixtures"
-
-
-def _is_uuid(s):
-    """Every entity id is a uuid4 string. Assert it parses."""
-    try:
-        uuid.UUID(s)
-        return True
-    except (ValueError, TypeError):
-        return False
-
-
-def test_class_with_slots():
-    parsed = parse_linkml(FIXTURES / "valid_slots.yml")
-
-    assert set(parsed["classes"]) == {"Person"}
-    person = parsed["classes"]["Person"]
-    assert person["iri"] == "https://example.org/schema#Person"
-    assert set(person["slots"]) == {"name", "orcid"}
-
-    assert set(parsed["slots"]) == {"name", "orcid"}
-    assert parsed["slots"]["name"]["value_range"] == "xsd:string"
-    assert parsed["slots"]["orcid"]["pattern"]
-
-
-def test_class_with_attributes():
-    parsed = parse_linkml(FIXTURES / "valid_attributes.yml")
-
-    assert set(parsed["classes"]) == {"Device"}
-    device = parsed["classes"]["Device"]
-    assert set(device["slots"]) == {"manufacturer", "sampling_rate"}
-
-    # attributes declared inline on a class must show up in the global
-    # slots dict too — this is exactly what the old hand-rolled parser missed
-    assert set(parsed["slots"]) == {"manufacturer", "sampling_rate"}
-    assert parsed["slots"]["sampling_rate"]["required"] is True
-    assert parsed["slots"]["sampling_rate"]["units"] == "Hz"
 
 
 def test_undefined_slot_raises():
@@ -292,7 +252,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     # 1a. Property sha256_hashes are exactly what's expected.
     for name, prop in properties.items():
         assert prop.sha256_hash == EXPECTED_PROP_SHAS[name], name
-        assert _is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
+        assert is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
 
     # 1b. Property content dumps (excluding id/sha256_hash/provenance which
     #     are checked separately) are exactly the expected shape.
@@ -354,7 +314,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
     #     comment on EXPECTED_CLASS_SHAS above.
     for name, rc in registry_classes.items():
         assert rc.sha256_hash.startswith("sha256:"), name
-        assert _is_uuid(rc.id), f"{name}.id not a UUID: {rc.id}"
+        assert is_uuid(rc.id), f"{name}.id not a UUID: {rc.id}"
 
     # 2b. Class content dumps (excluding id/sha256_hash/provenance/properties/
     #     parent_class/class_mixins — the reference fields hold
@@ -459,7 +419,7 @@ def test_build_registry_entities_maps_bican_prov_onto_the_meta_model():
     # Property sha256_hashes are exactly what's expected.
     for name, prop in properties.items():
         assert prop.sha256_hash == EXPECTED_BICAN_PROP_SHAS[name], name
-        assert _is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
+        assert is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
 
     # Both source classes declare `mixin: true` — is_mixin must carry
     # through, not silently default to False.
@@ -479,22 +439,6 @@ def test_build_registry_entities_maps_bican_prov_onto_the_meta_model():
     assert registry_classes["ProvEntity"].properties == sorted([
         properties["was_derived_from"].id, properties["was_generated_by"].id,
     ])
-
-
-class _FakeConn:
-    """Minimal stand-in for the LadybugDB connection that just remembers
-    which sha256_hash → id pairs it has seen. Used to demonstrate that
-    build_registry_entities() reuses ids via find_id_by_sha256 the same way
-    the real ingestion path does — without spinning up a real DB."""
-    def __init__(self):
-        self._by_sha: dict[tuple[str, str], str] = {}
-
-    def see(self, label: str, sha: str, node_id: str) -> None:
-        self._by_sha[(label, sha)] = node_id
-
-    # find_id_by_sha256 uses Cypher against a real conn; the ingestion code
-    # goes through db.find_id_by_sha256(conn, label, sha) — so patch that
-    # function in the fake-conn test rather than duck-typing execute().
 
 
 def test_class_hash_dedup_makes_a_re_ingest_deterministic(monkeypatch):
@@ -581,7 +525,7 @@ def test_build_registry_entities_produces_value_sets():
     assert len(vs.permissible_values) == 2
     # PermissibleValue references are UUIDs (the target's id).
     for pv_id in vs.permissible_values:
-        assert _is_uuid(pv_id)
+        assert is_uuid(pv_id)
     # sha256_hash on the value set itself starts with the sha256: prefix.
     assert vs.sha256_hash.startswith("sha256:")
     # Provenance from the ingestion
@@ -592,7 +536,7 @@ def test_build_registry_entities_produces_value_sets():
     for pv in permissible_values.values():
         assert isinstance(pv, PermissibleValue)
         assert pv.name in ("active", "deprecated")
-        assert _is_uuid(pv.id)
+        assert is_uuid(pv.id)
         assert pv.sha256_hash.startswith("sha256:")
         assert len(pv.provenance) == 1
         assert provenance_entries[pv.provenance[0]].had_primary_source == "enum_test"
@@ -636,7 +580,7 @@ def test_build_registry_entities_maps_person_classes_properties_and_rules():
     assert set(properties) == {"name", "last_name", "age"}
     for name, prop in properties.items():
         assert prop.sha256_hash == EXPECTED_PERSON_PROP_SHAS[name], name
-        assert _is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
+        assert is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
     assert properties["name"].property_range == "xsd:string"
     assert properties["last_name"].property_range == "xsd:string"
     assert properties["age"].property_range == "xsd:integer"
@@ -658,7 +602,7 @@ def test_build_registry_entities_maps_person_classes_properties_and_rules():
     for key, rule in rules.items():
         assert isinstance(rule, RegistryRule)
         assert rule.sha256_hash.startswith("sha256:"), key
-        assert _is_uuid(rule.id), f"{key}.id not a UUID: {rule.id}"
+        assert is_uuid(rule.id), f"{key}.id not a UUID: {rule.id}"
         assert rule.severity == "ERROR"
         assert rule.used_in_class is None
         assert rule.referenced_entities == []

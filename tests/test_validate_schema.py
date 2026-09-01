@@ -1,10 +1,7 @@
-from pathlib import Path
-
 from click.testing import CliRunner
 
+from conftest import FIXTURES
 from validate_schema import cli, validate_metamodel, validate_references
-
-FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_class_with_slots_is_valid():
