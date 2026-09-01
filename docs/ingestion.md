@@ -66,6 +66,8 @@ concepts are related — is a separate, deliberately basic step for now; see
 
 ```
 LinkML YAML
+    │  resolve_external_imports() — fetch declared external imports
+    │                              (see "External imports" below)
     │  parse_linkml()             — SchemaView-based parsing
     ▼
 intermediate dict               {classes: {...}, slots: {...}, enums: {...}}
@@ -173,6 +175,57 @@ Then `HAS_PROPERTY` and `SUBCLASS_OF` edges get created from the resolved
 UUID references. These functions are shared between `ingest_linkml.py` and
 `seed.py` — schema.org is ingested through the exact same path, just with
 `source="schema.org"`.
+
+## External imports
+
+A submitted schema can `imports:` other LinkML schemas by name. SchemaView
+resolves those names by looking in the input file's own directory, so any
+name that isn't a CURIE-form built-in (`linkml:types`, `biolink:core`) needs
+the sibling file on disk. NeuroGhost stores each submission as a single
+`registry_schemas/<name>.yml` file, so schemas built on shared upstream
+models (biolink, PROV, …) would otherwise arrive with their imports
+unresolved — SchemaView's `class_induced_slots()` then raises
+`No such class` on the missing parent, `parse_linkml`'s tolerant branch
+silently strips the `is_a` link, and every inherited slot is lost.
+
+`neuro_ghost/import_resolver.py` fixes that. A submitter declares where
+the missing siblings live via a LinkML `annotations:` entry — LinkML-native,
+so no new file format:
+
+```yaml
+id: https://identifiers.org/brain-bican/genome-annotation-schema
+imports:
+  - linkml:types      # built-in, resolved by SchemaView
+  - bican_biolink     # external, fetched by the resolver
+  - bican_core        # external, fetched by the resolver
+annotations:
+  imports_source: https://raw.githubusercontent.com/brain-bican/models/main/linkml-schema
+```
+
+At parse time, `parse_linkml()` runs the resolver first:
+
+1. Reads `annotations.imports_source` from the input schema.
+2. Copies the input into a per-invocation `tempfile.TemporaryDirectory()`.
+3. For each non-CURIE name in `imports:`, checks whether the sibling
+   already sits next to the input schema (submitters can still commit
+   the whole family). If not, fetches `<imports_source>/<name>.yaml`
+   (fallback `.yml`) into the temp dir.
+4. Recurses into each fetched file — its own `imports:` are resolved the
+   same way, inheriting the parent's `imports_source` unless the child
+   declares its own. A `seen` set breaks cycles; a `MAX_DEPTH` cap
+   prevents runaway.
+5. Hands SchemaView the path to the temp-dir copy of the input schema,
+   with every resolvable sibling now next to it.
+
+If a schema has no external imports (only CURIE built-ins, or none at
+all), the resolver is a no-op — `parse_linkml()` sees the original path
+and no temp dir writes happen. Existing schemas (bbqs, bids, dandi, …)
+go through unchanged.
+
+An import name with no `imports_source` to fetch from — and no local
+sibling next to the input — raises `FileNotFoundError` at parse time.
+That's deliberate: silent parse degradation (dropping `is_a` chains and
+their inherited slots) is worse than a loud error at ingest.
 
 ## The data model
 
