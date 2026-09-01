@@ -152,6 +152,17 @@ def resolve_prefix(curie: str, prefixes: dict[str, str]) -> str:
 # LinkML parser
 # ---------------------------------------------------------------------------
 
+def _map_range(raw_range: str, prefixes: dict[str, str]) -> str:
+    """Map a single LinkML range name to our stored form: an XSD CURIE for a
+    primitive, otherwise a resolved IRI (a real CURIE resolved, or a synthetic
+    make_iri(name) placeholder that build_registry_entities' second pass
+    rewrites to the target's real id)."""
+    if raw_range in LINKML_PRIMITIVES:
+        return LINKML_PRIMITIVES[raw_range]
+    return (resolve_prefix(raw_range, prefixes)
+            if ":" in raw_range else make_iri(raw_range))
+
+
 def _slot_to_dict(slot, prefixes: dict[str, str]) -> dict:
     """
     Convert a SchemaView-induced SlotDefinition into our internal slot dict.
@@ -164,13 +175,17 @@ def _slot_to_dict(slot, prefixes: dict[str, str]) -> dict:
     slot_uri     = slot.slot_uri or ""
     resolved_iri = resolve_prefix(slot_uri, prefixes) if slot_uri else ""
 
-    raw_range = slot.range if isinstance(slot.range, str) and slot.range else "string"
-    if raw_range in LINKML_PRIMITIVES:
-        value_range = LINKML_PRIMITIVES[raw_range]
+    # A union/polymorphic slot expresses its alternatives in `any_of` (each a
+    # slot expression with its own range), and leaves `range` unset — mirror
+    # that: value_range stays None, value_range_any_of holds the members.
+    any_of = [m.range for m in (slot.any_of or []) if getattr(m, "range", None)]
+    if any_of:
+        value_range = None
+        value_range_any_of = [_map_range(r, prefixes) for r in any_of]
     else:
-        # It's a reference to another class/type/enum — store as a resolved IRI
-        value_range = (resolve_prefix(raw_range, prefixes)
-                      if ":" in raw_range else make_iri(raw_range))
+        raw_range = slot.range if isinstance(slot.range, str) and slot.range else "string"
+        value_range = _map_range(raw_range, prefixes)
+        value_range_any_of = []
 
     # Extract units from description if present (common in neuro schemas)
     desc = str(slot.description or "")
@@ -184,6 +199,7 @@ def _slot_to_dict(slot, prefixes: dict[str, str]) -> dict:
         "iri":         resolved_iri,
         "definition":  desc,
         "value_range": value_range,
+        "value_range_any_of": value_range_any_of,
         "units":       units,
         "multivalued": bool(slot.multivalued),
         "required":    bool(slot.required),
@@ -451,6 +467,7 @@ def build_registry_entities(
             name=slot_name,
             description=slot["definition"] or "",
             property_range=slot["value_range"],
+            range_any_of=slot.get("value_range_any_of") or [],
             # ucum_code, not descriptive_name: this free-text extraction
             # ("FTE", "mV") is exactly the short-code shape align.py's
             # _DIMS dimension lookup already expects.
@@ -636,6 +653,8 @@ def build_registry_entities(
     for prop in properties.values():
         if prop.property_range in name_iri_to_id:
             prop.property_range = name_iri_to_id[prop.property_range]
+        if prop.range_any_of:
+            prop.range_any_of = [name_iri_to_id.get(r, r) for r in prop.range_any_of]
 
     return properties, registry_classes, value_sets, permissible_values, rules, provenance_entries
 

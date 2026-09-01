@@ -97,6 +97,7 @@ classes:
       different concept.
     slots:
       - property_range
+      - range_any_of
       - unit
 
   ProvenanceEntry:
@@ -534,8 +535,11 @@ slots:
 
   property_range:
     range: string
-    required: true
     slot_uri: linkml:range
+    # Optional, not required: a union/polymorphic property has no single
+    # range — it carries `range_any_of` instead and leaves this empty,
+    # mirroring LinkML, where a slot's `range` is unset when `any_of` is
+    # used. Exactly one of property_range / range_any_of is populated.
     # Not in HashSubset — the range is a reference into the graph
     # (a class id, an enum id, or an XSD CURIE for primitives).
     # Making it identity-defining forces class hashes and property hashes
@@ -558,6 +562,24 @@ slots:
       incompatibility veto, so "float", "xsd:float" and "double" must
       not read as three unrelated types. Ingestion normalizes
       source-native type names to XSD CURIEs.
+
+  range_any_of:
+    range: string
+    multivalued: true
+    slot_uri: linkml:any_of
+    # Same shape and resolution as property_range (XSD CURIE / class id /
+    # enum id), just a list — and, like property_range, deliberately NOT in
+    # HashSubset (graph references resolved after hashing). Mirrors LinkML's
+    # `any_of`, which is how LinkML expresses a union range (`range` itself
+    # stays single-valued; the alternatives live in `any_of`).
+    description: >-
+      The set of alternative ranges for a union / polymorphic property that
+      accepts more than one type — e.g. a `contributor` that may be a
+      Person, an Organization, or Software (JSON Schema `anyOf` of $refs,
+      LinkML `any_of`). Each entry is an XSD CURIE, a RegistryClass id, or a
+      RegistryValueSet id, resolved the same way as property_range. Empty
+      for the common single-range case, where property_range carries the one
+      type instead.
 
   unit:
     range: UnitOfMeasure

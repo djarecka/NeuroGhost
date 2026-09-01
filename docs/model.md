@@ -72,6 +72,7 @@ RegistryEntity {
 }
 RegistryProperty {
     string property_range
+    stringList range_any_of
     string id
     string name
     string description
