@@ -9,12 +9,11 @@ Covers:
   - Cycle protection via the seen-set and MAX_DEPTH
   - Mapping-form annotations, list-form annotations, and dict-value forms
     all get read the same way
+
+The `tmp_schema` and `fake_httpx_client` fixtures live in tests/conftest.py.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
-import httpx
 import pytest
 import yaml
 
@@ -24,48 +23,6 @@ from import_resolver import (
     _read_annotation_source,
     resolve_external_imports,
 )
-
-
-# ---------------------------------------------------------------------------
-# Tiny mock httpx.Client — dispatches by URL from a dict.
-# ---------------------------------------------------------------------------
-
-class FakeClient:
-    """Stand-in for httpx.Client. `responses` maps a URL to either a raw
-    string (200 OK with that body) or an int (that HTTP status, empty body)."""
-    def __init__(self, responses: dict[str, str | int]):
-        self.responses = responses
-        self.calls: list[str] = []
-
-    def get(self, url, timeout=None, follow_redirects=None):
-        self.calls.append(url)
-        r = self.responses.get(url)
-        if isinstance(r, str):
-            return httpx.Response(200, content=r.encode("utf-8"))
-        if isinstance(r, int):
-            return httpx.Response(r)
-        return httpx.Response(404)
-
-    def close(self):
-        pass
-
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-def _write(path: Path, obj: dict) -> Path:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(yaml.safe_dump(obj, sort_keys=False))
-    return path
-
-
-@pytest.fixture
-def tmp_schema(tmp_path):
-    """Factory for temporary LinkML schemas in an isolated dir."""
-    def _make(name: str, body: dict) -> Path:
-        return _write(tmp_path / f"{name}.yaml", body)
-    return _make
 
 
 # ---------------------------------------------------------------------------
@@ -118,7 +75,7 @@ def test_external_import_names_empty():
 # resolve_external_imports — the real thing
 # ---------------------------------------------------------------------------
 
-def test_no_annotation_is_a_noop(tmp_schema, tmp_path):
+def test_no_annotation_is_a_noop(tmp_schema, tmp_path, fake_httpx_client):
     """A schema without imports_source returns unchanged and writes nothing
     to work_dir — matches pre-existing bbqs/bids/… behavior."""
     schema = tmp_schema("plain", {
@@ -128,7 +85,7 @@ def test_no_annotation_is_a_noop(tmp_schema, tmp_path):
     })
     work_dir = tmp_path / "work"
 
-    client = FakeClient({})
+    client = fake_httpx_client({})
     result = resolve_external_imports(schema, work_dir, client=client)
 
     assert result == schema
@@ -136,7 +93,7 @@ def test_no_annotation_is_a_noop(tmp_schema, tmp_path):
     assert not work_dir.exists() or not any(work_dir.iterdir())
 
 
-def test_only_curie_imports_is_a_noop_even_with_source(tmp_schema, tmp_path):
+def test_only_curie_imports_is_a_noop_even_with_source(tmp_schema, tmp_path, fake_httpx_client):
     """imports_source set but every import is a built-in CURIE — nothing
     to fetch, no work_dir writes."""
     schema = tmp_schema("plain", {
@@ -146,7 +103,7 @@ def test_only_curie_imports_is_a_noop_even_with_source(tmp_schema, tmp_path):
     })
     work_dir = tmp_path / "work"
 
-    client = FakeClient({})
+    client = fake_httpx_client({})
     result = resolve_external_imports(schema, work_dir, client=client)
 
     # No external imports → returns original path, does no work.
@@ -154,7 +111,7 @@ def test_only_curie_imports_is_a_noop_even_with_source(tmp_schema, tmp_path):
     assert client.calls == []
 
 
-def test_single_external_import_fetched(tmp_schema, tmp_path):
+def test_single_external_import_fetched(tmp_schema, tmp_path, fake_httpx_client):
     """One external import is fetched and materialized in work_dir alongside
     a copy of the original schema."""
     schema = tmp_schema("root", {
@@ -169,7 +126,7 @@ def test_single_external_import_fetched(tmp_schema, tmp_path):
         "name": "sib",
         "classes": {"Thing": {"description": "a thing"}},
     })
-    client = FakeClient({"https://example.com/base/sib.yaml": sib_body})
+    client = fake_httpx_client({"https://example.com/base/sib.yaml": sib_body})
 
     result = resolve_external_imports(schema, work_dir, client=client)
 
@@ -179,7 +136,7 @@ def test_single_external_import_fetched(tmp_schema, tmp_path):
     assert client.calls == ["https://example.com/base/sib.yaml"]
 
 
-def test_yml_fallback_after_yaml_404(tmp_schema, tmp_path):
+def test_yml_fallback_after_yaml_404(tmp_schema, tmp_path, fake_httpx_client):
     """If the .yaml URL 404s, the resolver falls back to .yml."""
     schema = tmp_schema("root", {
         "imports": ["sib"],
@@ -188,7 +145,7 @@ def test_yml_fallback_after_yaml_404(tmp_schema, tmp_path):
     work_dir = tmp_path / "work"
 
     sib_body = yaml.safe_dump({"name": "sib"})
-    client = FakeClient({
+    client = fake_httpx_client({
         "https://example.com/base/sib.yaml": 404,
         "https://example.com/base/sib.yml":  sib_body,
     })
@@ -202,7 +159,7 @@ def test_yml_fallback_after_yaml_404(tmp_schema, tmp_path):
     ]
 
 
-def test_recursive_imports_fetched(tmp_schema, tmp_path):
+def test_recursive_imports_fetched(tmp_schema, tmp_path, fake_httpx_client):
     """A fetched sibling declaring its own `imports:` triggers another
     round of fetches, inheriting the source URL."""
     schema = tmp_schema("root", {
@@ -216,7 +173,7 @@ def test_recursive_imports_fetched(tmp_schema, tmp_path):
         "imports": ["linkml:types", "sib_b"],
     })
     sib_b_body = yaml.safe_dump({"name": "sib_b"})
-    client = FakeClient({
+    client = fake_httpx_client({
         "https://example.com/base/sib_a.yaml": sib_a_body,
         "https://example.com/base/sib_b.yaml": sib_b_body,
     })
@@ -231,7 +188,7 @@ def test_recursive_imports_fetched(tmp_schema, tmp_path):
     }
 
 
-def test_cycle_is_broken_by_seen_set(tmp_schema, tmp_path):
+def test_cycle_is_broken_by_seen_set(tmp_schema, tmp_path, fake_httpx_client):
     """sib_a imports sib_b, sib_b imports sib_a — resolution must terminate
     without re-fetching."""
     schema = tmp_schema("root", {
@@ -242,7 +199,7 @@ def test_cycle_is_broken_by_seen_set(tmp_schema, tmp_path):
 
     sib_a_body = yaml.safe_dump({"name": "sib_a", "imports": ["sib_b"]})
     sib_b_body = yaml.safe_dump({"name": "sib_b", "imports": ["sib_a"]})
-    client = FakeClient({
+    client = fake_httpx_client({
         "https://example.com/base/sib_a.yaml": sib_a_body,
         "https://example.com/base/sib_b.yaml": sib_b_body,
     })
@@ -256,18 +213,18 @@ def test_cycle_is_broken_by_seen_set(tmp_schema, tmp_path):
     ]
 
 
-def test_missing_import_without_source_raises(tmp_schema, tmp_path):
+def test_missing_import_without_source_raises(tmp_schema, tmp_path, fake_httpx_client):
     """An external import name with no imports_source is a loud error, not
     a silent parse degradation."""
     schema = tmp_schema("root", {"imports": ["sib"]})
     work_dir = tmp_path / "work"
 
-    client = FakeClient({})
+    client = fake_httpx_client({})
     with pytest.raises(FileNotFoundError, match="no annotations.imports_source"):
         resolve_external_imports(schema, work_dir, client=client)
 
 
-def test_unreachable_import_raises(tmp_schema, tmp_path):
+def test_unreachable_import_raises(tmp_schema, tmp_path, fake_httpx_client):
     """Both .yaml and .yml return 404 — resolver surfaces the failure."""
     schema = tmp_schema("root", {
         "imports": ["ghost"],
@@ -275,7 +232,7 @@ def test_unreachable_import_raises(tmp_schema, tmp_path):
     })
     work_dir = tmp_path / "work"
 
-    client = FakeClient({
+    client = fake_httpx_client({
         "https://example.com/base/ghost.yaml": 404,
         "https://example.com/base/ghost.yml":  404,
     })
@@ -283,7 +240,7 @@ def test_unreachable_import_raises(tmp_schema, tmp_path):
         resolve_external_imports(schema, work_dir, client=client)
 
 
-def test_child_imports_source_overrides_parent(tmp_schema, tmp_path):
+def test_child_imports_source_overrides_parent(tmp_schema, tmp_path, fake_httpx_client):
     """A fetched sibling can declare its own imports_source; its transitive
     imports come from that URL rather than the root's."""
     schema = tmp_schema("root", {
@@ -298,7 +255,7 @@ def test_child_imports_source_overrides_parent(tmp_schema, tmp_path):
         "annotations": {"imports_source": "https://two.example.com"},
     })
     sib_b_body = yaml.safe_dump({"name": "sib_b"})
-    client = FakeClient({
+    client = fake_httpx_client({
         "https://one.example.com/sib_a.yaml": sib_a_body,
         "https://two.example.com/sib_b.yaml": sib_b_body,
     })
@@ -312,7 +269,7 @@ def test_child_imports_source_overrides_parent(tmp_schema, tmp_path):
     assert "https://one.example.com/sib_b.yaml" not in client.calls
 
 
-def test_local_sibling_shortcircuits_fetch(tmp_schema, tmp_path):
+def test_local_sibling_shortcircuits_fetch(tmp_schema, tmp_path, fake_httpx_client):
     """An import whose file already sits next to the input schema is
     trusted — no fetch attempt is made."""
     schema = tmp_schema("root", {
@@ -323,7 +280,7 @@ def test_local_sibling_shortcircuits_fetch(tmp_schema, tmp_path):
     (schema.parent / "local_sib.yaml").write_text(yaml.safe_dump({"name": "local_sib"}))
 
     work_dir = tmp_path / "work"
-    client = FakeClient({})  # empty — any fetch would return 404 and fail
+    client = fake_httpx_client({})  # empty — any fetch would return 404 and fail
 
     result = resolve_external_imports(schema, work_dir, client=client)
 
@@ -333,7 +290,7 @@ def test_local_sibling_shortcircuits_fetch(tmp_schema, tmp_path):
     assert client.calls == []
 
 
-def test_max_depth_guard(tmp_schema, tmp_path):
+def test_max_depth_guard(tmp_schema, tmp_path, fake_httpx_client):
     """A chain longer than MAX_DEPTH raises RecursionError."""
     schema = tmp_schema("root", {
         "imports": ["sib_0"],
@@ -346,7 +303,7 @@ def test_max_depth_guard(tmp_schema, tmp_path):
     for i in range(MAX_DEPTH + 2):
         body = {"name": f"sib_{i}", "imports": [f"sib_{i+1}"]}
         responses[f"https://example.com/base/sib_{i}.yaml"] = yaml.safe_dump(body)
-    client = FakeClient(responses)
+    client = fake_httpx_client(responses)
 
     with pytest.raises(RecursionError, match="MAX_DEPTH"):
         resolve_external_imports(schema, work_dir, client=client)
