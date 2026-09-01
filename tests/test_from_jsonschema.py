@@ -163,3 +163,28 @@ def test_convert_output_is_valid_linkml_shape(tmp_path):
     assert d["id"] == "https://registry.sensein.io/schema/person"
     assert "linkml:types" in d["imports"]
     assert set(d["classes"]) == {"Person", "Address"}
+
+
+def test_format_maps_to_linkml_type_or_warns(tmp_path, capsys):
+    """JSON Schema string `format` maps to a LinkML semantic type where one
+    exists (uri/date-time/date/time -> xsd:anyURI/dateTime/date/time). Formats
+    with no LinkML type (email, uuid, ...) stay plain string and a warning is
+    emitted."""
+    js = {
+        "title": "T", "type": "object",
+        "properties": {
+            "homepage": {"type": "string", "format": "uri"},
+            "created":  {"type": "string", "format": "date-time"},
+            "born":     {"type": "string", "format": "date"},
+            "contact":  {"type": "string", "format": "email"},   # no LinkML type
+        },
+    }
+    _, built = _convert_and_build(js, "fmt", tmp_path)
+    properties = built[0]
+
+    assert properties["homepage"].property_range == "xsd:anyURI"
+    assert properties["created"].property_range == "xsd:dateTime"
+    assert properties["born"].property_range == "xsd:date"
+    # unmappable format falls back to string, with a warning naming it.
+    assert properties["contact"].property_range == "xsd:string"
+    assert "email" in capsys.readouterr().err

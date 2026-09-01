@@ -17,6 +17,9 @@ land (see NOTES / upstream-PR tracking):
   * `_patch_slot_constraints` — recovers `pattern` (importer drops it) and
     `minimum`/`maximum` (importer bug reads LinkML key names off a JSON dict).
     Feeds the RegistryRule PATTERN / MIN_VALUE / MAX_VALUE builders.
+  * `_patch_format_ranges` — maps string `format` to the equivalent LinkML
+    type range (uri/date-time/date/time); formats with no LinkML type
+    (email/uuid/...) stay strings and are warned about.
   * `_patch_string_length` — encodes `minLength`/`maxLength` (no native LinkML
     facet) as a length `pattern`, unless the field has a real pattern.
   * `_patch_anyof_ranges` — fills a slot's LinkML `any_of` from an `anyOf`
@@ -30,8 +33,9 @@ land (see NOTES / upstream-PR tracking):
 overrides the importer's title-derived schema name/id with the registry's
 submission name + IRI so provenance/dedup key on a stable label.
 
-Known still-uncovered (tracked, not yet patched): `format` (uri/email/...) is
-dropped.
+Not covered: type-less string formats (email/uuid/ipv4/...) — no LinkML type,
+so they stay plain strings (warned). A FORMAT RegistryRule would preserve the
+format name, but that builder isn't wired up yet.
 
 Usage (CLI):
     python -m neuro_ghost.converters.from_jsonschema input.json output.yml
@@ -113,6 +117,54 @@ def _patch_slot_constraints(sd, data: dict) -> None:
                 slot.minimum_value = pschema["minimum"]
             if "maximum" in pschema:
                 slot.maximum_value = pschema["maximum"]
+
+
+# JSON Schema string `format` -> the LinkML type that means the same thing.
+# Only formats with a real LinkML/XSD type equivalent; the rest (email, uuid,
+# ipv4, hostname, ...) have no LinkML type and stay plain strings (warned).
+_FORMAT_TO_LINKML_TYPE = {
+    "uri": "uri", "uri-reference": "uri", "iri": "uri", "url": "uri",
+    "date-time": "datetime", "date": "date", "time": "time",
+}
+
+
+def _patch_format_ranges(sd, data: dict) -> None:
+    """GAP: the importer drops JSON Schema string `format` entirely, so a
+    `{type: string, format: uri}` becomes a plain string, losing the datatype
+    distinction align.py's compatibility check reads off property_range.
+
+    Where a LinkML type means the same thing (uri/date-time/date/time), set
+    the slot's range to it — the idiomatic LinkML encoding, cleaner than a
+    rule. Formats with no LinkML type (email, uuid, ipv4, ...) can't be
+    represented natively; they stay strings and are reported via a warning
+    (a FORMAT RegistryRule would capture them — not built yet).
+
+    REMOVE the mapped part if schema-automator maps format->type upstream."""
+    unmapped: set[str] = set()
+    for block in _properties_blocks(data):
+        for pname, pschema in block.items():
+            if not isinstance(pschema, dict):
+                continue
+            fmt = pschema.get("format")
+            if not fmt or pschema.get("type") != "string":
+                continue
+            slot = sd.slots.get(_slot_name(pname))
+            if slot is None:
+                continue
+            linkml_type = _FORMAT_TO_LINKML_TYPE.get(fmt)
+            if linkml_type:
+                slot.range = linkml_type
+            else:
+                unmapped.add(fmt)
+
+    if unmapped:
+        print(
+            "WARNING: from_jsonschema: JSON Schema format(s) with no LinkML "
+            f"type kept as plain string (format detail lost): "
+            f"{', '.join(sorted(unmapped))}. "
+            "A FORMAT rule would preserve these, but that isn't wired up yet.",
+            file=sys.stderr,
+        )
 
 
 def _patch_string_length(sd, data: dict) -> None:
@@ -269,6 +321,7 @@ def convert(data: dict, name: str) -> dict:
     sd = engine.loads(data, name=name)
     # Importer-gap patches — each independently removable (see their docstrings).
     _patch_slot_constraints(sd, data)
+    _patch_format_ranges(sd, data)
     _patch_string_length(sd, data)   # after _patch_slot_constraints (checks pattern)
     _patch_anyof_ranges(engine, sd, data)
     _patch_enum_definitions(engine, sd, data)

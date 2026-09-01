@@ -117,6 +117,7 @@ LINKML_PRIMITIVES: dict[str, str] = {
     "boolean":    "xsd:boolean",
     "date":       "xsd:date",
     "datetime":   "xsd:dateTime",
+    "time":       "xsd:time",
     "uri":        "xsd:anyURI",
     "uriorcurie": "xsd:anyURI",
     "curie":      "xsd:anyURI",
