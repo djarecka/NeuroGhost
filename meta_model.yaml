@@ -534,30 +534,34 @@ slots:
 
   property_range:
     range: string
-    required: true
+    multivalued: true
     slot_uri: linkml:range
-    # Not in HashSubset — the range is a reference into the graph
-    # (a class id, an enum id, or an XSD CURIE for primitives).
-    # Making it identity-defining forces class hashes and property hashes
-    # into a mutual dependency: a class's hash includes its properties'
-    # UUIDs, and a property's sha256_hash would include the class UUID it
-    # points at, so a self-referential slot
-    # (e.g. `was_derived_from: range: ProvEntity` on ProvEntity) can't be
-    # hashed at all. Range is metadata that ingestion resolves to real
-    # graph references; datatype compatibility for alignment reads the
-    # resolved range directly, and per-usage range refinements live on
-    # RegistryRule (rule_type=RANGE), which does carry range in its own
-    # HashSubset. See ingest_linkml.build_registry_entities() for the
-    # order in which class hashes settle before property_range is filled in.
+    # Multivalued: a plain property has one range, a union/polymorphic
+    # property (LinkML `any_of`, JSON Schema `anyOf`) has several — both are
+    # just a list here, so there is no separate `range_any_of` field. A single
+    # range is a one-element list; a union has one entry per permitted type.
+    # Not in HashSubset — each entry is a reference into the graph (a class id,
+    # an enum id, or an XSD CURIE for primitives). Making it identity-defining
+    # would force class hashes and property hashes into a mutual dependency: a
+    # class's hash includes its properties' UUIDs, and a property's
+    # sha256_hash would include the class UUID it points at, so a
+    # self-referential slot (e.g. `was_derived_from: range: ProvEntity` on
+    # ProvEntity) couldn't be hashed. Range is metadata that ingestion
+    # resolves to real graph references; datatype compatibility for alignment
+    # reads the resolved range directly, and per-usage range refinements live
+    # on RegistryRule (rule_type=RANGE), which carries range in its own
+    # HashSubset. See ingest_linkml.build_registry_entities() for the order in
+    # which class hashes settle before property_range is filled in.
     description: >-
-      The data type or value range for this property: a canonical XSD
-      CURIE for primitives (e.g. "xsd:string", "xsd:integer"), or the
-      id of a RegistryClass or RegistryValueSet for entity/enum
-      references. Bare primitive names ("string", "float") are
-      deprecated: datatype compatibility is an alignment signal and an
-      incompatibility veto, so "float", "xsd:float" and "double" must
-      not read as three unrelated types. Ingestion normalizes
-      source-native type names to XSD CURIEs.
+      The data type(s) or value range for this property, as a list: a
+      canonical XSD CURIE for primitives (e.g. "xsd:string", "xsd:integer"),
+      or the id of a RegistryClass or RegistryValueSet for entity/enum
+      references. A single-range property carries a one-element list; a union
+      carries one entry per permitted type. Bare primitive names ("string",
+      "float") are deprecated: datatype compatibility is an alignment signal
+      and an incompatibility veto, so "float", "xsd:float" and "double" must
+      not read as three unrelated types. Ingestion normalizes source-native
+      type names to XSD CURIEs.
 
   unit:
     range: UnitOfMeasure

@@ -158,6 +158,17 @@ def resolve_prefix(curie: str, prefixes: dict[str, str]) -> str:
 # LinkML parser
 # ---------------------------------------------------------------------------
 
+def _map_range(raw_range: str, prefixes: dict[str, str]) -> str:
+    """Map a single LinkML range name to our stored form: an XSD CURIE for a
+    primitive, otherwise a resolved IRI (a real CURIE resolved, or a synthetic
+    make_iri(name) placeholder that build_registry_entities' second pass
+    rewrites to the target's real id)."""
+    if raw_range in LINKML_PRIMITIVES:
+        return LINKML_PRIMITIVES[raw_range]
+    return (resolve_prefix(raw_range, prefixes)
+            if ":" in raw_range else make_iri(raw_range))
+
+
 def _slot_to_dict(slot, prefixes: dict[str, str]) -> dict:
     """
     Convert a SchemaView-induced SlotDefinition into our internal slot dict.
@@ -170,13 +181,15 @@ def _slot_to_dict(slot, prefixes: dict[str, str]) -> dict:
     slot_uri     = slot.slot_uri or ""
     resolved_iri = resolve_prefix(slot_uri, prefixes) if slot_uri else ""
 
-    raw_range = slot.range if isinstance(slot.range, str) and slot.range else "string"
-    if raw_range in LINKML_PRIMITIVES:
-        value_range = LINKML_PRIMITIVES[raw_range]
+    # Range is multivalued: a plain slot has one range; a union (LinkML
+    # `any_of`) has several. Collect them all into one list — a union is just
+    # a property with more than one permitted range, not a separate field.
+    any_of = [m.range for m in (slot.any_of or []) if getattr(m, "range", None)]
+    if any_of:
+        value_range = [_map_range(r, prefixes) for r in any_of]
     else:
-        # It's a reference to another class/type/enum — store as a resolved IRI
-        value_range = (resolve_prefix(raw_range, prefixes)
-                      if ":" in raw_range else make_iri(raw_range))
+        raw_range = slot.range if isinstance(slot.range, str) and slot.range else "string"
+        value_range = [_map_range(raw_range, prefixes)]
 
     # Extract units from description if present (common in neuro schemas)
     desc = str(slot.description or "")
@@ -636,10 +649,11 @@ def build_registry_entities(
 
     # Second pass: resolve property_range name-IRIs to real UUIDs.
     #
-    # For a class/enum-typed range, _slot_to_dict() stores make_iri(name)
+    # property_range is multivalued (a union is just several ranges). For a
+    # class/enum-typed range, _slot_to_dict() stores make_iri(name)
     # (e.g. https://registry.sensein.io/obj/ProvEntity) — a synthetic
-    # label, not a graph reference. Rewrite each property's property_range
-    # in place so ranges point at real objects by id.
+    # label, not a graph reference. Rewrite each entry in place so ranges
+    # point at real objects by id.
     #
     # Safe against self-references and cross-class cycles because
     # property_range is deliberately not in HashSubset (see meta_model.yaml):
@@ -655,8 +669,7 @@ def build_registry_entities(
         for enum_name, vs in value_sets.items()
     })
     for prop in properties.values():
-        if prop.property_range in name_iri_to_id:
-            prop.property_range = name_iri_to_id[prop.property_range]
+        prop.property_range = [name_iri_to_id.get(r, r) for r in prop.property_range]
 
     return properties, registry_classes, value_sets, permissible_values, rules, provenance_entries
 

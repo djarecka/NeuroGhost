@@ -157,11 +157,12 @@ def test_bican_prov_ingests_expected_classes_and_properties(conn):
     range_by_name = {name: rng for name, rng in props}
     assert set(range_by_name) == {"used", "was_derived_from", "was_generated_by"}
 
-    # property_range must be the real RegistryClass id, not the synthetic
-    # make_iri("ProvEntity")-style placeholder _slot_to_dict() starts with.
-    assert range_by_name["used"] == classes["ProvEntity"]
-    assert range_by_name["was_derived_from"] == classes["ProvEntity"]
-    assert range_by_name["was_generated_by"] == classes["ProvActivity"]
+    # property_range is multivalued: a one-element list holding the real
+    # RegistryClass id, not the synthetic make_iri("ProvEntity")-style
+    # placeholder _slot_to_dict() starts with.
+    assert range_by_name["used"] == [classes["ProvEntity"]]
+    assert range_by_name["was_derived_from"] == [classes["ProvEntity"]]
+    assert range_by_name["was_generated_by"] == [classes["ProvActivity"]]
 
     has_property = conn.execute("""
         MATCH (c:RegistryClass)-[:HAS_PROPERTY]->(p:RegistryProperty)

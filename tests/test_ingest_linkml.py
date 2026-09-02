@@ -80,7 +80,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
             "created_at": {
                 "iri": "",
                 "definition": "",
-                "value_range": "xsd:dateTime",
+                "value_range": ["xsd:dateTime"],
                 "units": "",
                 "multivalued": False,
                 "required": False,
@@ -92,7 +92,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
             "name": {
                 "iri": "https://schema.org/name",
                 "definition": "Full name.",
-                "value_range": "xsd:string",
+                "value_range": ["xsd:string"],
                 "units": "",
                 "multivalued": False,
                 "required": False,
@@ -104,7 +104,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
             "orcid": {
                 "iri": "https://example.org/schema#orcid",
                 "definition": "ORCID identifier.",
-                "value_range": "xsd:string",
+                "value_range": ["xsd:string"],
                 "units": "",
                 "multivalued": False,
                 "required": False,
@@ -116,7 +116,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
             "role": {
                 "iri": "",
                 "definition": "Role on the study (units: FTE)",
-                "value_range": "xsd:string",
+                "value_range": ["xsd:string"],
                 "units": "FTE",
                 "multivalued": True,
                 "required": True,
@@ -179,11 +179,46 @@ def test_property_range_does_not_affect_identity():
         name="target", description="An arbitrary reference.",
         unit=None, concept_uri=None, skos_mappings=[], aliases=[],
     )
-    as_string = compute_content_hash_for(RegistryProperty, dict(base, property_range="xsd:string"))
+    as_string = compute_content_hash_for(RegistryProperty, dict(base, property_range=["xsd:string"]))
     as_class_ref = compute_content_hash_for(
-        RegistryProperty, dict(base, property_range="606a7c1d-0f96-4599-8070-aad647f433f8"),
+        RegistryProperty, dict(base, property_range=["606a7c1d-0f96-4599-8070-aad647f433f8"]),
     )
     assert as_string == as_class_ref
+
+
+def test_union_range_is_multivalued(tmp_path):
+    """
+    A union / polymorphic property (LinkML `any_of`, JSON Schema `anyOf`) has
+    more than one permitted range. There is no separate `range_any_of` field:
+    property_range is multivalued, so a union is simply a property_range with
+    several entries (each resolved to a real class/enum id or XSD CURIE), and a
+    plain single-range property is a one-element list.
+    """
+    yml = tmp_path / "u.yml"
+    yml.write_text(
+        "id: https://example.org/u\n"
+        "name: u\n"
+        "prefixes: {linkml: https://w3id.org/linkml/}\n"
+        "default_range: string\n"
+        "imports: [linkml:types]\n"
+        "classes:\n"
+        "  Person: {attributes: {pname: {range: string}}}\n"
+        "  Organization: {attributes: {oname: {range: string}}}\n"
+        "  Doc:\n"
+        "    attributes:\n"
+        "      contributor:\n"
+        "        multivalued: true\n"
+        "        any_of: [{range: Person}, {range: Organization}]\n"
+        "      title: {range: string}\n"
+    )
+    props, classes, _, _, _, _ = build_registry_entities(parse_linkml(yml), "u", "tester")
+
+    # union -> one entry per permitted type, each a real class id
+    assert set(props["contributor"].property_range) == {
+        classes["Person"].id, classes["Organization"].id,
+    }
+    # plain single range -> one-element list
+    assert props["title"].property_range == ["xsd:string"]
 
 
 # Deterministic sha256 fingerprints for the entities that come out of
@@ -262,7 +297,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "description": "Full name.",
             "skos_mappings": [],
             "concept_uri": "https://schema.org/name",
-            "property_range": "xsd:string",
+            "property_range": ["xsd:string"],
             "unit": None,
             "aliases": [],
         },
@@ -271,7 +306,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "description": "ORCID identifier.",
             "skos_mappings": [],
             "concept_uri": "https://example.org/schema#orcid",
-            "property_range": "xsd:string",
+            "property_range": ["xsd:string"],
             "unit": None,
             "aliases": ["ORCID iD"],
         },
@@ -280,7 +315,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "description": "Role on the study (units: FTE)",
             "skos_mappings": [],
             "concept_uri": None,
-            "property_range": "xsd:string",
+            "property_range": ["xsd:string"],
             "unit": {
                 "ucum_code": "FTE",
                 "has_quantity_kind": None,
@@ -295,7 +330,7 @@ def test_build_registry_entities_produces_exactly_the_expected_objects():
             "description": "",
             "skos_mappings": [],
             "concept_uri": None,
-            "property_range": "xsd:dateTime",
+            "property_range": ["xsd:dateTime"],
             "unit": None,
             "aliases": [],
         },
@@ -421,9 +456,9 @@ def test_build_registry_entities_maps_bican_prov_onto_the_meta_model():
 
     # property_range must be the real class id, not the synthetic
     # make_iri("ProvEntity")-style placeholder parse_linkml() starts with.
-    assert properties["used"].property_range == registry_classes["ProvEntity"].id
-    assert properties["was_derived_from"].property_range == registry_classes["ProvEntity"].id
-    assert properties["was_generated_by"].property_range == registry_classes["ProvActivity"].id
+    assert properties["used"].property_range == [registry_classes["ProvEntity"].id]
+    assert properties["was_derived_from"].property_range == [registry_classes["ProvEntity"].id]
+    assert properties["was_generated_by"].property_range == [registry_classes["ProvActivity"].id]
 
     # Cross-reference wiring: each class's properties list matches the
     # target property's own id.
@@ -573,9 +608,9 @@ def test_build_registry_entities_maps_person_classes_properties_and_rules():
     for name, prop in properties.items():
         assert prop.sha256_hash == EXPECTED_PERSON_PROP_SHAS[name], name
         assert is_uuid(prop.id), f"{name}.id not a UUID: {prop.id}"
-    assert properties["name"].property_range == "xsd:string"
-    assert properties["last_name"].property_range == "xsd:string"
-    assert properties["age"].property_range == "xsd:integer"
+    assert properties["name"].property_range == ["xsd:string"]
+    assert properties["last_name"].property_range == ["xsd:string"]
+    assert properties["age"].property_range == ["xsd:integer"]
     assert person.properties == sorted([
         properties["name"].id, properties["last_name"].id, properties["age"].id,
     ])

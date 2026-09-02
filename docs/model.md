@@ -71,7 +71,7 @@ RegistryEntity {
     string sha256_hash
 }
 RegistryProperty {
-    string property_range
+    stringList property_range
     string id
     string name
     string description
