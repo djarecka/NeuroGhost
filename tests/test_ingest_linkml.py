@@ -154,8 +154,8 @@ def test_aliases_do_not_affect_identity():
     collapse to the same sha256_hash (and therefore share an id via dedup).
     """
     base = dict(
-        name="orcid", description="ORCID identifier.", property_range="xsd:string",
-        unit=None, concept_uri="https://example.org/schema#orcid",
+        name="orcid", description="ORCID identifier.",
+        concept_uri="https://example.org/schema#orcid",
         skos_mappings=[],
     )
     with_alias = compute_content_hash_for(RegistryProperty, dict(base, aliases=["ORCID iD"]))
@@ -706,3 +706,30 @@ def test_build_registry_entities_maps_person_classes_properties_and_rules():
         prov = provenance_entries[entity.provenance[0]]
         assert prov.had_primary_source == "person"
         assert prov.was_attributed_to == "tester"
+
+
+def test_print_entities_raw_ids_vs_readable_names(capsys):
+    """--verbose prints exactly what's stored (raw UUID references);
+    --verbose-readable resolves them to names. Same data, two renderings."""
+    from ingest_linkml import _print_entities
+
+    parsed = parse_linkml(FIXTURES / "comprehensive.yml")
+    props, classes, vsets, pvs, rules, prov = build_registry_entities(
+        parsed, "comprehensive", "tester"
+    )
+    person = classes["Person"]
+    a_prop_id = props["name"].id
+
+    _print_entities(props, classes, vsets, pvs, rules, prov, readable=False)
+    raw = capsys.readouterr().out
+    _print_entities(props, classes, vsets, pvs, rules, prov, readable=True)
+    readable = capsys.readouterr().out
+
+    # The property's own `id:` line prints the id in both modes; the
+    # difference is in *reference* fields (a class's `properties:` list etc.),
+    # which show the id in raw mode and the name in readable mode. So the id
+    # occurs strictly more often in raw, and a resolved name shows up only in
+    # readable.
+    assert raw.count(a_prop_id) > readable.count(a_prop_id)
+    assert "'name'" in readable          # a reference resolved to a name
+    assert "'name'" not in raw

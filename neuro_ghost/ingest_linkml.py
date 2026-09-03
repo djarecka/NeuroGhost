@@ -125,6 +125,7 @@ LINKML_PRIMITIVES: dict[str, str] = {
     "boolean":    "xsd:boolean",
     "date":       "xsd:date",
     "datetime":   "xsd:dateTime",
+    "time":       "xsd:time",
     "uri":        "xsd:anyURI",
     "uriorcurie": "xsd:anyURI",
     "curie":      "xsd:anyURI",
@@ -893,16 +894,27 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
 
 def _print_entities(properties: dict, registry_classes: dict,
                     value_sets: dict, permissible_values: dict,
-                    rules: dict, provenance_entries: dict) -> None:
+                    rules: dict, provenance_entries: dict,
+                    readable: bool = False) -> None:
     """
     Pretty-print the entities build_registry_entities() would create, for
-    visual inspection (--verbose). Resolves id-reference fields
-    (properties, parent_class, attests_to) back to human-readable names,
-    since the stored FKs are UUIDs.
+    visual inspection.
+
+    By default prints exactly what is stored — id-reference fields
+    (properties, parent_class, applies_to, rule_value range targets,
+    attests_to, ...) show the raw UUIDs. With readable=True those references
+    are resolved to the referent's name instead, for eyeballing.
     """
     name_by_id = {p.id: name for name, p in properties.items()}
     name_by_id.update({c.id: name for name, c in registry_classes.items()})
     name_by_id.update({vs.id: name for name, vs in value_sets.items()})
+    name_by_id.update({pv.id: pv.name for pv in permissible_values.values()})
+
+    def ref(x):
+        return name_by_id.get(x, x) if readable else x
+
+    def refs(xs):
+        return [ref(x) for x in xs]
 
     if registry_classes:
         click.echo("  --- RegistryClass ---")
@@ -914,9 +926,9 @@ def _print_entities(properties: dict, registry_classes: dict,
             click.echo(f"      concept_uri:   {c.concept_uri}")
             click.echo(f"      is_abstract:   {c.is_abstract}")
             click.echo(f"      is_mixin:      {c.is_mixin}")
-            click.echo(f"      parent_class:  {name_by_id.get(c.parent_class, c.parent_class)}")
-            click.echo(f"      class_mixins:  {[name_by_id.get(m, m) for m in c.class_mixins]}")
-            click.echo(f"      properties:    {[name_by_id.get(p, p) for p in c.properties]}")
+            click.echo(f"      parent_class:  {ref(c.parent_class)}")
+            click.echo(f"      class_mixins:  {refs(c.class_mixins)}")
+            click.echo(f"      properties:    {refs(c.properties)}")
             click.echo(f"      aliases:       {c.aliases}")
 
     if properties:
@@ -932,12 +944,10 @@ def _print_entities(properties: dict, registry_classes: dict,
     if value_sets:
         click.echo("  --- RegistryValueSet ---")
         for name, vs in value_sets.items():
-            pv_names = [pv.name for pv in permissible_values.values()
-                        if pv.id in vs.permissible_values]
             click.echo(f"  {name}")
             click.echo(f"      id:                 {vs.id}")
             click.echo(f"      sha256_hash:        {vs.sha256_hash}")
-            click.echo(f"      permissible_values: {pv_names}")
+            click.echo(f"      permissible_values: {refs(vs.permissible_values)}")
 
     if rules:
         click.echo("  --- RegistryRule ---")
@@ -947,8 +957,8 @@ def _print_entities(properties: dict, registry_classes: dict,
             click.echo(f"      sha256_hash:         {r.sha256_hash}")
             click.echo(f"      rule_type:           {r.rule_type}")
             click.echo(f"      rule_value:          {r.rule_value}")
-            click.echo(f"      applies_to:          {[name_by_id.get(a, a) for a in r.applies_to]}")
-            click.echo(f"      used_in_class:       {name_by_id.get(r.used_in_class, r.used_in_class)}")
+            click.echo(f"      applies_to:          {refs(r.applies_to)}")
+            click.echo(f"      used_in_class:       {ref(r.used_in_class)}")
             click.echo(f"      severity:            {r.severity}")
             click.echo(f"      error_message:       {r.error_message}")
 
@@ -956,7 +966,7 @@ def _print_entities(properties: dict, registry_classes: dict,
         click.echo("  --- ProvenanceEntry ---")
         for pe in provenance_entries.values():
             click.echo(f"  {pe.id}")
-            click.echo(f"      attests_to:         {name_by_id.get(pe.attests_to, pe.attests_to)}")
+            click.echo(f"      attests_to:         {ref(pe.attests_to)}")
             click.echo(f"      had_primary_source: {pe.had_primary_source}")
             click.echo(f"      source_version:     {pe.source_version}")
             click.echo(f"      registry_version:   {pe.registry_version}")
@@ -973,15 +983,20 @@ def _print_entities(properties: dict, registry_classes: dict,
 @click.option("--dry-run", is_flag=True,
               help="Parse and count without writing to DB.")
 @click.option("--verbose", is_flag=True,
-              help="Print each built RegistryClass/RegistryProperty/RegistryValueSet in full "
-                   "(pairs well with --dry-run).")
+              help="Print each built entity in full, exactly as stored — "
+                   "id-reference fields (properties, ranges, ...) show raw "
+                   "UUIDs. Pairs well with --dry-run.")
+@click.option("--verbose-readable", is_flag=True,
+              help="Like --verbose, but resolve id references to the "
+                   "referent's name for easier reading.")
 @click.option("--wipe",    is_flag=True,
               help="Remove this source's attestations before re-ingesting.")
 @click.option("--registry-version", default="",
               help="Registry semver to stamp on created nodes.")
 @click.option("--issue",   default="", help="GitHub issue number (for provenance).")
 @click.option("--agent",   default="anonymous", help="Who submitted this schema.")
-def cli(file, db, dry_run, verbose, wipe, registry_version, issue, agent) -> None:
+def cli(file, db, dry_run, verbose, verbose_readable, wipe,
+        registry_version, issue, agent) -> None:
     """
     Ingest one or more LinkML .yml schemas into the NeuroGhost graph.
 
@@ -1032,7 +1047,7 @@ def cli(file, db, dry_run, verbose, wipe, registry_version, issue, agent) -> Non
                 DETACH DELETE pe
             """, {"src": source_label})
 
-        if verbose:
+        if verbose or verbose_readable:
             # Read-only preview build — uses the real ensure_schema_source
             # (safe: it only reads/creates the SchemaSource, no
             # RegistryClass/RegistryProperty writes happen here) and the
@@ -1045,7 +1060,8 @@ def cli(file, db, dry_run, verbose, wipe, registry_version, issue, agent) -> Non
             p_props, p_classes, p_vs, p_pvs, p_rules, p_provs = build_registry_entities(
                 parsed, preview_source_id, agent, issue, registry_version, conn=conn,
             )
-            _print_entities(p_props, p_classes, p_vs, p_pvs, p_rules, p_provs)
+            _print_entities(p_props, p_classes, p_vs, p_pvs, p_rules, p_provs,
+                            readable=verbose_readable)
 
         stats = insert_schema(
             conn, parsed, source_label, agent=agent, issue=issue,
