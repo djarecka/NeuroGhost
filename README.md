@@ -1,4 +1,4 @@
-<h1 align='center'>NeuroGhost</p>
+<h1 align='center'>NeuroGhost</h1>
 
 <h3 align='center'>A shared vocabulary for neuroscience data</h3>
 
@@ -17,10 +17,10 @@
 | Stat | Value |
 |------|-------|
 | Schemas registered | **7** — aind · bids · nwb · bbqs · dandi · openminds · personinfo |
-| Classes catalogued | **671** across all schemas |
-| Properties indexed | **~3,800** content-addressed nodes |
-| Alignment edges | **56** across 28 classes · mean distance **0.17** |
-| Alignment methods | IRI anchor 77% · semantic-name 14% · composite 9% |
+| Classes catalogued | **677** across all schemas |
+| Properties indexed | **~3,700** content-addressed nodes |
+| Alignment edges | **42** across 30 classes |
+| Alignment methods | IRI anchor · semantic-name · composite |
 | Confidence floor | **0.45** — pairs below this threshold are dropped |
 | `skos:exactMatch` threshold | **0.95** — IRI anchor + unit compatibility required |
 
@@ -28,11 +28,11 @@
 
 ## Adding a schema
 
-1. Write a LinkML `.yml` file (copy `registry_schemas/bbqs.yml` as a template).
-2. Go to the **Ingest** tab of the [website](https://sensein.group/NeuroGhost/), drop the file, browse to it, or paste the YAML directly, then click **Open ingestion issue**.
-3. A GitHub Action validates, ingests, aligns, and archives it within minutes.
+1. Write a **LinkML** (`.yml`) or **JSON Schema** (`.json`) file (copy `registry_schemas/bbqs.yml` as a LinkML template; JSON Schema is converted to LinkML on ingest).
+2. Go to the **Ingest** tab of the [website](https://sensein.group/NeuroGhost/) — drop the file, browse to it, or paste the schema — fill in the optional metadata (bundle, homepage, publisher, …), then click **Open ingestion issue**. (You can also open the **Schema submission** issue form on GitHub directly.)
+3. A GitHub Action validates the schema, rebuilds the registry, and **opens a pull request for review** — a maintainer merges it to add the schema.
 
-No installation, no pull request, no reviewers required.
+No local installation needed.
 
 ---
 
@@ -80,7 +80,7 @@ python neuro_ghost/ingest.py --dry-run --verbose dandiset.json   # JSON Schema
 
 ## Contributing
 
-- Register a schema via the [Register tab](https://sensein.group/NeuroGhost/).
+- Register a schema via the [Ingest tab](https://sensein.group/NeuroGhost/).
 - [Open an issue](https://github.com/sensein/NeuroGhost/issues/new) to report bugs or suggest features.
 - PRs welcome, especially around the distance function.
 
