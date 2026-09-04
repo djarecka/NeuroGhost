@@ -29,7 +29,7 @@
 ## Adding a schema
 
 1. Write a LinkML `.yml` file (copy `registry_schemas/bbqs.yml` as a template).
-2. Go to the [Register tab](https://sensein.group/NeuroGhost/), paste your YAML, click **Open GitHub Issue**.
+2. Go to the **Ingest** tab of the [website](https://sensein.group/NeuroGhost/), drop the file, browse to it, or paste the YAML directly, then click **Open ingestion issue**.
 3. A GitHub Action validates, ingests, aligns, and archives it within minutes.
 
 No installation, no pull request, no reviewers required.
