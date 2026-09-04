@@ -6,12 +6,17 @@ body:
   - type: markdown
     attributes:
       value: |
-        Submit a schema to the registry. On submit, a workflow validates it,
-        rebuilds the registry, and opens a **pull request** for review — nothing
-        lands until that PR is merged.
+        **Add a schema to the NeuroGhost registry.** Its classes and properties are
+        harmonized with everything already registered. On submit, a workflow
+        validates the schema, rebuilds the registry, and opens a **pull request**
+        for review — nothing lands until that PR is merged.
 
-        Finish the **title** above as `schema-submission: <short-name>`, and fill in
-        the fields below. Same fields as the web UI's Ingest page.
+        Finish the **title** above as `schema-submission: <short-name>` and fill in
+        the fields below (the same fields as the web UI's Ingest page).
+
+        **Two formats are accepted** (both end up as LinkML in the registry):
+        - **LinkML** — YAML, e.g. `id: …`, `name: …`, `classes: {Person: {attributes: {…}}}`
+        - **JSON Schema** — JSON, e.g. `{"type": "object", "properties": {"name": {"type": "string"}}}`
   - type: input
     id: name
     attributes:
@@ -24,7 +29,10 @@ body:
     id: format
     attributes:
       label: Format
-      description: How the schema below is written.
+      description: >-
+        Pick **JSON Schema** if you're pasting JSON (`{ … }`), or **LinkML** if
+        you're pasting YAML (`id:` / `classes:` …). Either way it's converted to
+        LinkML on ingest.
       options:
         - LinkML (YAML)
         - JSON Schema
@@ -34,7 +42,7 @@ body:
     id: schema
     attributes:
       label: Schema
-      description: Paste the full schema here (LinkML YAML or JSON Schema).
+      description: Paste the whole schema — LinkML YAML or JSON Schema, matching the Format above.
       render: yaml
     validations:
       required: true
