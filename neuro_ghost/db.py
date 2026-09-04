@@ -299,8 +299,13 @@ def _build_registry_ddl(yaml_path: str | Path = SCHEMA_YAML) -> list[str]:
 
     stmts: list[str] = []
 
+    # Infrastructure classes have their own hardcoded node tables below
+    # (_INFRASTRUCTURE_NODE_DDL); skip them here so the meta-model-generated
+    # table doesn't shadow the hardcoded one via CREATE ... IF NOT EXISTS.
+    _INFRA_CLASSES = {"SchemaSource", "SchemaVersionSnapshot", "SchemaActivity", "SemanticIdentity"}
+
     for cls_name, cls_def in classes.items():
-        if cls_def.get("abstract") or cls_name in inline_classes:
+        if cls_def.get("abstract") or cls_name in inline_classes or cls_name in _INFRA_CLASSES:
             continue
 
         slots = _resolve_slots(cls_name, classes, all_slots)
