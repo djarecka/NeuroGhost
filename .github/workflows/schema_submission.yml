@@ -55,23 +55,44 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Parse issue metadata
         id: meta
+        env:
+          ISSUE_BODY:   ${{ github.event.issue.body }}
+          ISSUE_TITLE:  ${{ github.event.issue.title }}
+          ISSUE_LABELS: ${{ toJson(github.event.issue.labels.*.name) }}
         run: |
-          TITLE="${{ github.event.issue.title }}"
-          SCHEMA_NAME="${TITLE#schema-submission:}"
-          SCHEMA_NAME=$(echo "$SCHEMA_NAME" | xargs | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
-          echo "schema_name=$SCHEMA_NAME" >> $GITHUB_OUTPUT
+          python3 - << 'PYEOF'
+          import os, re
 
-          LABELS='${{ toJson(github.event.issue.labels.*.name) }}'
-          if echo "$LABELS" | grep -q "breaking"; then
-            echo "bump=major" >> $GITHUB_OUTPUT
-          else
-            echo "bump=minor" >> $GITHUB_OUTPUT
-          fi
+          body  = os.environ.get("ISSUE_BODY", "") or ""
+          title = os.environ.get("ISSUE_TITLE", "") or ""
+
+          def field(label):
+              m = re.search(r'^###\s+' + re.escape(label) + r'\s*\n(.*?)(?=\n###\s|\Z)',
+                            body, re.DOTALL | re.MULTILINE)
+              if not m:
+                  return ""
+              v = m.group(1).strip()
+              return "" if v == "_No response_" else v
+
+          # Name: prefer the issue-form "Schema name" field; fall back to the
+          # title suffix (the web-UI prefill path: "schema-submission: <name>").
+          name = field("Schema name") or title.split("schema-submission:", 1)[-1]
+          name = re.sub(r'[^a-z0-9]+', '-', name.strip().lower()).strip('-') or "schema"
+
+          bump = "major" if "breaking" in os.environ.get("ISSUE_LABELS", "").lower() else "minor"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"schema_name={name}\n")
+              out.write(f"bump={bump}\n")
+          print("schema_name:", name, "| bump:", bump)
+          PYEOF
 
       # -----------------------------------------------------------------------
-      # Write the submitted schema to registry_schemas/{name}.yml so it's picked up
-      # by pipeline.py alongside all previously committed schemas.
-      - name: Extract and write schema file
+      # Write the submitted schema to registry_schemas/{name}.yml (+ an optional
+      # {name}_source.yaml sidecar of bundle/source metadata) so pipeline.py picks
+      # them up. Reads the issue-form fields, with the web-UI prefill body as a
+      # fallback.
+      - name: Extract schema + metadata
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
           SCHEMA_NAME: ${{ steps.meta.outputs.schema_name }}
@@ -80,24 +101,38 @@ jobs:
           import os, re, sys, json
           import yaml
 
-          body = os.environ["ISSUE_BODY"]
+          body = os.environ.get("ISSUE_BODY", "") or ""
           name = os.environ["SCHEMA_NAME"]
 
+          def field(label):
+              m = re.search(r'^###\s+' + re.escape(label) + r'\s*\n(.*?)(?=\n###\s|\Z)',
+                            body, re.DOTALL | re.MULTILINE)
+              if not m:
+                  return ""
+              v = m.group(1).strip()
+              return "" if v == "_No response_" else v
+
+          # Schema content: the fenced code block (the issue-form textarea renders
+          # as ```yaml; the web-UI prefill fences with the detected language).
           fenced = re.search(r'```([\w-]*)\s*\n(.*?)```', body, re.DOTALL)
           if fenced:
-              lang    = (fenced.group(1) or "yaml").lower()
+              fence_lang = (fenced.group(1) or "").lower()
               content = fenced.group(2).strip()
           else:
-              lang    = "yaml"
-              content = body.strip()
+              fence_lang, content = "", body.strip()
 
-          json_schema_langs = {"json", "json-schema", "jsonschema"}
+          # Format: prefer the "Format" dropdown — the form's textarea always
+          # renders as ```yaml, so the fence can't distinguish JSON from LinkML;
+          # fall back to the fence language for the web-UI prefill path.
+          fmt = field("Format").lower()
+          json_langs = {"json", "json-schema", "jsonschema"}
+          is_json = ("json" in fmt) if fmt else (fence_lang in json_langs)
 
           os.makedirs("registry_schemas", exist_ok=True)
           out_path = f"registry_schemas/{name}.yml"
 
-          if lang in json_schema_langs:
-              print(f"Detected format: JSON Schema ({lang!r}) — converting…")
+          if is_json:
+              print("Format: JSON Schema — converting…")
               sys.path.insert(0, ".")
               from neuro_ghost.converters.from_jsonschema import convert as js2lm
               try:
@@ -108,13 +143,33 @@ jobs:
               with open(out_path, "w") as f:
                   yaml.dump(linkml_dict, f, default_flow_style=False,
                             allow_unicode=True, sort_keys=False)
-              print(f"Converted → {out_path} "
-                    f"({len(linkml_dict['classes'])} classes)")
+              print(f"Converted → {out_path} ({len(linkml_dict['classes'])} classes)")
           else:
-              print(f"Detected format: LinkML ({lang!r})")
+              print("Format: LinkML")
               with open(out_path, "w") as f:
                   f.write(content)
               print(f"Wrote {out_path}")
+
+          # Source/bundle metadata sidecar from the form fields (keys = SchemaSource
+          # / SchemaBundle slot names), with the web-UI's "### Source metadata" yaml
+          # block as a fallback.
+          meta = {}
+          for key, label in [("bundle_label", "Bundle"), ("title", "Title"),
+                             ("homepage", "Homepage"), ("publisher", "Publisher"),
+                             ("contact", "Contact"), ("license", "License")]:
+              v = field(label)
+              if v:
+                  meta[key] = v
+          sm = re.search(r'###\s*Source metadata\s*\n+```[\w-]*\s*\n(.*?)```', body, re.DOTALL)
+          if sm:
+              old = yaml.safe_load(sm.group(1))
+              if isinstance(old, dict):
+                  for k, v in old.items():
+                      meta.setdefault(k, v)
+          if meta:
+              with open(f"registry_schemas/{name}_source.yaml", "w") as f:
+                  yaml.safe_dump(meta, f, sort_keys=False, allow_unicode=True)
+              print("Wrote sidecar:", list(meta))
           PYEOF
 
       # -----------------------------------------------------------------------
