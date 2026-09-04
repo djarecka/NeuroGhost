@@ -26,19 +26,6 @@
 
 ---
 
-## Roadmap
-
-**MVP (Sep 29):** BBQS and DANDI aligned, transform API live, users can sign up. Full public launch with BrainKB on Oct 23.
-
-| # | Date | Milestone | Owners | Issue |
-|---|------|-----------|--------|-------|
-| M1 | Aug 28 | Foundation — modules, meta-model v1, BICAN ingested, cloud deploy | @neurovium · @puja-trivedi · @djarecka · @Sulstice | [#56](https://github.com/sensein/NeuroGhost/issues/56) |
-| M2 | Sep 11 | Alignment consolidated, DANDI ingested, schema strategy | @neurovium · @djarecka · @Sulstice | [#57](https://github.com/sensein/NeuroGhost/issues/57) |
-| M3 | Sep 29 | **MVP soft launch** — users can sign up | @Sulstice + team | [#58](https://github.com/sensein/NeuroGhost/issues/58) |
-| M4 | Oct 23 | Full public launch with BrainKB | @Sulstice + team | [#59](https://github.com/sensein/NeuroGhost/issues/59) |
-
----
-
 ## Website
 
 **[sensein.group/NeuroGhost](https://sensein.group/NeuroGhost/)** — seven tabs: **Concepts**, **Diff**, **Graph Schema**, **Transform**, **Query**, **Provenance**, **Register**. Every view has download buttons.
@@ -96,28 +83,6 @@ python neuro_ghost/ingest.py --dry-run --verbose dandiset.json   # JSON Schema
 
 ---
 
-## Satellite Modules
-
-NeuroGhost core is extended by independently maintained satellite modules.
-Each module lives in its own repository and contributes back via pull
-requests; every PR from a satellite module requires one approval from the
-designated NeuroGhost approver before merging.
-See [docs/GOVERNANCE.md](docs/GOVERNANCE.md) for the full spec.
-
-### Module sync status
-
-> **Proteus**: commits ahead of the version pinned into `neuro_ghost/align.py` (see `.proteus-pin`).
-> **search_hybrid**: commits behind `sensein/NeuroGhost` main.
-> Updated automatically by CI on every push to main.
-
-<!-- MODULE_SYNC_START -->
-| Module | Maintainer | Repository | Behind main | Compare |
-|--------|-----------|------------|-------------|---------|
-| Proteus | @neurovium (Nema) | [neurovium/Proteus](https://github.com/neurovium/Proteus) | ⚠ pin unset | [compare ↗](https://github.com/neurovium/Proteus/commits/main) |
-| Dorada | @djarecka | [djarecka/NeuroGhost](https://github.com/djarecka/NeuroGhost) | 181 commits | [compare ↗](https://github.com/sensein/NeuroGhost/compare/main...djarecka:NeuroGhost:main) |
-<!-- MODULE_SYNC_END -->
-
----
 
 ## Contributing
 
