@@ -11,6 +11,7 @@ jobs:
     permissions:
       contents: write
       issues: write
+      pull-requests: write
 
     steps:
       # -----------------------------------------------------------------------
@@ -144,18 +145,39 @@ jobs:
             --agent "${{ github.event.issue.user.login }}"
 
       # -----------------------------------------------------------------------
-      - name: Commit registry + schema file
+      # Propose the ingested schema + rebuilt data as a PULL REQUEST (a review
+      # gate) rather than committing straight to main — additions to the general
+      # registry go through review.
+      - name: Open pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          NAME="${{ steps.meta.outputs.schema_name }}"
+          ISSUE="${{ github.event.issue.number }}"
+          BRANCH="schema-submission/${NAME}-issue-${ISSUE}"
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
           git add \
-            registry_schemas/${{ steps.meta.outputs.schema_name }}.yml \
+            registry_schemas/${NAME}.yml \
             data/registry.json \
             data/versions/ \
             data/provenance.json
-          git diff --cached --quiet || git commit -m \
-            "feat(registry): ingest ${{ steps.meta.outputs.schema_name }} (issue #${{ github.event.issue.number }})"
-          git push
+          SIDECAR="registry_schemas/${NAME}_source.yaml"
+          [ -f "$SIDECAR" ] && git add "$SIDECAR" || true
+          if git diff --cached --quiet; then
+            echo "No changes to propose (schema already in the registry)."
+            echo "pr_url=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "feat(registry): ingest ${NAME} (issue #${ISSUE})"
+          git push -u origin "$BRANCH"
+          PR_URL=$(gh pr create --base main --head "$BRANCH" \
+            --label schema-submission \
+            --title "Ingest schema: ${NAME} (issue #${ISSUE})" \
+            --body "Automated ingestion of \`${NAME}\` from issue #${ISSUE}. Review the schema and the rebuilt \`data/registry.json\` before merging into the registry. Closes #${ISSUE}")
+          echo "pr_url=${PR_URL}" >> "$GITHUB_OUTPUT"
 
       # -----------------------------------------------------------------------
       - name: Comment success
@@ -163,24 +185,22 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const name     = "${{ steps.meta.outputs.schema_name }}";
-            const pagesUrl = "https://sensein.group/NeuroGhost/";
+            const name  = "${{ steps.meta.outputs.schema_name }}";
+            const prUrl = "${{ steps.pr.outputs.pr_url }}";
+            const body = prUrl
+              ? [
+                  `✅ **\`${name}\` validated and ingested — opened a PR for review.**`,
+                  ``,
+                  `${prUrl}`,
+                  ``,
+                  `Merging that PR adds the schema and the rebuilt registry, and closes this issue. Nothing lands in the registry until it's reviewed.`,
+                ].join("\n")
+              : [
+                  `ℹ️ **\`${name}\` is already in the registry** — validated, but there was nothing new to propose.`,
+                ].join("\n");
             await github.rest.issues.createComment({
               owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: [
-                `✅ **\`${name}\` ingested successfully.**`,
-                ``,
-                `- All schemas rebuilt and aligned.`,
-                `- Provenance logged to \`data/provenance.json\`.`,
-                `- Archived snapshot in \`data/versions/\`.`,
-                ``,
-                `Browse: ${pagesUrl}`,
-              ].join("\n"),
-            });
-            await github.rest.issues.update({
-              owner: context.repo.owner, repo: context.repo.repo,
-              issue_number: context.issue.number, state: "closed",
+              issue_number: context.issue.number, body,
             });
 
       - name: Comment failure
