@@ -46,17 +46,17 @@ def _attesting_sources(conn, label: str, rel: str, hash_id: str) -> list[str]:
 def export_snapshot(conn, registry_version: str) -> dict:
     # ---- sources -----------------------------------------------------------
     src_rows = conn.execute(
-        "MATCH (s:SchemaSource) RETURN s.uid, s.label, s.version"
+        "MATCH (s:SchemaSource) RETURN s.uid, s.label, s.version, s.content_hash"
     ).get_all()
 
     sources = []
-    for _, label, ver in src_rows:
+    for _, label, ver, chash in src_rows:
         count = conn.execute("""
             MATCH (n:RegistryClass)-[:HAS_PROVENANCE]->(:ProvenanceEntry {source: $src})
             RETURN count(DISTINCT n)
         """, {"src": label}).get_next()[0]
         sources.append({"label": label, "version": ver or "1.0.0",
-                        "class_count": count})
+                        "class_count": count, "content_hash": chash or ""})
 
     # ---- classes -----------------------------------------------------------
     # Identity is shared across sources now, so a class/property no longer

@@ -380,7 +380,8 @@ _INFRASTRUCTURE_NODE_DDL: list[str] = [
         created_at       STRING,
         label            STRING,
         mime_type        STRING,
-        registry_version STRING
+        registry_version STRING,
+        content_hash     STRING
     )""",
 
     # SchemaVersionSnapshot — one per (schema_name, semver) pair

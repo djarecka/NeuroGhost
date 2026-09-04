@@ -83,6 +83,8 @@ from db import (
     write_registry_entities, write_structural_edges,
 )
 
+from schema_hash import content_hash
+
 DB_PATH = "./registry.lbug"
 
 # ---------------------------------------------------------------------------
@@ -243,6 +245,10 @@ def parse_linkml(path: Path) -> dict[str, Any]:
         "name":        sv.schema.name or path.stem,
         "version":     str(sv.schema.version or "1.0.0"),
         "description": sv.schema.description or "",
+        # File-level fingerprint of the raw source text (canonicalised) — lets
+        # ingestion reject a schema that is already in the registry, and lets
+        # the UI pre-check a dropped/pasted file. See schema_hash.py.
+        "content_hash": content_hash(Path(path).read_text()),
     }
 
     classes: dict[str, dict] = {}
@@ -514,7 +520,8 @@ def _write_value_sets(conn, value_sets: dict[str, "ValueSet"],
 # SchemaSource / SchemaVersionSnapshot (unchanged in spirit from before)
 # ---------------------------------------------------------------------------
 
-def _ensure_schema_source(conn, source_label: str, version: str, registry_version: str) -> str:
+def _ensure_schema_source(conn, source_label: str, version: str,
+                          registry_version: str, content_hash: str = "") -> str:
     """One SchemaSource node per source label, reused across ingests."""
     r = conn.execute(
         "MATCH (s:SchemaSource {label: $label}) RETURN s.uid LIMIT 1",
@@ -528,13 +535,34 @@ def _ensure_schema_source(conn, source_label: str, version: str, registry_versio
             uid: $uid, iri: $uri, uri: $uri,
             version: $version, created_at: $t,
             label: $label, mime_type: 'application/yaml',
-            registry_version: $rv
+            registry_version: $rv, content_hash: $ch
         })
     """, {
         "uid": uid, "uri": f"{REG}source/{uid}", "version": version,
         "t": now_iso(), "label": source_label, "rv": registry_version,
+        "ch": content_hash or "",
     })
     return uid
+
+
+def find_duplicate_source(conn, content_hash: str, exclude_label: str = "") -> str | None:
+    """
+    Return the label of an already-ingested SchemaSource whose file content is
+    identical to `content_hash`, or None. `exclude_label` skips the schema's own
+    prior record, so a re-ingest of the SAME source is an update (handled by the
+    schema_unchanged path), not a "duplicate file". A match under a DIFFERENT
+    label means the exact same schema was already added under another name.
+    """
+    if not content_hash:
+        return None
+    rows = conn.execute(
+        "MATCH (s:SchemaSource) WHERE s.content_hash = $ch RETURN s.label",
+        {"ch": content_hash},
+    ).get_all()
+    for (label,) in rows:
+        if label != exclude_label:
+            return label
+    return None
 
 
 def _prev_schema_version(conn, source_label: str) -> str | None:
@@ -590,6 +618,22 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
     Returns a stats dict.
     """
     meta = parsed["meta"]
+    schema_hash = meta.get("content_hash", "")
+
+    # Reject a file whose exact content is already in the registry under a
+    # different source label — the schema was already added (see
+    # find_duplicate_source). Re-ingesting the SAME label is an update, not a
+    # duplicate, and falls through to the normal schema_unchanged path below.
+    if not dry_run:
+        dup = find_duplicate_source(conn, schema_hash, exclude_label=source_label)
+        if dup:
+            return {
+                "classes_new": 0, "classes_existing": 0,
+                "properties_new": 0, "properties_existing": 0,
+                "provenance_added": 0, "rels": 0,
+                "duplicate_of": dup, "skipped": True,
+                "content_hash": schema_hash,
+            }
 
     properties, registry_classes, value_sets = build_registry_entities(
         parsed, source_label, agent, issue, registry_version,
@@ -600,7 +644,8 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
     if dry_run:
         return stats
 
-    _ensure_schema_source(conn, source_label, meta["version"], registry_version)
+    _ensure_schema_source(conn, source_label, meta["version"], registry_version,
+                          content_hash=schema_hash)
     stats["rels"] = write_structural_edges(conn, registry_classes)
     stats["rels"] += _write_value_sets(conn, value_sets, parsed.get("enums", {}))
 
@@ -724,6 +769,11 @@ def cli(file, db, dry_run, wipe, registry_version, issue, agent) -> None:
             registry_version=registry_version,
             yml_path=str(path),
         )
+
+        if stats.get("skipped") and stats.get("duplicate_of"):
+            click.echo(f"  Skipped — identical content already ingested as "
+                       f"'{stats['duplicate_of']}'. Not re-added.")
+            continue
 
         prefix = "[dry-run]" if dry_run else "Result:"
         click.echo(
