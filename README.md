@@ -26,12 +26,6 @@
 
 ---
 
-## Website
-
-**[sensein.group/NeuroGhost](https://sensein.group/NeuroGhost/)** — seven tabs: **Concepts**, **Diff**, **Graph Schema**, **Transform**, **Query**, **Provenance**, **Register**. Every view has download buttons.
-
----
-
 ## Adding a schema
 
 1. Write a LinkML `.yml` file (copy `registry_schemas/bbqs.yml` as a template).
