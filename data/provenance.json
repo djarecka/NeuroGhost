@@ -418,5 +418,20 @@
       "sources_total": 10
     },
     "archive_path": "data/versions/1.15.4.json"
+  },
+  {
+    "registry_version": "1.15.5",
+    "previous_version": "1.15.4",
+    "timestamp": "2026-09-27T03:24:53.454826+00:00",
+    "bump": "patch",
+    "trigger": "manual",
+    "issue_number": "",
+    "agent": "github-actions",
+    "schema_ingested": "",
+    "stats": {
+      "classes_total": 732,
+      "sources_total": 10
+    },
+    "archive_path": "data/versions/1.15.5.json"
   }
 ]
