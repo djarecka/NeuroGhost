@@ -30,7 +30,7 @@
 
 1. Write a **LinkML** (`.yml`) or **JSON Schema** (`.json`) file (copy `registry_schemas/bbqs.yml` as a LinkML template; JSON Schema is converted to LinkML on ingest).
 2. Go to the **Ingest** tab of the [website](https://sensein.group/NeuroGhost/) — drop the file, browse to it, or paste the schema — fill in the optional metadata (bundle, homepage, publisher, …), then click **Open ingestion issue**. (You can also open the **Schema submission** issue form on GitHub directly.)
-3. A GitHub Action validates the schema, rebuilds the registry, and **opens a pull request for review** — a maintainer merges it to add the schema.
+3. A GitHub Action validates the schema, checks that the registry still builds, and **opens a pull request for review** — a maintainer merges it, which triggers a registry rebuild that adds the schema.
 
 No local installation needed.
 
@@ -73,7 +73,7 @@ python neuro_ghost/ingest.py --dry-run --verbose dandiset.json   # JSON Schema
 - **[LinkML](https://linkml.io/)** — schema format
 - **[sentence-transformers](https://sbert.net/)** — `all-MiniLM-L6-v2` for semantic distance
 - **Static HTML + GitHub Pages** — one-file frontend, no framework
-- **GitHub Actions** — CI/CD on every schema submission
+- **GitHub Actions** — schema submission (issue → PR), registry rebuild on every merge to `main`, and a manual *Fetch External Schemas* run that proposes upstream schema updates as a PR
 
 ---
 

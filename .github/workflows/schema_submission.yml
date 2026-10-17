@@ -190,10 +190,12 @@ jobs:
             registry_schemas/${{ steps.meta.outputs.schema_name }}.yml
 
       # -----------------------------------------------------------------------
-      # Full rebuild from all registry_schemas/*.yml in the repo (including the new one
-      # written above).  --skip-converters keeps CI fast — external schemas
-      # (BIDS/NWB/DANDI/…) are refreshed by the weekly publish_registry.yml.
-      - name: Rebuild registry (all local schemas)
+      # Check that the full registry still builds with the new schema (ingest +
+      # align + export over all registry_schemas/*.yml). The rebuilt data/ is
+      # NOT committed: the PR carries only the schema, and merging it triggers
+      # publish_registry.yml, which regenerates data/ from main. That keeps
+      # concurrent submission PRs from conflicting on data/.
+      - name: Check the registry builds (all local schemas)
         run: |
           python neuro_ghost/pipeline.py \
             --fresh \
@@ -203,9 +205,9 @@ jobs:
             --agent "${{ github.event.issue.user.login }}"
 
       # -----------------------------------------------------------------------
-      # Propose the ingested schema + rebuilt data as a PULL REQUEST (a review
-      # gate) rather than committing straight to main — additions to the general
-      # registry go through review.
+      # Propose the schema (+ sidecar) as a PULL REQUEST (a review gate) rather
+      # than committing straight to main — additions to the general registry go
+      # through review.
       - name: Open pull request
         id: pr
         env:
@@ -217,11 +219,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
-          git add \
-            registry_schemas/${NAME}.yml \
-            data/registry.json \
-            data/versions/ \
-            data/provenance.json
+          git add registry_schemas/${NAME}.yml
           SIDECAR="registry_schemas/${NAME}_source.yaml"
           [ -f "$SIDECAR" ] && git add "$SIDECAR" || true
           if git diff --cached --quiet; then
@@ -234,7 +232,7 @@ jobs:
           PR_URL=$(gh pr create --base main --head "$BRANCH" \
             --label schema-submission \
             --title "Ingest schema: ${NAME} (issue #${ISSUE})" \
-            --body "Automated ingestion of \`${NAME}\` from issue #${ISSUE}. Review the schema and the rebuilt \`data/registry.json\` before merging into the registry. Closes #${ISSUE}")
+            --body "Automated ingestion of \`${NAME}\` from issue #${ISSUE}. Validated, and the registry builds with it. Merging triggers **Rebuild & Publish Registry**, which regenerates \`data/\`. Closes #${ISSUE}")
           echo "pr_url=${PR_URL}" >> "$GITHUB_OUTPUT"
 
       # -----------------------------------------------------------------------
@@ -251,7 +249,7 @@ jobs:
                   ``,
                   `${prUrl}`,
                   ``,
-                  `Merging that PR adds the schema and the rebuilt registry, and closes this issue. Nothing lands in the registry until it's reviewed.`,
+                  `Merging that PR adds the schema, rebuilds the registry, and closes this issue. Nothing lands in the registry until it's reviewed.`,
                 ].join("\n")
               : [
                   `ℹ️ **\`${name}\` is already in the registry** — validated, but there was nothing new to propose.`,
