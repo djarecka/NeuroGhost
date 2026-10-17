@@ -1,0 +1,84 @@
+name: Fetch External Schemas
+
+# Downloads the latest upstream schemas (BIDS/NWB/AIND/openMINDS/BBQS) with the
+# converters in neuro_ghost/converters/run_all.py and proposes the updated
+# registry_schemas/*.yml as a PULL REQUEST for review.
+#
+# It does not touch data/: merging the PR triggers publish_registry.yml, which
+# rebuilds the registry. Manual only for now (see issue #118).
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Only these sources, comma-separated (e.g. bids,nwb). Empty = all."
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # push the PR branch
+      pull-requests: write   # open the PR
+
+    steps:
+      # -----------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # -----------------------------------------------------------------------
+      - name: Run converters
+        env:
+          ONLY: ${{ inputs.only }}
+        run: |
+          ARGS=()
+          IFS=',' read -ra NAMES <<< "$ONLY"
+          for n in "${NAMES[@]}"; do
+            n="$(echo "$n" | xargs)"
+            if [ -n "$n" ]; then ARGS+=(--only "$n"); fi
+          done
+          python neuro_ghost/converters/run_all.py "${ARGS[@]}"
+
+      # -----------------------------------------------------------------------
+      - name: Open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add registry_schemas/
+          if git diff --cached --quiet; then
+            echo "Upstream schemas unchanged — nothing to propose."
+            exit 0
+          fi
+          BRANCH="external-schemas/$(date -u +%Y-%m-%d)-${{ github.run_id }}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git commit -m "chore(schemas): fetch external schemas"
+          git push -u origin "$BRANCH"
+          {
+            echo "Automated fetch of upstream schemas (\`converters/run_all.py\`)."
+            echo
+            echo "Changed files:"
+            git diff --stat HEAD~1 HEAD | sed 's/^/    /'
+            echo
+            echo "Review the schema changes before merging. Merging triggers **Rebuild & Publish Registry**, which regenerates \`data/\`."
+          } > /tmp/pr_body.md
+          gh pr create --base main --head "$BRANCH" \
+            --title "Fetch external schemas ($(date -u +%Y-%m-%d))" \
+            --body-file /tmp/pr_body.md

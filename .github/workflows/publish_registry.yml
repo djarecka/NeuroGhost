@@ -1,19 +1,20 @@
 name: Rebuild & Publish Registry
 
-# Trigger manually or weekly (Sunday 03:00 UTC).
-# A schema submission (schema_submission.yml) handles per-PR incremental updates;
-# this workflow does a full clean rebuild on a schedule.
+# Rebuilds data/ (registry.json, versions/, provenance.json) from the schemas
+# already in registry_schemas/ and commits the result to main.
 #
-# PAUSED: the push and schedule triggers are commented out while we decide
-# whether we want automatic rebuilds (see issue #118). Manual runs still work.
+# This workflow never downloads external schemas. Fetching upstream schemas
+# (BIDS/NWB/AIND/…) is a separate, manual step: fetch_external_schemas.yml opens
+# a PR with the updated registry_schemas/*.yml, and merging it triggers this
+# rebuild. Automatic weekly fetching is off for now (see issue #118).
 on:
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - "registry_schemas/**"
-  #     - "meta_model.yaml"
-  #     - "neuro_ghost/**"
-  #     - "requirements.txt"
+  push:
+    branches: [main]
+    paths:
+      - "registry_schemas/**"
+      - "meta_model.yaml"
+      - "neuro_ghost/**"
+      - "requirements.txt"
   workflow_dispatch:
     inputs:
       bump:
@@ -22,13 +23,12 @@ on:
         default: "patch"
         type: choice
         options: [patch, minor, major]
-      skip_converters:
-        description: "Skip fetching external schemas (BIDS/NWB/DANDI/…)"
-        required: false
-        default: false
-        type: boolean
-  # schedule:
-  #   - cron: "0 3 * * 0"   # weekly, Sunday 03:00 UTC
+
+# One rebuild at a time; a queued run rebuilds from the latest main, so it
+# also covers anything merged while the previous run was going.
+concurrency:
+  group: rebuild-registry
+  cancel-in-progress: false
 
 jobs:
   rebuild:
@@ -41,6 +41,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # Build from the current tip of main, not the triggering commit, so a
+          # queued run includes every merge and can push without conflicts.
+          ref: main
           # Fetch full history so the bump commit doesn't squash provenance
           fetch-depth: 0
 
@@ -84,24 +87,26 @@ jobs:
       # -----------------------------------------------------------------------
       - name: Determine pipeline flags
         id: flags
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
           BUMP="${{ inputs.bump || 'patch' }}"
-          SKIP=""
-          if [ "${{ inputs.skip_converters }}" = "true" ]; then
-            SKIP="--skip-converters"
-          fi
+          # A merged schema-submission PR carries "(issue #N)" in its commit
+          # message; keep that link in provenance.json.
+          ISSUE=$(printf '%s' "$COMMIT_MSG" | head -n1 | grep -oE 'issue #[0-9]+' | grep -oE '[0-9]+' | head -n1 || true)
           echo "bump=$BUMP"   >> $GITHUB_OUTPUT
-          echo "skip=$SKIP"   >> $GITHUB_OUTPUT
+          echo "issue=$ISSUE" >> $GITHUB_OUTPUT
 
       # -----------------------------------------------------------------------
-      # Full pipeline: wipe → seed → (converters) → ingest all → align → export
+      # Full pipeline: wipe → seed → ingest all local schemas → align → export
       - name: Seed, ingest, align, export
         run: |
           python neuro_ghost/pipeline.py \
             --fresh \
-            ${{ steps.flags.outputs.skip }} \
+            --skip-converters \
             --bump  ${{ steps.flags.outputs.bump }} \
-            --agent "github-actions"
+            ${{ steps.flags.outputs.issue && format('--issue {0}', steps.flags.outputs.issue) || '' }} \
+            --agent "${{ github.actor }}"
 
       # -----------------------------------------------------------------------
       - name: Commit & push updated registry
@@ -109,9 +114,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stage registry outputs + any new converted schemas
           git add data/registry.json data/versions/ data/provenance.json
-          git add registry_schemas/ --ignore-errors
 
           if git diff --cached --quiet; then
             echo "Registry unchanged — nothing to commit."
