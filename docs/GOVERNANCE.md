@@ -64,8 +64,10 @@ module before merging.
    module reviews and approves the PR. No other approvals are required, but
    any NeuroGhost maintainer may comment.
 
-4. **CI must pass.** All existing tests, the schema validation workflow, and
-   (where applicable) the registry rebuild must be green before merging.
+4. **CI must pass.** All existing tests and (where applicable) the schema
+   validation workflow must be green before merging. The registry rebuild runs
+   *after* merge (see [Registry data and automation](#registry-data-and-automation)),
+   so PRs should not include regenerated `data/` files.
 
 5. **Squash or merge — no rebases onto main.** The merge method is merge
    commit so the satellite module's authorship is visible in `git log`.
@@ -76,6 +78,33 @@ If a satellite PR is merged prematurely or introduces a regression, any
 NeuroGhost core maintainer may open a revert PR without waiting for the
 satellite module's approval. The revert is merged as soon as one core
 maintainer approves it.
+
+---
+
+## Registry data and automation
+
+Schemas and registry data change only through pull requests to `main`, plus
+one automatic rebuild commit after each merge. Three GitHub Actions workflows
+are involved, and they are kept separate on purpose:
+
+| Workflow | Trigger | What it does | Output |
+|----------|---------|--------------|--------|
+| **Schema Submission** (`schema_submission.yml`) | an issue titled `schema-submission: <name>` (the website's Ingest tab, or the issue form) | validates the schema and checks that the full registry still builds with it | a PR with only `registry_schemas/<name>.yml` (+ its `_source.yaml` sidecar) |
+| **Fetch External Schemas** (`fetch_external_schemas.yml`) | manual only | downloads the latest upstream schemas (BIDS, NWB, AIND, openMINDS, BBQS) with `neuro_ghost/converters/run_all.py` | a PR with the updated `registry_schemas/*.yml` |
+| **Rebuild & Publish Registry** (`publish_registry.yml`) | push to `main` touching `registry_schemas/`, `meta_model.yaml`, `neuro_ghost/` or `requirements.txt`; or manual | rebuilds the registry from the schemas on `main` (`pipeline.py --fresh --skip-converters`); never downloads anything | a `chore(registry): rebuild vX.Y.Z` commit to `main` with `data/` |
+
+Rules that follow from this:
+
+- **Every schema change is reviewed before it lands.** That includes upstream
+  updates: a fetch PR shows exactly what changed in each external schema, and a
+  maintainer decides whether to merge it.
+- **`data/` is generated, never edited by hand.** `data/registry.json`,
+  `data/provenance.json` and `data/versions/` are written only by the rebuild
+  workflow. PRs, including hand-edits to `registry_schemas/`, carry the
+  schema or code change only.
+- **External schemas are not fetched automatically** for now. Whether to
+  schedule the fetch, and how often, is tracked in
+  [#118](https://github.com/sensein/NeuroGhost/issues/118).
 
 ---
 
