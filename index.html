@@ -270,6 +270,8 @@ header{height:52px;padding:0 20px;border-bottom:1px solid var(--border);
 .c-map:last-child{border-bottom:none;}
 .c-map-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .c-map-pred{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.c-map-end.clickable{cursor:pointer;color:var(--teal);}
+.c-map-end.clickable:hover{text-decoration:underline;}
 .c-map-meta{font-size:10.5px;color:var(--muted);margin-top:3px;}
 .c-status{font-family:var(--mono);font-size:9px;letter-spacing:.05em;padding:1px 5px;border-radius:4px;border:1px solid var(--border);}
 .c-status.PROPOSED{color:var(--yellow);}
@@ -2070,11 +2072,22 @@ async function initConcepts() {
     }
     e.uses.push({ cls: c.name, clsSources: c.sources || [], rules: p.rules || [] });
   }));
-  // id -> source labels of every class and property (for mapping targets).
-  CONCEPT.entitySources = new Map();
+  // id -> {kind, name, sources} of every class and property, and the
+  // mappings pointing AT each one (shown as "Mapped from" on the target).
+  CONCEPT.entities = new Map();
+  CONCEPT.incoming = new Map();
+  const addIncoming = (subject, kind, ms) => (ms || []).forEach(m => {
+    if (!CONCEPT.incoming.has(m.target_id)) CONCEPT.incoming.set(m.target_id, []);
+    const list = CONCEPT.incoming.get(m.target_id);
+    if (!list.some(x => x.id === m.id)) list.push({ ...m, subject_id: subject.id, subject_name: subject.name });
+  });
   d.classes.forEach(c => {
-    CONCEPT.entitySources.set(c.id, c.sources || []);
-    (c.properties || []).forEach(p => CONCEPT.entitySources.set(p.id, p.sources || []));
+    CONCEPT.entities.set(c.id, { kind: 'class', name: c.name, sources: c.sources || [] });
+    addIncoming(c, 'class', c.mappings);
+    (c.properties || []).forEach(p => {
+      CONCEPT.entities.set(p.id, { kind: 'property', name: p.name, sources: p.sources || [] });
+      addIncoming(p, 'property', p.mappings);
+    });
   });
   CONCEPT.properties = [...propMap.values()].map(e => ({
     ...e,
@@ -2313,9 +2326,13 @@ function ruleChip(r) {
 }
 
 // Reviewed cross-schema mappings of a class or property (from mappings/*.sssom.tsv).
-function mappingsHtml(mappings) {
+// `incoming`: mappings pointing at this entity — show their subject instead of
+// their target. The other end is clickable (opens that class/property).
+function mappingsHtml(mappings, incoming = false) {
   if (!mappings || !mappings.length) return '<div class="c-none">No mappings yet.</div>';
   return mappings.map(m => {
+    const endId = incoming ? m.subject_id : m.target_id;
+    const end = (CONCEPT.entities && CONCEPT.entities.get(endId)) || { name: '', sources: [] };
     const conf = m.confidence == null ? '' : ` · ${Number(m.confidence).toFixed(2)}`;
     const method = m.mapping_tool || m.mapping_justification || '';
     const who = [m.proposed_by && `proposed by ${m.proposed_by}`,
@@ -2326,13 +2343,37 @@ function mappingsHtml(mappings) {
         <div class="c-map-head">
           <span class="c-status ${esc(m.review_status)}">${esc(m.review_status)}</span>
           <span class="c-map-pred">${esc(m.predicate)}</span>
-          <span class="c-prop-name" title="${esc(m.target_id)}">${esc(m.target_name || m.target_id)}</span>
-          ${((CONCEPT.entitySources && CONCEPT.entitySources.get(m.target_id)) || []).slice(0, 2)
-              .map(s => `<span class="c-src-tag">${esc(s)}</span>`).join('')}
+          <span class="c-prop-name c-map-end${end.kind ? ' clickable' : ''}" data-id="${esc(endId)}"
+                title="${esc(endId)}">${esc(end.name || (incoming ? m.subject_name : m.target_name) || endId)}</span>
+          ${end.sources.slice(0, 2).map(s => `<span class="c-src-tag">${esc(s)}</span>`).join('')}
         </div>
         <div class="c-map-meta">${esc(method)}${esc(conf)}${who ? ' · ' + esc(who) : ''}</div>
       </div>`;
   }).join('');
+}
+
+// Open a class or property by id (from a mapping link), switching between the
+// Classes and Properties views as needed.
+function conceptOpen(id) {
+  const e = CONCEPT.entities && CONCEPT.entities.get(id);
+  if (!e) return;
+  setMode(e.kind === 'class' ? 'classes' : 'properties');
+  if (e.kind === 'class') { CONCEPT.selected = id; renderClassList(); renderConceptDetail(); }
+  else { CONCEPT.selectedProp = id; renderPropertyList(); renderPropertyDetail(); }
+  const row = document.querySelector('.c-cls-row.selected');
+  if (row) row.scrollIntoView({ block: 'nearest' });
+}
+function bindMappingLinks(el) {
+  el.querySelectorAll('.c-map-end.clickable').forEach(node =>
+    node.addEventListener('click', () => conceptOpen(node.dataset.id)));
+}
+// "Mappings" + (if any) "Mapped from" sections for an entity.
+function mappingSectionsHtml(id, mappings) {
+  const incoming = (CONCEPT.incoming && CONCEPT.incoming.get(id)) || [];
+  return `
+    <div class="c-section">Mappings (${(mappings || []).length})</div>
+    ${mappingsHtml(mappings)}
+    ${incoming.length ? `<div class="c-section">Mapped from (${incoming.length})</div>${mappingsHtml(incoming, true)}` : ''}`;
 }
 
 function renderPropertyDetail() {
@@ -2364,9 +2405,22 @@ function renderPropertyDetail() {
     ${uses.length > 80 ? `<div class="c-prop-more">+${uses.length - 80} more</div>` : ''}
     ${anyClassScoped ? '<div class="c-legend"><span class="c-rule cls">highlighted</span> rules are specific to that class</div>' : ''}
 
-    <div class="c-section">Mappings (${(p.mappings || []).length})</div>
-    ${mappingsHtml(p.mappings)}
+    ${mappingSectionsHtml(p.id, p.mappings)}
   `;
+  bindMappingLinks(el);
+}
+
+// Live-reweighted alignment distance (Concepts tab weight sliders).
+function conceptWeightedDistance(a) {
+  const w = CONCEPT.weights;
+  const s = a.scores || {};
+  const num = (w.iri  * (s.iri  || 0))
+            + (w.name * (s.name || 0))
+            + (w.desc * (s.desc || 0))
+            + (w.slot * (s.slot || 0));
+  const den = w.iri + w.name + w.desc + w.slot;
+  if (!den) return a.distance ?? 1;
+  return 1 - (num / den);
 }
 
 function renderConceptDetail() {
@@ -2447,8 +2501,7 @@ function renderConceptDetail() {
     <div class="c-section">Properties (${props.length})</div>
     ${propsHtml}
 
-    <div class="c-section">Mappings (${(c.mappings || []).length})</div>
-    ${mappingsHtml(c.mappings)}
+    ${mappingSectionsHtml(c.id, c.mappings)}
 
     <div class="c-section">Alignments (${aligns.length})</div>
     ${aligns.length ? weightsHtml : ''}
@@ -2470,6 +2523,8 @@ function renderConceptDetail() {
     CONCEPT.weights = { ...CONCEPT_DEFAULT_WEIGHTS };
     renderConceptDetail();
   });
+
+  bindMappingLinks(el);
 
   // Click alignment target → jump to it
   el.querySelectorAll('.c-align-name.clickable').forEach(node => {
