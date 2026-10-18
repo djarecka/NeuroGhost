@@ -155,3 +155,16 @@ def test_schema_pairs_expand_all():
         schema_pairs(reg, "x", "a")
     with pytest.raises(ValueError, match="both 'a'"):
         schema_pairs(reg, "a", "a")
+
+
+def test_spaces_typed_instead_of_a_tab_still_separate_columns(tmp_path):
+    """GitHub's web editor often inserts spaces for Tab: a short row whose
+    last columns are separated by 2+ spaces still parses; a complete row's
+    comment keeps its double spaces."""
+    mf = read_mapping_file(write(tmp_path,
+        "a:S\tskos:closeMatch\tb:T\t0.66\tACCEPTED  djarecka\n"
+        "a:S.x\tskos:closeMatch\tb:T.y\t\tPROPOSED\t\tkeep  these  spaces\n"
+    ))
+    assert mf.errors == []
+    assert (mf.rows[0].review_status, mf.rows[0].reviewer_id) == ("ACCEPTED", "djarecka")
+    assert mf.rows[1].comment == "keep  these  spaces"
