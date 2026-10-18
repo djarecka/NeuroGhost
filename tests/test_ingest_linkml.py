@@ -39,7 +39,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
     assert parsed["meta"].pop("content_hash") == \
         content_hash((FIXTURES / "comprehensive.yml").read_text())
 
-    assert parsed == {
+    expected = {
         "meta": {
             "id": "https://example.org/comprehensive",
             "name": "comprehensive",
@@ -86,6 +86,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
         },
         "slots": {
             "created_at": {
+                "name": "created_at",
                 "iri": "",
                 "definition": "",
                 "value_range": ["xsd:dateTime"],
@@ -98,6 +99,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "aliases": [],
             },
             "name": {
+                "name": "name",
                 "iri": "https://schema.org/name",
                 "definition": "Full name.",
                 "value_range": ["xsd:string"],
@@ -110,6 +112,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "aliases": [],
             },
             "orcid": {
+                "name": "orcid",
                 "iri": "https://example.org/schema#orcid",
                 "definition": "ORCID identifier.",
                 "value_range": ["xsd:string"],
@@ -122,6 +125,7 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
                 "aliases": ["ORCID iD"],
             },
             "role": {
+                "name": "role",
                 "iri": "",
                 "definition": "Role on the study (units: FTE)",
                 "value_range": ["xsd:string"],
@@ -137,6 +141,14 @@ def test_parse_linkml_extracts_exactly_the_expected_dict():
         "enums": {},
         "source_metadata": {},
     }
+    # Each class's own rule facets for its slots: in this fixture no class
+    # refines a slot, so they're exactly the slot definitions' facets.
+    from ingest_linkml import _FACETS
+    for cls in expected["classes"].values():
+        cls["slot_facets"] = {
+            key: {f: expected["slots"][key][f] for f in _FACETS} for key in cls["slots"]
+        }
+    assert parsed == expected
 
 
 def test_registry_property_does_not_retain_usage_constraints():
@@ -170,6 +182,93 @@ def test_aliases_do_not_affect_identity():
     with_alias = compute_content_hash_for(RegistryProperty, dict(base, aliases=["ORCID iD"]))
     without_alias = compute_content_hash_for(RegistryProperty, dict(base, aliases=[]))
     assert with_alias == without_alias
+
+
+def test_same_name_different_definition_becomes_separate_properties(tmp_path):
+    """
+    Two classes can declare the same attribute name with different meanings
+    (dandiset: `description` of a Dandiset vs of an Activity). Each must keep
+    its own definition — two RegistryProperty entities, both named
+    `description` — instead of every class silently getting the first
+    class's definition. A third class repeating a definition shares that
+    property.
+    """
+    yml = tmp_path / "s.yml"
+    yml.write_text(
+        "id: https://example.org/s\n"
+        "name: s\n"
+        "prefixes: {linkml: https://w3id.org/linkml/}\n"
+        "default_range: string\n"
+        "imports: [linkml:types]\n"
+        "classes:\n"
+        "  Dataset:\n"
+        "    attributes:\n"
+        "      description: {description: A description of the dataset.}\n"
+        "  Activity:\n"
+        "    attributes:\n"
+        "      description: {description: The description of the activity.}\n"
+        "  Project:\n"
+        "    attributes:\n"
+        "      description: {description: A description of the dataset.}\n"
+    )
+    properties, classes, *_ = build_registry_entities(parse_linkml(yml), "s", "tester")
+
+    descriptions = [p for p in properties.values() if p.name == "description"]
+    assert sorted(p.description for p in descriptions) == [
+        "A description of the dataset.", "The description of the activity.",
+    ]
+    by_definition = {p.description: p.id for p in descriptions}
+    assert classes["Dataset"].properties == [by_definition["A description of the dataset."]]
+    assert classes["Activity"].properties == [by_definition["The description of the activity."]]
+    assert classes["Project"].properties == classes["Dataset"].properties
+
+
+def test_shared_property_constrained_differently_gets_class_scoped_rules(tmp_path):
+    """
+    Two classes share a property (same name + description) but constrain it
+    differently: Dataset requires `status` and limits it to an enum, Sample
+    leaves it optional and a plain string; both give it the same pattern.
+    Where the classes agree (PATTERN) there is one schema-level rule. RANGE
+    differs but every class states one, so the most common (on a tie, the
+    first seen: Dataset's enum) is the schema-level default and Sample's
+    string range overrides it for Sample. REQUIRED is stated by Dataset only,
+    so there is no schema-level REQUIRED (Sample doesn't require `status`)
+    and Dataset's is scoped to Dataset.
+    """
+    yml = tmp_path / "s.yml"
+    yml.write_text(
+        "id: https://example.org/s\n"
+        "name: s\n"
+        "prefixes: {linkml: https://w3id.org/linkml/}\n"
+        "default_range: string\n"
+        "imports: [linkml:types]\n"
+        "enums:\n"
+        "  StatusEnum: {permissible_values: {draft: {}, published: {}}}\n"
+        "classes:\n"
+        "  Dataset:\n"
+        "    attributes:\n"
+        "      status: {description: Publication status., range: StatusEnum,"
+        " required: true, pattern: '^[a-z]+$'}\n"
+        "  Sample:\n"
+        "    attributes:\n"
+        "      status: {description: Publication status., pattern: '^[a-z]+$'}\n"
+    )
+    properties, classes, value_sets, _, rules, _ = build_registry_entities(
+        parse_linkml(yml), "s", "tester")
+
+    status = [p for p in properties.values() if p.name == "status"]
+    assert len(status) == 1  # one property: same name + description
+    status_rules = [r for r in rules.values() if r.applies_to == [status[0].id]]
+
+    def scoped(rule_type):
+        return {(r.used_in_class, r.rule_value) for r in status_rules if r.rule_type == rule_type}
+
+    assert scoped("PATTERN") == {(None, "^[a-z]+$")}
+    assert scoped("REQUIRED") == {(classes["Dataset"].id, "true")}
+    assert scoped("RANGE") == {
+        (None, value_sets["StatusEnum"].id),
+        (classes["Sample"].id, "xsd:string"),
+    }
 
 
 def test_range_and_unit_live_on_rules_not_property_identity(tmp_path):
