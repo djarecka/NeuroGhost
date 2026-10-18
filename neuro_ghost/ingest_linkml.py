@@ -68,6 +68,7 @@ USAGE
 
 from __future__ import annotations
 import re, sys, tempfile
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -254,6 +255,38 @@ def _slot_to_dict(slot, prefixes: dict[str, str]) -> dict:
     }
 
 
+# The slot fields that become RegistryRules (not property identity). Kept per
+# class, since classes sharing a property can constrain it differently.
+_FACETS = ("value_range", "units", "required", "pattern", "minimum_value", "maximum_value")
+
+
+def _slot_key(slots: dict[str, dict], name: str, slot: dict) -> str:
+    """
+    Register `slot` (named `name`) in `slots` and return the key it lives
+    under. The same name can mean different things in different classes
+    (dandiset: `description` of a Dandiset vs of an Activity), so slots are
+    keyed by name *and* definition: the first definition of a name is stored
+    under the bare name, a differing one under "name#2", "name#3", ... —
+    each becomes its own RegistryProperty, all still named `name`.
+
+    "Differing" means a different RegistryProperty identity (description,
+    IRI, aliases). Same identity with different facets (range, required, ...)
+    stays one slot; each class's own facets are kept separately (see
+    _FACETS / classes[...]["slot_facets"]) and become class-scoped rules.
+    """
+    def identity(d: dict) -> tuple:
+        return (d["definition"], d["iri"], tuple(d["aliases"]))
+
+    key, n = name, 1
+    while key in slots:
+        if identity(slots[key]) == identity(slot):
+            return key
+        n += 1
+        key = f"{name}#{n}"
+    slots[key] = {**slot, "name": name}
+    return key
+
+
 def parse_linkml(path: Path) -> dict[str, Any]:
     """
     Load a LinkML YAML file via SchemaView and return a clean, normalised dict.
@@ -375,6 +408,14 @@ def _parse_schemaview(sv, path: Path) -> dict[str, Any]:
             except (ValueError, KeyError):
                 pass
 
+        slot_keys: list[str] = []
+        slot_facets: dict[str, dict] = {}
+        for slot in induced_slots:
+            slot_dict = _slot_to_dict(slot, prefixes)
+            key = _slot_key(slots, slot.name, slot_dict)
+            slot_keys.append(key)
+            slot_facets[key] = {f: slot_dict[f] for f in _FACETS}
+
         classes[cls_name] = {
             "iri":         resolved_iri,
             "definition":  cls_def.description or "",
@@ -382,13 +423,14 @@ def _parse_schemaview(sv, path: Path) -> dict[str, Any]:
             "is_abstract": bool(cls_def.abstract),
             "is_mixin":    bool(cls_def.mixin),
             "mixins":      mixins,
-            "slots":       [slot.name for slot in induced_slots],
+            # Keys into `slots` (see _slot_key) — the bare name unless this
+            # class defines the name differently from an earlier class.
+            "slots":       slot_keys,
+            # This class's own rule facets for each slot key (range,
+            # required, ...) — may differ from another class's for the same key.
+            "slot_facets": slot_facets,
             "aliases":     list(cls_def.aliases or []),
         }
-
-        for slot in induced_slots:
-            if slot.name not in slots:
-                slots[slot.name] = _slot_to_dict(slot, prefixes)
 
     enums: dict[str, dict] = {}
     for enum_name in sv.all_enums():
@@ -561,14 +603,14 @@ def build_registry_entities(
         # concept collapses across schemas even when they type or measure it
         # differently.
         fields = dict(
-            name=slot_name,
+            name=slot.get("name", slot_name),
             description=slot["definition"] or "",
             concept_uri=slot["iri"] or None,
             skos_mappings=[],
             aliases=slot.get("aliases") or [],
         )
         sha = compute_content_hash_for(RegistryProperty, fields)
-        pid = dedup_id("RegistryProperty", sha, slot_name)
+        pid = dedup_id("RegistryProperty", sha, fields["name"])
         sha_of[pid] = sha
         prop = RegistryProperty(
             id=pid,
@@ -717,7 +759,8 @@ def build_registry_entities(
 
     rules: dict[str, RegistryRule] = {}
 
-    def make_rule(slot_name: str, rule_type: str, rule_value: str, error_message: str) -> None:
+    def make_rule(slot_name: str, rule_type: str, rule_value: str,
+                  error_message: str, used_in_class: str | None = None) -> None:
         fields = dict(
             name=rule_type,
             description=_RULE_TYPE_DESCRIPTIONS[rule_type],
@@ -727,7 +770,7 @@ def build_registry_entities(
             rule_type=rule_type,
             rule_value=rule_value,
             applies_to=[properties[slot_name].id],
-            used_in_class=None,
+            used_in_class=registry_classes[used_in_class].id if used_in_class else None,
             severity="ERROR",
             error_message=error_message,
             referenced_entities=[],
@@ -743,38 +786,65 @@ def build_registry_entities(
         )
         # Key by rule_value too where a slot can state several rules of the
         # same type (a union's RANGE rules), so members don't overwrite each
-        # other; single-instance types keep the plain "slot:TYPE" key.
-        key = f"{slot_name}:{rule_type}"
+        # other; single-instance types keep the plain "slot:TYPE" key. A
+        # class-scoped rule gets "@Class".
+        key = f"{slot_name}:{rule_type}" + (f"@{used_in_class}" if used_in_class else "")
         if key in rules:
-            key = f"{slot_name}:{rule_type}:{rule_value}"
+            key = f"{key}:{rule_value}"
         rules[key] = rule
 
+    # rule_type -> (the rule_values a slot's facets state, error message).
+    # RANGE: one rule per permitted range (a union is several RANGE rules).
+    # UNIT: the UCUM short code parse_linkml() extracted ("FTE", "mV").
+    facet_rules = {
+        "REQUIRED":  (lambda f: ["true"] if f["required"] else [],
+                      lambda n, v: f"{n} is required."),
+        "PATTERN":   (lambda f: [f["pattern"]] if f["pattern"] else [],
+                      lambda n, v: f"{n} must match pattern {v!r}."),
+        "MIN_VALUE": (lambda f: [] if f["minimum_value"] is None else [f["minimum_value"]],
+                      lambda n, v: f"{n} must be >= {v}."),
+        "MAX_VALUE": (lambda f: [] if f["maximum_value"] is None else [f["maximum_value"]],
+                      lambda n, v: f"{n} must be <= {v}."),
+        "RANGE":     (lambda f: [resolve_range(m) for m in f["value_range"] or []],
+                      lambda n, v: f"{n} has range {v}."),
+        "UNIT":      (lambda f: [f["units"]] if f["units"] else [],
+                      lambda n, v: f"{n} is measured in {v}."),
+    }
+
+    # Classes sharing a property can constrain it differently (one requires
+    # it, another doesn't; enum vs string range). Per rule_type, with
+    # class-scoped rules (used_in_class) overriding the schema-level ones of
+    # the same rule_type (see RegistryRule in meta_model.yaml):
+    #   * every class states the same values -> schema-level rules only;
+    #   * every class states *some* value (RANGE always does) -> the most
+    #     common values are the schema-level default, and only the classes
+    #     that differ get class-scoped rules;
+    #   * some classes state nothing (not required, no pattern) -> no
+    #     schema-level rule of that type — "nothing" can't override one, so a
+    #     schema-level REQUIRED would wrongly apply to classes that don't
+    #     require it — and each class's own values are scoped to it.
     for slot_name, prop in properties.items():
-        slot = slots[slot_name]
-        if slot.get("required"):
-            make_rule(slot_name, "REQUIRED", "true", f"{slot_name} is required.")
-        if slot.get("pattern"):
-            make_rule(slot_name, "PATTERN", slot["pattern"],
-                      f"{slot_name} must match pattern {slot['pattern']!r}.")
-        if slot.get("minimum_value") is not None:
-            make_rule(slot_name, "MIN_VALUE", slot["minimum_value"],
-                      f"{slot_name} must be >= {slot['minimum_value']}.")
-        if slot.get("maximum_value") is not None:
-            make_rule(slot_name, "MAX_VALUE", slot["maximum_value"],
-                      f"{slot_name} must be <= {slot['maximum_value']}.")
-
-        # Value type: one RANGE rule per permitted range. A single-range slot
-        # makes one; a union (property_range with several entries) makes one
-        # per member — no separate rule_type.
-        for member in slot.get("value_range") or []:
-            rv = resolve_range(member)
-            make_rule(slot_name, "RANGE", rv, f"{slot_name} has range {rv}.")
-
-        # Unit: rule_value is the UCUM short code parse_linkml() extracted
-        # ("FTE", "mV", "Hz") — the shape align.py's unit veto expects.
-        unit_text = slot.get("units") or None
-        if unit_text:
-            make_rule(slot_name, "UNIT", unit_text, f"{slot_name} is measured in {unit_text}.")
+        label = prop.name  # slot_name may carry a "#n" variant suffix
+        users = [
+            (cls_name, cls["slot_facets"][slot_name])
+            for cls_name, cls in classes.items()
+            if slot_name in cls.get("slot_facets", {}) and cls_name in registry_classes
+        ] or [(None, slots[slot_name])]
+        for rule_type, (values_of, message) in facet_rules.items():
+            per_class = [(cls_name, tuple(values_of(facets))) for cls_name, facets in users]
+            counts = Counter(v for _, v in per_class)
+            if all(v for _, v in per_class):
+                # Ties go to the values seen first, so the default is stable.
+                default = max(counts, key=lambda v: (counts[v], -[w for _, w in per_class].index(v)))
+            else:
+                default = per_class[0][1] if len(counts) == 1 else None
+            for value in default or ():
+                make_rule(slot_name, rule_type, value, message(label, value))
+            for cls_name, values in per_class:
+                if values != default:
+                    for value in values:
+                        make_rule(slot_name, rule_type, value,
+                                  message(f"{label} (in {cls_name})", value), cls_name)
 
     return properties, registry_classes, value_sets, permissible_values, rules, provenance_entries
 

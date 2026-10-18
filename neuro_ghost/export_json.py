@@ -43,28 +43,52 @@ def _attesting_sources(conn, label: str, rel: str, id: str) -> list[str]:
     })
 
 
-def _rule_values(conn, prop_id: str, rule_type: str) -> list[str]:
-    """Distinct rule_values of the given rule_type on rules that apply to this
-    property (rule -[:APPLIES_TO_P]-> property), sorted."""
-    return sorted({
-        r[0] for r in conn.execute(f"""
-            MATCH (rr:RegistryRule)-[:APPLIES_TO_P]->(:RegistryProperty {{id: $pid}})
-            WHERE rr.rule_type = '{rule_type}' AND rr.rule_value IS NOT NULL
-            RETURN rr.rule_value
-        """, {"pid": prop_id}).get_all()
-    })
+# Display order of a property's rules.
+_RULE_ORDER = ("RANGE", "REQUIRED", "PATTERN", "MIN_VALUE", "MAX_VALUE", "UNIT")
 
 
-def _property_range(conn, prop_id: str) -> str:
-    """The property's value type(s), read back from its RANGE rules. Range
-    moved off the property node onto rules — a union (or divergent per-source
-    types) yields several, joined here for the snapshot."""
-    return " | ".join(_rule_values(conn, prop_id, "RANGE"))
+Rule = tuple[str, str, "str | None", frozenset]  # type, value, used_in_class id, source labels
 
 
-def _property_unit(conn, prop_id: str) -> str:
-    """The property's unit(s), read back from its UNIT rule(s)."""
-    return " | ".join(_rule_values(conn, prop_id, "UNIT"))
+def _load_rules(conn) -> dict[str, list[Rule]]:
+    """Every rule on a property, as property id -> [(rule_type, rule_value,
+    used_in_class id or None, labels of the sources that state it)]. One
+    query for the whole export."""
+    found: dict[tuple, set] = {}
+    for prop_id, rid, rule_type, rule_value, class_id, source in conn.execute("""
+        MATCH (rr:RegistryRule)-[:APPLIES_TO_P]->(p:RegistryProperty)
+        OPTIONAL MATCH (rr)-[:USED_IN_CLASS]->(c:RegistryClass)
+        OPTIONAL MATCH (rr)-[:HAS_PROVENANCE_R]->(:ProvenanceEntry)-[:HAD_PRIMARY_SOURCE]->(s:SchemaSource)
+        RETURN p.id, rr.id, rr.rule_type, rr.rule_value, c.id, s.label
+    """).get_all():
+        if rule_type and rule_value is not None:
+            found.setdefault((prop_id, rid, rule_type, rule_value, class_id), set()).add(source)
+    by_prop: dict[str, list[Rule]] = {}
+    for (prop_id, _, rule_type, rule_value, class_id), sources in found.items():
+        by_prop.setdefault(prop_id, []).append(
+            (rule_type, rule_value, class_id, frozenset(sources - {None})))
+    return by_prop
+
+
+def _effective_rules(rules: list[Rule], class_id: str, class_sources: set[str],
+                     names: dict[str, str]) -> list[dict]:
+    """The rules in effect for a property used inside one class: per
+    rule_type, the class-scoped rules (used_in_class = this class) if any,
+    else the schema-level ones (used_in_class unset) — see RegistryRule in
+    meta_model.yaml. A property can be shared by several schemas, each with
+    its own schema-level rules, so only rules stated by a source that also
+    defines this class count. `scope` says class vs schema; `label` is the
+    value made readable (a RANGE to a class or value set holds its id)."""
+    rules = [r for r in rules if r[3] & class_sources]
+    effective = []
+    for rule_type in sorted({r[0] for r in rules},
+                            key=lambda t: (_RULE_ORDER.index(t) if t in _RULE_ORDER else 99, t)):
+        scoped = sorted({v for t, v, c, _ in rules if t == rule_type and c == class_id})
+        shared = sorted({v for t, v, c, _ in rules if t == rule_type and c is None})
+        values, scope = (scoped, "class") if scoped else (shared, "schema")
+        effective += [{"type": rule_type, "value": v, "label": names.get(v, v), "scope": scope}
+                      for v in values]
+    return effective
 
 
 def export_snapshot(conn, registry_version: str) -> dict:
@@ -134,9 +158,17 @@ def export_snapshot(conn, registry_version: str) -> dict:
         ORDER BY n.name
     """).get_all()
 
+    rules_by_prop = _load_rules(conn)
+    # id -> name for the entities a RANGE rule can point at.
+    names = {
+        i: n for label in ("RegistryClass", "RegistryValueSet")
+        for i, n in conn.execute(f"MATCH (x:{label}) RETURN x.id, x.name").get_all()
+    }
+
     classes = []
     for row in cls_rows:
         node_id, sha256_hash, concept_uri, name, desc, is_abstract = row
+        class_sources = _attesting_sources(conn, "RegistryClass", "HAS_PROVENANCE", node_id)
 
         props = conn.execute("""
             MATCH (c:RegistryClass {id: $id})-[:HAS_PROPERTY]->(p:RegistryProperty)
@@ -166,7 +198,7 @@ def export_snapshot(conn, registry_version: str) -> dict:
             "name":             name or "",
             "definition":       desc or "",
             "is_abstract":      bool(is_abstract),
-            "sources":          _attesting_sources(conn, "RegistryClass", "HAS_PROVENANCE", node_id),
+            "sources":          class_sources,
             "properties": [
                 {
                     "id":          r[0],
@@ -174,13 +206,19 @@ def export_snapshot(conn, registry_version: str) -> dict:
                     "iri":         r[2] or "",
                     "name":        r[3] or "",
                     "definition":  r[4] or "",
-                    # Value type and unit live on RANGE/UNIT rules now, not on
-                    # the property node — fetch them back here.
-                    "value_range": _property_range(conn, r[0]),
-                    "units":       _property_unit(conn, r[0]),
+                    # The rules in effect for this property in THIS class
+                    # (range, required, pattern, ...): schema-level, or this
+                    # class's own where it constrains the property differently.
+                    "rules":       rules,
+                    # Value type and unit live on RANGE/UNIT rules, not on the
+                    # property node — kept as flat strings for older readers.
+                    "value_range": " | ".join(x["label"] for x in rules if x["type"] == "RANGE"),
+                    "units":       " | ".join(x["value"] for x in rules if x["type"] == "UNIT"),
                     "sources":     _attesting_sources(conn, "RegistryProperty", "HAS_PROVENANCE_P", r[0]),
                 }
                 for r in props
+                for rules in [_effective_rules(rules_by_prop.get(r[0], []), node_id,
+                                               set(class_sources), names)]
             ],
             "subclass_of": subclass_of,
             "alignments": [

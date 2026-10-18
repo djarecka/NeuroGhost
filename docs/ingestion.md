@@ -371,10 +371,13 @@ registry_version` stays `None` for now, pending a decision on the above.
 - **`RegistryRule` is populated for the common facets.**
   `build_registry_entities()` constructs rules for `REQUIRED`/`PATTERN`/
   `MIN_VALUE`/`MAX_VALUE`, plus a `RANGE` rule per permitted value type
-  (a union is several RANGE rules) and a `UNIT` rule for the unit. Not yet
-  wired: the remaining `rule_type`s (`MIN_LENGTH`/`MAX_LENGTH`/
-  `ENUM_MEMBERSHIP`/`FORMAT`/`EXPRESSION_*`) and per-class refinements
-  (`used_in_class` is always unset — every rule is schema-level for now).
+  (a union is several RANGE rules) and a `UNIT` rule for the unit. A rule
+  is schema-level (`used_in_class` unset) when every class using the
+  property states the same thing; where classes sharing a property
+  constrain it differently (one requires it, another doesn't; enum vs
+  string range), that rule_type gets one class-scoped rule per class
+  (`used_in_class`) instead. Not yet wired: the remaining `rule_type`s
+  (`MIN_LENGTH`/`MAX_LENGTH`/`ENUM_MEMBERSHIP`/`FORMAT`/`EXPRESSION_*`).
   `Transform` is still a genuine stub (`id`/`name`/`description` only).
 - **`SemanticIdentity`/`PRIOR_VERSION*`** tables in `db.py`'s DDL are dead
   (superseded by content-hash identity) but not yet removed.
