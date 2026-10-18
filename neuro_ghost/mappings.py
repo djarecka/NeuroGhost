@@ -9,7 +9,9 @@ file into Mapping + MappingProvenanceEntry nodes; nothing here computes
 mappings.
 
 Format: SSSOM-style TSV with a `# key: value` metadata header whose values
-are defaults for every row (a row's own column wins):
+are defaults for every row (a row's own column wins). Columns are separated
+by tabs; two or more spaces also work where a browser editor turned a tab
+into spaces (see _tabs_for_spaces):
 
     # mapping_set_id: 2026-10-18_embeddings_aind__bids
     # mapping_date: 2026-10-18
@@ -41,6 +43,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import sys
 import uuid
 from dataclasses import dataclass, field
@@ -120,6 +123,26 @@ class MappingFile:
     errors: list[str] = field(default_factory=list)
 
 
+def _tabs_for_spaces(body: list[str]) -> list[str]:
+    """Browser editors (GitHub's included) often insert spaces when Tab is
+    pressed. In a row with fewer tab-separated columns than the header —
+    and in the header itself — treat a run of two or more spaces as a column
+    separator too. Complete rows are left alone, so a comment containing
+    double spaces isn't split."""
+    if not body:
+        return body
+    header = re.split(r"\t| {2,}", body[0].strip())
+    out = ["\t".join(header)]
+    for line in body[1:]:
+        fields = line.split("\t")
+        if len(fields) < len(header) and re.search(r" {2,}", line):
+            split = [part for f in fields for part in re.split(r" {2,}", f)]
+            if len(split) <= len(header):
+                fields = split
+        out.append("\t".join(fields))
+    return out
+
+
 def read_mapping_file(path: Path) -> MappingFile:
     """Parse one mapping file. Problems are collected in `.errors` (with
     line numbers) rather than raised, so a validator can report them all."""
@@ -140,7 +163,7 @@ def read_mapping_file(path: Path) -> MappingFile:
         if not mf.meta.get(key):
             mf.errors.append(f"{path}: header is missing `# {key}: ...`")
 
-    reader = csv.DictReader(lines[body_start:], delimiter="\t")
+    reader = csv.DictReader(_tabs_for_spaces(lines[body_start:]), delimiter="\t")
     missing = [c for c in REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
     if missing:
         mf.errors.append(f"{path}: missing column(s) {missing}")
