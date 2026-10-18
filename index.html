@@ -250,6 +250,21 @@ header{height:52px;padding:0 20px;border-bottom:1px solid var(--border);
 .c-prop:last-child{border-bottom:none;}
 .c-prop-name{font-family:var(--mono);color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .c-prop-more{font-size:11px;color:var(--muted);padding:6px 0;}
+/* id + content hash under an entity's name */
+.c-ids{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:0 0 12px;
+  font-family:var(--mono);font-size:10px;color:var(--muted);}
+.c-ids span:nth-child(odd){text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding-top:1px;}
+.c-ids code{color:var(--text-dim);word-break:break-all;user-select:all;}
+/* per-class usage of a property, with the rules in effect there */
+.c-use{padding:6px 0;border-bottom:1px solid var(--border);font-size:11.5px;}
+.c-use:last-child{border-bottom:none;}
+.c-use-head{display:flex;align-items:center;gap:6px;}
+.c-use-head .c-prop-name{flex:1;}
+.c-rules{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+.c-rule{font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:4px;
+  color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border);word-break:break-all;}
+.c-rule.cls{color:var(--purple);background:var(--purple-soft);border-color:var(--purple-line);}
+.c-legend{font-size:10.5px;color:var(--muted);margin-top:6px;}
 
 /* weight sliders */
 .c-weights{background:var(--surface);border:1px solid var(--border);border-radius:8px;
@@ -2029,24 +2044,23 @@ async function initConcepts() {
   // detail shows the schema/bundle a concept comes from, not the internal file.
   CONCEPT.srcToBundle = new Map((d.sources || []).map(s => [s.label, s.bundle || s.label]));
 
-  // Properties are namespaced by class in the data (e.g. "Dandiset__id"). Group
-  // by the BARE name ("id") so the list shows the concept once, and aggregate
-  // the classes it occurs in, its sources, ranges, and definitions.
+  // One entry per property (by id): two properties that share a name but
+  // differ in definition are distinct and listed separately. Each entry
+  // records the classes it's used in, with the rules in effect in each.
   const propMap = new Map();
   d.classes.forEach(c => (c.properties || []).forEach(p => {
-    const bare = barePropName(p.name);
-    let e = propMap.get(bare);
-    if (!e) { e = { name: bare, classes: new Set(), sources: new Set(), ranges: new Set(), defs: new Set(), iri: '' }; propMap.set(bare, e); }
-    e.classes.add(c.name);
-    (p.sources || []).forEach(s => e.sources.add(s));
-    if (p.value_range) e.ranges.add(p.value_range);
-    if (p.definition) e.defs.add(p.definition);
-    if (!e.iri && p.iri) e.iri = p.iri;
+    let e = propMap.get(p.id);
+    if (!e) {
+      e = { id: p.id, sha256_hash: p.sha256_hash || '', name: p.name || '', iri: p.iri || '',
+            defs: p.definition ? [p.definition] : [], sources: p.sources || [], uses: [] };
+      propMap.set(p.id, e);
+    }
+    e.uses.push({ cls: c.name, clsSources: c.sources || [], rules: p.rules || [] });
   }));
   CONCEPT.properties = [...propMap.values()].map(e => ({
-    name: e.name,
-    classes: [...e.classes], sources: [...e.sources],
-    ranges: [...e.ranges], defs: [...e.defs], iri: e.iri,
+    ...e,
+    classes: e.uses.map(u => u.cls),
+    uses: e.uses.sort((a, b) => a.cls.localeCompare(b.cls)),
   }));
 
   // Source list order is stable (by class count); the per-source counts shown
@@ -2082,11 +2096,6 @@ async function initConcepts() {
 }
 
 // ── mode-aware helpers (Classes / Properties) ──
-// Property names are namespaced "<Class>__<prop>"; strip to the bare prop name.
-function barePropName(name) {
-  const i = (name || '').lastIndexOf('__');
-  return i >= 0 ? name.slice(i + 2) : (name || '');
-}
 function currentItems() {
   return CONCEPT.mode === 'properties' ? CONCEPT.properties : (CONCEPT.registry.classes || []);
 }
@@ -2239,7 +2248,7 @@ function renderPropertyList() {
   const listEl = document.getElementById('c-class-list');
   const countEl = document.getElementById('c-list-count');
   const filtered = CONCEPT.properties.filter(propPassesFilter);
-  filtered.sort((a, b) => a.name.localeCompare(b.name));
+  filtered.sort((a, b) => a.name.localeCompare(b.name) || (a.defs[0] || '').localeCompare(b.defs[0] || ''));
   countEl.textContent = `${filtered.length} / ${CONCEPT.properties.length}`;
 
   if (!filtered.length) {
@@ -2248,7 +2257,7 @@ function renderPropertyList() {
   }
   const shown = filtered.slice(0, 500);
   listEl.innerHTML = shown.map(p => `
-      <div class="c-cls-row${CONCEPT.selectedProp === p.name ? ' selected' : ''}" data-hash="${esc(p.name)}">
+      <div class="c-cls-row${CONCEPT.selectedProp === p.id ? ' selected' : ''}" data-hash="${esc(p.id)}">
         <div class="c-cls-main">
           <div class="c-cls-name">${esc(p.name)}</div>
           <div class="c-cls-def">${esc((p.defs[0] || '').slice(0, 120) || '—')}</div>
@@ -2268,42 +2277,51 @@ function renderPropertyList() {
   });
 }
 
+// id + content hash block shown under an entity's name.
+function conceptIdsHtml(x) {
+  return `<div class="c-ids">
+    <span>id</span><code>${esc(x.id || '—')}</code>
+    <span>hash</span><code>${esc(x.sha256_hash || '—')}</code>
+  </div>`;
+}
+
+const RULE_LABELS = { RANGE: 'range', REQUIRED: 'required', PATTERN: 'pattern',
+                      MIN_VALUE: 'min', MAX_VALUE: 'max', UNIT: 'unit' };
+function ruleChip(r) {
+  const what = r.type === 'REQUIRED' ? 'required' : `${RULE_LABELS[r.type] || r.type.toLowerCase()} ${r.label || r.value}`;
+  const title = r.scope === 'class' ? 'Specific to this class' : 'Shared by every class using this property';
+  return `<span class="c-rule${r.scope === 'class' ? ' cls' : ''}" title="${esc(title)}">${esc(what)}</span>`;
+}
+
 function renderPropertyDetail() {
   const el = document.getElementById('c-detail');
-  const p  = CONCEPT.properties.find(x => x.name === CONCEPT.selectedProp);
+  const p  = CONCEPT.properties.find(x => x.id === CONCEPT.selectedProp);
   if (!p) { conceptPlaceholder(); return; }
   el.className = 'c-detail';
   const iriHtml = p.iri
     ? `<div class="c-dn-iri"><a href="${esc(p.iri)}" target="_blank" rel="noopener">${esc(p.iri)}</a></div>`
     : '';
-  const classes = (p.classes || []).slice().sort((a, b) => a.localeCompare(b));
-  const defs    = p.defs || [];
-  const ranges  = (p.ranges || []).filter(Boolean);
+  const uses = p.uses || [];
+  const anyClassScoped = uses.some(u => u.rules.some(r => r.scope === 'class'));
   el.innerHTML = `
     <div class="c-dn">${esc(p.name)}</div>
     ${iriHtml}
+    ${conceptIdsHtml(p)}
     <div class="c-src-row">${conceptBundles(p.sources).map(s => `<span class="c-src-tag">${esc(s)}</span>`).join('')}</div>
-    <div class="c-def">${esc(defs[0] || '—')}${defs.length > 1 ? ` <span class="c-prop-more">(+${defs.length - 1} other definition${defs.length > 2 ? 's' : ''})</span>` : ''}</div>
+    <div class="c-def">${esc(p.defs[0] || '—')}</div>
 
-    <div class="c-section">Type${ranges.length > 1 ? 's' : ''}</div>
-    <div class="c-prop"><span class="c-prop-name">${ranges.length ? esc(ranges.join(', ')) : '—'}</span></div>
-
-    <div class="c-section">Used in (${classes.length} class${classes.length === 1 ? '' : 'es'})</div>
-    ${classes.slice(0, 80).map(n => `<div class="c-prop"><span class="c-prop-name">${esc(n)}</span></div>`).join('')}
-    ${classes.length > 80 ? `<div class="c-prop-more">+${classes.length - 80} more</div>` : ''}
+    <div class="c-section">Used in (${uses.length} class${uses.length === 1 ? '' : 'es'})</div>
+    ${uses.slice(0, 80).map(u => `
+      <div class="c-use">
+        <div class="c-use-head">
+          <span class="c-prop-name">${esc(u.cls)}</span>
+          ${u.clsSources.slice(0, 2).map(s => `<span class="c-src-tag">${esc(s)}</span>`).join('')}
+        </div>
+        ${u.rules.length ? `<div class="c-rules">${u.rules.map(ruleChip).join('')}</div>` : ''}
+      </div>`).join('')}
+    ${uses.length > 80 ? `<div class="c-prop-more">+${uses.length - 80} more</div>` : ''}
+    ${anyClassScoped ? '<div class="c-legend"><span class="c-rule cls">highlighted</span> rules are specific to that class</div>' : ''}
   `;
-}
-
-function conceptWeightedDistance(a) {
-  const w = CONCEPT.weights;
-  const s = a.scores || {};
-  const num = (w.iri  * (s.iri  || 0))
-            + (w.name * (s.name || 0))
-            + (w.desc * (s.desc || 0))
-            + (w.slot * (s.slot || 0));
-  const den = w.iri + w.name + w.desc + w.slot;
-  if (!den) return a.distance ?? 1;
-  return 1 - (num / den);
 }
 
 function renderConceptDetail() {
@@ -2324,7 +2342,7 @@ function renderConceptDetail() {
   const propsHtml = props.length
     ? props.slice(0, 20).map(p => `
         <div class="c-prop">
-          <span class="c-prop-name">${esc(barePropName(p.name))}</span>
+          <span class="c-prop-name">${esc((p.name || ''))}</span>
         </div>`).join('')
       + (props.length > 20 ? `<div class="c-prop-more">+${props.length - 20} more</div>` : '')
     : '<div class="c-none">No own properties.</div>';
@@ -2377,6 +2395,7 @@ function renderConceptDetail() {
   el.innerHTML = `
     <div class="c-dn${c.is_abstract ? ' abstract' : ''}">${esc(c.name)}</div>
     ${iriHtml}
+    ${conceptIdsHtml(c)}
     <div class="c-src-row">${conceptBundles(c.sources).map(s => `<span class="c-src-tag">${esc(s)}</span>`).join('')}</div>
     <div class="c-def">${esc(c.definition || '—')}</div>
 
@@ -2555,8 +2574,8 @@ function computeDiff(srcA, srcB) {
 function propDelta(a, b) {
   // Compare by BARE property name — names are namespaced "<Class>__<prop>", so
   // comparing the raw names would never find a shared slot between two classes.
-  const aNames = new Set((a.properties || []).map(p => barePropName(p.name).toLowerCase()).filter(Boolean));
-  const bNames = new Set((b.properties || []).map(p => barePropName(p.name).toLowerCase()).filter(Boolean));
+  const aNames = new Set((a.properties || []).map(p => (p.name || '').toLowerCase()).filter(Boolean));
+  const bNames = new Set((b.properties || []).map(p => (p.name || '').toLowerCase()).filter(Boolean));
   const shared = [...aNames].filter(n => bNames.has(n)).sort();
   const removed = [...aNames].filter(n => !bNames.has(n)).sort();  // in A, not in B
   const added   = [...bNames].filter(n => !aNames.has(n)).sort();  // in B, not in A
@@ -3330,11 +3349,11 @@ function computeTransform() {
   const tgtProps = tgt.properties || [];
   // Match on BARE property names — the raw names are namespaced
   // "<Class>__<prop>", so matching them would never line up across classes.
-  const tgtByLower = new Map(tgtProps.map(p => [barePropName(p.name).toLowerCase(), p]));
+  const tgtByLower = new Map(tgtProps.map(p => [(p.name || '').toLowerCase(), p]));
 
   const usedTgt = new Set();
   const mappings = srcProps.map(p => {
-    const lower = barePropName(p.name).toLowerCase();
+    const lower = (p.name || '').toLowerCase();
     // 1. exact-name match
     const exact = tgtByLower.get(lower);
     if (exact && !usedTgt.has(exact.name)) {
@@ -3408,13 +3427,13 @@ function renderTransform() {
               :                          '<span class="tf-tag unmapped">unmapped</span>';
     const conf = m.kind === 'unmapped' ? '—' : m.confidence.toFixed(2);
     const tgtCell = m.tgt
-      ? `<div class="tf-slot">${esc(barePropName(m.tgt.name))}</div>` +
+      ? `<div class="tf-slot">${esc((m.tgt.name || ''))}</div>` +
         (m.tgt.definition ? `<div class="tf-slot-def">${esc(m.tgt.definition)}</div>` : '')
       : `<div class="tf-none-target">— no target field —</div>`;
     return `
       <tr class="${m.kind === 'unmapped' ? 'tf-row-unmapped' : ''}">
         <td>
-          <div class="tf-slot">${esc(barePropName(m.src.name))}</div>
+          <div class="tf-slot">${esc((m.src.name || ''))}</div>
           ${m.src.definition ? `<div class="tf-slot-def">${esc(m.src.definition)}</div>` : ''}
         </td>
         <td class="tf-arrow-cell">→</td>
@@ -3428,7 +3447,7 @@ function renderTransform() {
     ? `
       <div class="tf-section">Target-only fields (${r.unusedTgt.length})</div>
       <div class="tf-target-hint">
-        ${r.unusedTgt.map(p => esc(barePropName(p.name))).join(' · ')}
+        ${r.unusedTgt.map(p => esc((p.name || ''))).join(' · ')}
       </div>`
     : '';
 
@@ -3653,7 +3672,7 @@ function renderQueryResults() {
         <div class="q-hit${selected}" data-key="${esc(key)}">
           <span class="q-hit-kind prop">SLOT</span>
           <div class="q-hit-main">
-            <div class="q-hit-name">${qHighlight(barePropName(h.prop.name), QUERY.q)}</div>
+            <div class="q-hit-name">${qHighlight((h.prop.name || ''), QUERY.q)}</div>
             ${h.prop.definition ? `<div class="q-hit-sub">${qHighlight(h.prop.definition, QUERY.q)}</div>` : ''}
           </div>
           <div class="q-hit-side">
@@ -3724,7 +3743,7 @@ function renderQueryDetail(hit) {
     `<span class="c-src-tag">${esc(s)}</span>`).join(' ');
   const props = cls.properties || [];
   const slotsHtml = props.length
-    ? `<div>${props.map(p => `<span class="q-d-slot-chip${p.name === highlightSlot ? ' matched' : ''}">${esc(barePropName(p.name))}</span>`).join(' ')}</div>`
+    ? `<div>${props.map(p => `<span class="q-d-slot-chip${p.name === highlightSlot ? ' matched' : ''}">${esc((p.name || ''))}</span>`).join(' ')}</div>`
     : '<div class="c-none">No own properties.</div>';
 
   el.innerHTML = `
@@ -4033,7 +4052,7 @@ function renderComposePicked() {
     const slotChips = props.length
       ? props.map(p => {
           const off = excluded.has(p.name);
-          return `<span class="cp-slot-chip${off ? ' off' : ''}" data-slot="${esc(p.name)}" title="${esc(p.name)}${p.definition ? ' — ' + esc(p.definition) : ''}">${esc(barePropName(p.name))}</span>`;
+          return `<span class="cp-slot-chip${off ? ' off' : ''}" data-slot="${esc(p.name)}" title="${esc(p.name)}${p.definition ? ' — ' + esc(p.definition) : ''}">${esc((p.name || ''))}</span>`;
         }).join('')
       : '<div class="cp-no-slots">No own properties on this class.</div>';
 
