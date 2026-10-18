@@ -36,8 +36,18 @@ Every registered object carries two identity-related fields:
   `meta_model.yaml`. Not the identifier — but the mechanism by
   which two sources' identical concepts collapse to one row: on ingest,
   `build_registry_entities` computes each entity's `sha256_hash` first,
-  then either reuses an existing row's `id` (via `find_id_by_sha256`) or
-  mints a fresh UUID. Same content → same `sha256_hash` → same `id`.
+  then reuses an existing row's `id` (via `find_id_by_sha256`), else the
+  `id` that hash had in the previous export (`data/registry.json` — the
+  graph is wiped on every `--fresh` rebuild, so the export is what keeps
+  ids stable), else mints a fresh UUID. Same content → same
+  `sha256_hash` → same `id`.
+
+  Fields that reference other entities (a class's `properties` /
+  `parent_class` / `class_mixins`, a value set's `permissible_values`, a
+  rule's `applies_to`, …) are stored as UUIDs but **hashed as the
+  referenced entity's `sha256_hash`**, so every fingerprint is content-only
+  and reproducible from scratch — it never depends on which UUIDs happened
+  to be minted.
 
 ```
 schema_a.yml: Subject.age  (name=age, description=..., range=integer)
@@ -308,11 +318,14 @@ about:
   * **`id` values are asserted structurally** (parse as `uuid.UUID`) and by
     **cross-reference consistency** (a class's `parent_class` equals the
     parent's `id`; `properties` list equals the target properties' `id`s).
-    Class `sha256_hash` values include property UUIDs, so they only become
-    deterministic when property ids stabilize via dedup — see
-    `test_class_hash_dedup_makes_a_re_ingest_deterministic`, which
-    monkeypatches `find_id_by_sha256` to prove that a second ingest reuses
-    the first's ids and produces identical hashes.
+    Every `sha256_hash` (classes, value sets and rules too) is
+    content-only — references are hashed as the referents' hashes — so two
+    independent builds produce identical hashes with different random ids
+    (`test_hashes_are_content_only_independent_of_ids`). Id reuse is tested
+    separately: through the graph
+    (`test_class_hash_dedup_makes_a_re_ingest_deterministic`) and through
+    the previous export
+    (`test_previous_export_keeps_ids_stable_across_fresh_rebuilds`).
 
 Saying "parse_linkml extracts X" and "the registry stores X" are different
 claims — test each layer for what it actually is, not for what you assume

@@ -37,6 +37,7 @@ from schema_registry_utils import (
 
 from db import (
     get_connection, make_id, now_iso, write_registry_entities, write_structural_edges,
+    load_previous_ids, previous_id,
     ensure_schema_source,
 )
 
@@ -213,7 +214,7 @@ def build_registry_entities(
                 skos_mappings=[],
             )
             p_sha = compute_content_hash_for(RegistryProperty, fields)
-            p_id  = make_id()
+            p_id  = previous_id("RegistryProperty", p_sha, "schema.org", prop["name"]) or make_id()
             p = RegistryProperty(
                 id=p_id,
                 sha256_hash=p_sha,
@@ -239,6 +240,11 @@ def build_registry_entities(
         prop_ids = sorted({
             properties[prop["iri"]].id for prop in info["props"]
         })
+        # Stored as UUIDs, hashed as the referents' sha256_hash (as in
+        # ingest_linkml.build_registry_entities) — content-only fingerprint.
+        prop_shas = sorted({
+            properties[prop["iri"]].sha256_hash for prop in info["props"]
+        })
         fields = dict(
             name=name,
             description=info["comment"] or "",
@@ -250,8 +256,12 @@ def build_registry_entities(
             class_mixins=[],
             skos_mappings=[],
         )
-        rc_sha = compute_content_hash_for(RegistryClass, fields)
-        rc_id  = make_id()
+        rc_sha = compute_content_hash_for(RegistryClass, {
+            **fields,
+            "properties": prop_shas,
+            "parent_class": parent.sha256_hash if parent else None,
+        })
+        rc_id  = previous_id("RegistryClass", rc_sha, "schema.org", name) or make_id()
         rc = RegistryClass(
             id=rc_id,
             sha256_hash=rc_sha,
@@ -343,8 +353,15 @@ def seed(db_path: str = "./registry.lbug",
               help="Delete existing classes/properties before seeding.")
 @click.option("--registry-version", default="1.0.0", show_default=True,
               help="Registry semver to stamp on seeded ProvenanceEntry records.")
-def cli(db: str, dry_run: bool, wipe: bool, registry_version: str) -> None:
+@click.option("--previous-ids", default=None,
+              help="A previous registry.json export: content already in it "
+                   "keeps its id instead of getting a fresh UUID.")
+@click.option("--carry-ids-by-name", is_flag=True,
+              help="One-time: also match --previous-ids by (source, name).")
+def cli(db: str, dry_run: bool, wipe: bool, registry_version: str,
+        previous_ids: str | None, carry_ids_by_name: bool) -> None:
     """Seed the SenseIn Schema Registry from schema.org."""
+    load_previous_ids(previous_ids, by_name=carry_ids_by_name)
     seed(db_path=db, dry_run=dry_run, wipe=wipe, registry_version=registry_version)
 
 if __name__ == "__main__":

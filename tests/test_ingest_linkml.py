@@ -518,14 +518,14 @@ def test_build_registry_entities_maps_bican_prov_onto_the_meta_model():
 def test_class_hash_dedup_makes_a_re_ingest_deterministic(monkeypatch):
     """
     On a first ingest with an empty graph, every entity gets a fresh uuid4
-    id — RegistryProperty ids are random, so any RegistryClass sha256 that
-    includes those property ids is also non-deterministic across separate
-    empty-graph runs.
+    id (sha256_hashes don't depend on those ids — see
+    test_hashes_are_content_only_independent_of_ids).
 
-    In production this is not a problem: the second ingest of the same
-    schema (or any other schema that shares content) finds each entity by
-    sha256_hash and reuses the existing id, so class content stabilizes and
-    dedup collapses the class too. This test simulates that with a fake
+    Within one graph, the second ingest of the same schema (or any other
+    schema that shares content) finds each entity by sha256_hash and reuses
+    the existing id, so class content stabilizes and dedup collapses the
+    class too. (Across rebuilds the graph is wiped, so the previous export
+    does this job instead — see the next test.) This test simulates that with a fake
     conn: after the first ingest, feed the entities' sha256 → id map back
     in as `find_id_by_sha256` results, run the second ingest, and assert
     every id round-trips.
@@ -557,6 +557,68 @@ def test_class_hash_dedup_makes_a_re_ingest_deterministic(monkeypatch):
     for name, p1 in props1.items():
         assert props2[name].id == p1.id, name
         assert props2[name].sha256_hash == p1.sha256_hash, name
+    for name, c1 in classes1.items():
+        assert classes2[name].id == c1.id, name
+        assert classes2[name].sha256_hash == c1.sha256_hash, name
+
+
+def test_hashes_are_content_only_independent_of_ids():
+    """
+    Two independent builds of the same schema (empty graph, no previous
+    export) mint different random UUIDs, but every sha256_hash — including
+    classes, value sets and rules, whose hashed fields reference other
+    entities — is identical: references are hashed as the referenced
+    entity's sha256_hash, never its UUID.
+    """
+    from ingest_linkml import build_registry_entities, parse_linkml
+
+    for fixture in ("comprehensive.yml", "schema_with_enums.yml"):
+        parsed = parse_linkml(FIXTURES / fixture)
+        build1 = build_registry_entities(parsed, "src", "tester")[:5]
+        build2 = build_registry_entities(parsed, "src", "tester")[:5]
+        for kind1, kind2 in zip(build1, build2):
+            # Permissible values are keyed by id; the rest by name.
+            hashes1 = sorted(e.sha256_hash for e in kind1.values())
+            hashes2 = sorted(e.sha256_hash for e in kind2.values())
+            assert hashes1 == hashes2, fixture
+        # ...while the ids really are independent random UUIDs.
+        props1, props2 = build1[0], build2[0]
+        assert all(props1[k].id != props2[k].id for k in props1)
+
+
+def test_previous_export_keeps_ids_stable_across_fresh_rebuilds(tmp_path):
+    """
+    Rebuilds always start from an empty graph (`pipeline.py --fresh`), so
+    the graph lookup above never fires in practice. The previous
+    registry.json export stands in for it: content already in that export
+    keeps its id (and so classes keep their sha256_hash, which includes
+    property ids), with no graph at all (conn=None).
+    """
+    import json
+    import db
+    from ingest_linkml import build_registry_entities, parse_linkml
+
+    parsed = parse_linkml(FIXTURES / "comprehensive.yml")
+    props1, classes1, _, _, _, _ = build_registry_entities(parsed, "comprehensive", "tester")
+
+    # Same shape export_json writes: properties nested inside classes.
+    export = {"classes": [
+        {"id": c.id, "sha256_hash": c.sha256_hash, "properties": [
+            {"id": p.id, "sha256_hash": p.sha256_hash} for p in props1.values()
+        ]}
+        for c in classes1.values()
+    ]}
+    path = tmp_path / "registry.json"
+    path.write_text(json.dumps(export))
+
+    try:
+        assert db.load_previous_ids(path) == len(props1) + len(classes1)
+        props2, classes2, _, _, _, _ = build_registry_entities(parsed, "comprehensive", "tester")
+    finally:
+        db.load_previous_ids(None)
+
+    for name, p1 in props1.items():
+        assert props2[name].id == p1.id, name
     for name, c1 in classes1.items():
         assert classes2[name].id == c1.id, name
         assert classes2[name].sha256_hash == c1.sha256_hash, name

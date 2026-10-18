@@ -301,7 +301,7 @@ class RegistryEntity(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'abstract': True,
          'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -310,6 +310,7 @@ class RegistryEntity(ConfiguredBaseModel):
                        'SchemaVersionSnapshot',
                        'RegistrySchema']} })
     sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A HashSubset field that references other entities (a class's properties / parent_class / class_mixins, a value set's permissible_values, a rule's applies_to, ...) is stored as their ids but hashed as their sha256_hash, so the fingerprint depends on content only — never on which UUIDs were minted — and is reproducible from scratch.
 A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
          'in_subset': ['HashSubset']} })
@@ -345,7 +346,7 @@ class RegistryClass(RegistryEntity):
          'ifabsent': 'false',
          'in_subset': ['HashSubset'],
          'slot_uri': 'linkml:mixin'} })
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -354,6 +355,7 @@ class RegistryClass(RegistryEntity):
                        'SchemaVersionSnapshot',
                        'RegistrySchema']} })
     sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A HashSubset field that references other entities (a class's properties / parent_class / class_mixins, a value set's permissible_values, a rule's applies_to, ...) is stored as their ids but hashed as their sha256_hash, so the fingerprint depends on content only — never on which UUIDs were minted — and is reproducible from scratch.
 A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
          'in_subset': ['HashSubset']} })
@@ -376,7 +378,7 @@ class RegistryProperty(RegistryEntity):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -385,6 +387,7 @@ class RegistryProperty(RegistryEntity):
                        'SchemaVersionSnapshot',
                        'RegistrySchema']} })
     sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A HashSubset field that references other entities (a class's properties / parent_class / class_mixins, a value set's permissible_values, a rule's applies_to, ...) is stored as their ids but hashed as their sha256_hash, so the fingerprint depends on content only — never on which UUIDs were minted — and is reproducible from scratch.
 A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
          'in_subset': ['HashSubset']} })
@@ -408,7 +411,7 @@ class ProvenanceEntry(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -440,7 +443,7 @@ class MappingProvenanceEntry(ProvenanceEntry):
     mapping_justification: Optional[str] = Field(default=None, description="""How this mapping came to be. Values SHOULD be semapv CURIEs (https://w3id.org/semapv/vocab/): semapv:ManualMappingCuration for source-declared or human-curated mappings, semapv:LexicalMatching, semapv:SemanticSimilarityThresholdMatching, semapv:StructuralMatching, semapv:LogicalReasoning, semapv:CompositeMatching for computed ones. The range stays string (no enum migration forced), but free-form values (\"manual\", \"exact_class_uri\") are deprecated: the alignment pipeline keys review, predicate policy, and per-method evaluation off these terms, and SSSOM requires them — a free string collapses the distinction between statistical evidence and declared semantics.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MappingProvenanceEntry']} })
     match_string: Optional[list[str]] = Field(default=None, description="""The strings/evidence the match was made on, if any.""", json_schema_extra = { "linkml_meta": {'domain_of': ['MappingProvenanceEntry']} })
     mapping_tool: Optional[str] = Field(default=None, description="""Name of the tool/process that produced this mapping, e.g. \"align.py\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['MappingProvenanceEntry']} })
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -468,7 +471,7 @@ class Mapping(ConfiguredBaseModel):
          'slot_usage': {'provenance': {'name': 'provenance',
                                        'range': 'MappingProvenanceEntry'}}})
 
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -504,7 +507,7 @@ class RegistryRule(RegistryEntity):
          'in_subset': ['HashSubset']} })
     error_message: Optional[str] = Field(default=None, description="""Human-readable message describing what the rule requires, shown when it fails. Preserved verbatim from the source schema where one is supplied (dandi-schema's `ValueError` strings inside `@model_validator`, LinkML's `constraint_message`); otherwise populated by ingestion with a canned message derived from rule_type + parameters.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryRule']} })
     referenced_entities: Optional[list[str]] = Field(default=None, description="""Additional entities an EXPRESSION_* rule mentions but does not apply to as its direct target — e.g. a dandi-schema `@model_validator` that reads `roleName` and `email` on Contributor would list Contributor in `applies_to` and both RegistryProperties here. Lets alignment find rules that touch a given property without conflating direct constraints with incidental references. Empty/omitted for the declarative rule_types.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryRule'], 'in_subset': ['HashSubset']} })
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -513,6 +516,7 @@ class RegistryRule(RegistryEntity):
                        'SchemaVersionSnapshot',
                        'RegistrySchema']} })
     sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A HashSubset field that references other entities (a class's properties / parent_class / class_mixins, a value set's permissible_values, a rule's applies_to, ...) is stored as their ids but hashed as their sha256_hash, so the fingerprint depends on content only — never on which UUIDs were minted — and is reproducible from scratch.
 A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
          'in_subset': ['HashSubset']} })
@@ -535,7 +539,7 @@ class Transform(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -561,7 +565,7 @@ class PermissibleValue(RegistryEntity):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
     meaning: Optional[str] = Field(default=None, description="""Ontology IRI this permissible value maps to (e.g. skos:exactMatch for the EXACT_MATCH value in SkosMappingTypeEnum).""", json_schema_extra = { "linkml_meta": {'domain_of': ['PermissibleValue'], 'in_subset': ['HashSubset']} })
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -570,6 +574,7 @@ class PermissibleValue(RegistryEntity):
                        'SchemaVersionSnapshot',
                        'RegistrySchema']} })
     sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A HashSubset field that references other entities (a class's properties / parent_class / class_mixins, a value set's permissible_values, a rule's applies_to, ...) is stored as their ids but hashed as their sha256_hash, so the fingerprint depends on content only — never on which UUIDs were minted — and is reproducible from scratch.
 A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
          'in_subset': ['HashSubset']} })
@@ -593,7 +598,7 @@ class RegistryValueSet(RegistryEntity):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
     permissible_values: Optional[list[str]] = Field(default=None, description="""The set of permissible values for this RegistryValueSet. Stored as id references; HAS_PERMISSIBLE_VALUE edges are the graph traversal.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryValueSet'], 'in_subset': ['HashSubset']} })
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -602,6 +607,7 @@ class RegistryValueSet(RegistryEntity):
                        'SchemaVersionSnapshot',
                        'RegistrySchema']} })
     sha256_hash: str = Field(default=..., description="""Content fingerprint (format `sha256:<hex>`) derived from the fields marked `in_subset: HashSubset` on this entity's class. Not the identifier — `id` (UUID) is — but content-addressed and stable across sources: two sources that submit identical content produce identical sha256_hash values, and ingestion uses that equality to reuse an existing `id` rather than mint a new UUID for the duplicate.
+A HashSubset field that references other entities (a class's properties / parent_class / class_mixins, a value set's permissible_values, a rule's applies_to, ...) is stored as their ids but hashed as their sha256_hash, so the fingerprint depends on content only — never on which UUIDs were minted — and is reproducible from scratch.
 A change in any HashSubset field produces a different sha256_hash (a different entity), never an edit of the old one; lineage is tracked via was_derived_from on each ProvenanceEntry.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity']} })
     name: str = Field(default=..., description="""Human-readable label for this entity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity', 'Transform', 'RegistrySchema'],
          'in_subset': ['HashSubset']} })
@@ -626,7 +632,7 @@ class SchemaSource(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -665,7 +671,7 @@ class SchemaBundle(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -700,7 +706,7 @@ class SchemaVersionSnapshot(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
@@ -729,7 +735,7 @@ class RegistrySchema(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/schema-registry-utils/meta-model'})
 
-    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and stable across content changes. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
+    id: str = Field(default=..., description="""UUID (uuid4) primary key for every registered object, minted at first ingest and kept across rebuilds (content already in the previous export keeps its id). Changed content is a new entity with a new id — see sha256_hash. Used uniformly by RegistryEntity subclasses and by non-content-addressed classes (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping), so cross-references are the same shape regardless of the referent's family. For RegistryEntity subclasses the `sha256_hash` fingerprint is what enables cross-source dedup — see RegistryEntity's own description.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RegistryEntity',
                        'ProvenanceEntry',
                        'Mapping',
                        'Transform',
