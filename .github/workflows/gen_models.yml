@@ -49,7 +49,7 @@ jobs:
       # Only LinkML is needed to verify, so install just its pinned line rather
       # than all of requirements.txt (which drags in sentence-transformers).
       - name: Install LinkML
-        run: pip install "$(grep -E '^linkml==' requirements.txt)"
+        run: pip install $(grep -E '^linkml(-runtime)?==' requirements.txt)
 
       - name: Verify models.py matches the meta-model
         run: ./scripts/gen_models.sh --check

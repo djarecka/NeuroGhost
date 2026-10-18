@@ -14,9 +14,12 @@ pyyaml>=6.0
 # for reasons unrelated to the change under review. More importantly, the
 # generator decides field optionality and defaults, and those feed
 # compute_content_hash() — so a generator change could silently shift every stored
-# sha256_hash. .github/workflows/gen_models.yml installs this exact line; bump it
-# here and regenerate models.py in the same commit.
+# sha256_hash. .github/workflows/gen_models.yml installs these exact lines; bump
+# them here and regenerate models.py in the same commit. linkml-runtime is pinned
+# too: it supplies the `metamodel_version` gen-pydantic writes into models.py, and
+# linkml itself doesn't pin it (a new runtime release alone breaks the check).
 linkml==1.11.1
+linkml-runtime==1.11.1
 # X -> LinkML importers (JSON Schema now; OWL/SQL/etc. available for later).
 # Compatible with the linkml==1.11.1 pin above (requires linkml<2,>=1.10.0).
 # NOTE: pulls a large dependency tail (only the JSON Schema importer is used);
