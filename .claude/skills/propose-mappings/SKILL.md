@@ -29,8 +29,10 @@ Two modes — ask which if it isn't clear:
 - `gh auth status` must show a logged-in account. Get the login with
   `gh api user --jq .login` — it is the `author_id` and `reviewer_id` of
   every row. Never type it in by hand or use anyone else's.
-- Python with `requirements.txt` installed (the candidate step needs
-  `sentence-transformers`).
+- Python with `requirements.txt` installed, plus `sentence-transformers`
+  for the candidate step (`pip install sentence-transformers`; it isn't in
+  `requirements.txt`). Check with
+  `python -c "import sentence_transformers"` and install it if missing.
 - Ask which **subject** and **object** schemas (source labels as in
   `data/registry.json` → `sources[].label`, e.g. `aind`, `bids`, `asset`;
   either may be `all`) and whether to map **properties**, **classes**, or
