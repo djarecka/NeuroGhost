@@ -40,6 +40,9 @@ asset:Person.identifier	skos:closeMatch	bbqs:Investigator.orcid	0.723	PROPOSED
   and it opens a PR containing only what you approved. It can also **review
   an existing file** — e.g. a *Propose Mappings* PR — updating its rows to
   `ACCEPTED` / `REJECTED` with you as reviewer.
+- **Locally** — `python neuro_ghost/propose_mappings.py <subject> <object>
+  --kind <properties|classes|all>` (needs `pip install sentence-transformers`,
+  which isn't in `requirements.txt`), then open a PR with the file.
 - **By hand** — write or edit a file and open a PR; check it locally with
   `python neuro_ghost/mappings.py validate mappings/<file>`.
 

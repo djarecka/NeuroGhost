@@ -9,6 +9,8 @@ scores are evidence for a reviewer, a person, or a stronger model (the
 propose-mappings skill reads this file and asks the user to approve rows).
 
 Reads the registry.json export, not the graph, so it runs without a rebuild.
+Needs `sentence-transformers` (not in requirements.txt — it pulls in PyTorch;
+`pip install sentence-transformers`).
 
 Either side can be `all` (every other registered schema; `all all` = every
 pair once), and `--kind all` does classes and properties — all into one file.
@@ -79,7 +81,11 @@ def schema_pairs(registry: dict, subject: str, obj: str) -> list[tuple[str, str]
 
 
 def load_model(model_name: str):
-    from sentence_transformers import SentenceTransformer
+    try:
+        from sentence_transformers import SentenceTransformer
+    except ImportError:
+        raise click.ClickException(
+            "propose_mappings needs sentence-transformers: pip install sentence-transformers")
     return SentenceTransformer(model_name)
 
 

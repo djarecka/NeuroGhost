@@ -65,8 +65,14 @@ jobs:
           key: hf-minilm-v2
           restore-keys: hf-
 
+      # sentence-transformers is only needed here, so it isn't in
+      # requirements.txt (every rebuild would pull in PyTorch). The CPU-only
+      # torch wheel avoids the multi-GB CUDA build on Linux runners.
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install sentence-transformers
 
       - name: Propose mappings
         id: propose
