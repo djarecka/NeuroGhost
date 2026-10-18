@@ -8,18 +8,28 @@ property with their status, method and who proposed / reviewed them.
 
 ## Format
 
-SSSOM-style TSV with a `# key: value` header whose values are defaults for
-every row:
+Each mapping set is two files with the same base name, as in SSSOM: the
+table, which GitHub shows as a searchable table, and its metadata, whose
+values are defaults for every row.
+
+`2026-10-18_embeddings_asset__bbqs_properties.sssom.yml`:
 
 ```
-# mapping_set_id: 2026-10-18_embeddings_asset__bbqs_properties
-# mapping_date: 2026-10-18
-# mapping_tool: embeddings/all-MiniLM-L6-v2
-# mapping_justification: semapv:SemanticSimilarityThresholdMatching
-# author_id: github-actions
+mapping_set_id: 2026-10-18_embeddings_asset__bbqs_properties
+mapping_date: 2026-10-18
+mapping_tool: embeddings/all-MiniLM-L6-v2
+mapping_justification: semapv:SemanticSimilarityThresholdMatching
+author_id: github-actions
+```
+
+`2026-10-18_embeddings_asset__bbqs_properties.sssom.tsv` (tab-separated):
+
+```
 subject_id	predicate_id	object_id	confidence	review_status	reviewer_id	review_date	comment
 asset:Person.identifier	skos:closeMatch	bbqs:Investigator.orcid	0.723	PROPOSED
 ```
+
+Keep the two files together (same base name; rename or delete both).
 
 - `subject_id` / `object_id`: `source:Class` or `source:Class.prop` (source
   labels as in `data/registry.json`).

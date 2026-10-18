@@ -29,19 +29,24 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install click
+        run: pip install click pyyaml
 
       - name: Changed mapping files
         id: files
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          FILES=$(git diff --name-only --diff-filter=AM "$BASE_SHA" HEAD -- 'mappings/*.sssom.tsv' | tr '\n' ' ')
+          # A mapping set is a table (.sssom.tsv) plus its metadata (.sssom.yml):
+          # a change to either means checking the table.
+          FILES=$(git diff --name-only --diff-filter=AM "$BASE_SHA" HEAD -- 'mappings/*.sssom.tsv' 'mappings/*.sssom.yml' \
+                  | sed 's/\.sssom\.yml$/.sssom.tsv/' | sort -u | tr '\n' ' ')
           echo "files=$FILES" >> "$GITHUB_OUTPUT"
           # The base branch's versions, for telling new reviews from old ones.
           mkdir -p /tmp/base
           for f in $FILES; do
-            git show "$BASE_SHA:$f" > "/tmp/base/$(basename "$f")" 2>/dev/null || rm -f "/tmp/base/$(basename "$f")"
+            for g in "$f" "${f%.tsv}.yml"; do
+              git show "$BASE_SHA:$g" > "/tmp/base/$(basename "$g")" 2>/dev/null || rm -f "/tmp/base/$(basename "$g")"
+            done
           done
           echo "Changed: ${FILES:-none}"
 

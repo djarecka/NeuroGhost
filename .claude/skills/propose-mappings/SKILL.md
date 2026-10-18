@@ -5,7 +5,8 @@ description: Propose cross-schema mappings for the NeuroGhost registry with your
 
 # Propose mappings (user-approved)
 
-Produce a reviewed mapping file — `mappings/*.sssom.tsv`, format in
+Produce a reviewed mapping set — `mappings/<set>.sssom.tsv` (the table) plus
+`mappings/<set>.sssom.yml` (its metadata), format in
 `neuro_ghost/mappings.py` — for two schemas already in the registry, judged by
 you and **approved row by row by the user**, then open a PR with it. Every
 row in the PR is a mapping the user accepted, recorded under their GitHub
@@ -79,16 +80,24 @@ without their explicit answer.
 Include only accepted rows in the file. Rejected rows are included only if
 the user asks for that (as `REJECTED`, which records "this is not a match").
 
-## 5. Write the mapping file
+## 5. Write the mapping set
 
-`mappings/<YYYY-MM-DD>_llm_<subject>__<object>_<kind>.sssom.tsv`:
+Two files with the same base name,
+`mappings/<YYYY-MM-DD>_llm_<subject>__<object>_<kind>`:
+
+`….sssom.yml` — the metadata (defaults for every row):
 
 ```
-# mapping_set_id: <file name without .sssom.tsv>
-# mapping_date: <YYYY-MM-DD>
-# mapping_tool: llm/<your exact model id>
-# mapping_justification: semapv:ManualMappingCuration
-# author_id: <login>
+mapping_set_id: <base name>
+mapping_date: <YYYY-MM-DD>
+mapping_tool: llm/<your exact model id>
+mapping_justification: semapv:ManualMappingCuration
+author_id: <login>
+```
+
+`….sssom.tsv` — the table only, no `#` lines (so GitHub shows it as a table):
+
+```
 subject_id	predicate_id	object_id	confidence	review_status	reviewer_id	review_date	comment
 aind:Subject.sex	skos:exactMatch	bids:Columns.sex	0.95	ACCEPTED	<login>	<YYYY-MM-DD>	<your one-sentence reason>
 ```
@@ -108,7 +117,7 @@ Show the user a summary (counts, the file path) and **ask before**
 committing, pushing, or opening the PR. Then:
 
 ```bash
-git add mappings/<file>
+git add mappings/<base name>.sssom.tsv mappings/<base name>.sssom.yml
 git commit -m "Mappings: <subject> → <object> (<kind>), approved by <login>"
 git push -u origin <branch>
 gh pr create --base main --title "Mappings: <subject> → <object> (<kind>)" --body "<summary: how many, method llm/<model>, all approved by <login>>"

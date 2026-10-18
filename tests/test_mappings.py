@@ -3,19 +3,23 @@ from export_json import _load_mappings
 from ingest_linkml import insert_schema, parse_linkml
 from mappings import Ref, RegistryIndex, load_rows, read_mapping_file
 
-HEADER = (
-    "# mapping_set_id: test_set\n"
-    "# mapping_date: 2026-10-18\n"
-    "# mapping_tool: embeddings/all-MiniLM-L6-v2\n"
-    "# mapping_justification: semapv:SemanticSimilarityThresholdMatching\n"
-    "# author_id: github-actions\n"
+META = (
+    "mapping_set_id: test_set\n"
+    "mapping_date: 2026-10-18\n"
+    "mapping_tool: embeddings/all-MiniLM-L6-v2\n"
+    "mapping_justification: semapv:SemanticSimilarityThresholdMatching\n"
+    "author_id: github-actions\n"
 )
 COLUMNS = "subject_id\tpredicate_id\tobject_id\tconfidence\treview_status\treviewer_id\tcomment\n"
 
 
-def write(tmp_path, rows: str, header: str = HEADER):
+def write(tmp_path, rows: str, meta: str | None = META):
+    """A mapping table m.sssom.tsv and (unless meta is None) its metadata
+    file m.sssom.yml."""
     path = tmp_path / "m.sssom.tsv"
-    path.write_text(header + COLUMNS + rows)
+    path.write_text(COLUMNS + rows)
+    if meta is not None:
+        (tmp_path / "m.sssom.yml").write_text(meta)
     return path
 
 
@@ -43,9 +47,29 @@ def test_read_mapping_file_applies_header_defaults_and_reports_bad_rows(tmp_path
     assert any("needs a reviewer_id" in e for e in mf.errors)
 
 
-def test_header_must_name_the_mapping_set_and_date(tmp_path):
-    mf = read_mapping_file(write(tmp_path, "", header="# author_id: x\n"))
+def test_metadata_must_name_the_mapping_set_and_date(tmp_path):
+    mf = read_mapping_file(write(tmp_path, "", meta="author_id: x\n"))
     assert len(mf.errors) == 2
+
+
+def test_older_hash_header_still_loads_but_validate_wants_the_yml(tmp_path):
+    """Metadata as `# key: value` lines at the top of the TSV (the first
+    format) still reads, but validate asks for the .sssom.yml file, since
+    GitHub can't show such a TSV as a table."""
+    from click.testing import CliRunner
+    from mappings import validate
+    header = "".join(f"# {line}\n" for line in META.splitlines())
+    path = tmp_path / "m.sssom.tsv"
+    path.write_text(header + COLUMNS + "a:S\tskos:closeMatch\tb:T\t\t\t\t\n")
+    mf = read_mapping_file(path)
+    assert mf.errors == [] and not mf.has_metadata_file
+    assert mf.rows[0].mapping_set_id == "test_set"
+
+    registry = tmp_path / "registry.json"
+    registry.write_text('{"classes": [{"id": "1", "name": "S", "sources": ["a"], "properties": []},'
+                        ' {"id": "2", "name": "T", "sources": ["b"], "properties": []}]}')
+    result = CliRunner().invoke(validate, [str(path), "--registry", str(registry)])
+    assert result.exit_code == 1 and "no metadata file m.sssom.yml" in result.output
 
 
 def test_load_writes_mappings_with_proposal_and_review_provenance(conn, tmp_path):
@@ -58,7 +82,7 @@ def test_load_writes_mappings_with_proposal_and_review_provenance(conn, tmp_path
     ))
     stats = load_rows(conn, mf.rows)
     assert stats["loaded"] == 2
-    assert stats["unresolved"] == [f"{mf.path}:9: source_a:Nope"]
+    assert stats["unresolved"] == [f"{mf.path}:4: source_a:Nope"]
 
     names = {i: n for label in ("RegistryClass", "RegistryProperty")
              for i, n in conn.execute(f"MATCH (x:{label}) RETURN x.id, x.name").get_all()}

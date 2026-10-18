@@ -8,17 +8,26 @@ skill, Proteus later — and always merged through a PR. The rebuild loads every
 file into Mapping + MappingProvenanceEntry nodes; nothing here computes
 mappings.
 
-Format: SSSOM-style TSV with a `# key: value` metadata header whose values
-are defaults for every row (a row's own column wins). Columns are separated
-by tabs; two or more spaces also work where a browser editor turned a tab
-into spaces (see _tabs_for_spaces):
+Format: an SSSOM table plus its metadata file, side by side:
 
-    # mapping_set_id: 2026-10-18_embeddings_aind__bids
-    # mapping_date: 2026-10-18
-    # mapping_tool: embeddings/all-MiniLM-L6-v2
-    # mapping_justification: semapv:SemanticSimilarityThresholdMatching
-    # author_id: github-actions
+    mappings/<set>.sssom.tsv   the mappings, one per row (GitHub shows it as a table)
+    mappings/<set>.sssom.yml   mapping-set metadata; values are defaults for
+                               every row (a row's own column wins)
+
+    # <set>.sssom.yml
+    mapping_set_id: 2026-10-18_embeddings_aind__bids
+    mapping_date: 2026-10-18
+    mapping_tool: embeddings/all-MiniLM-L6-v2
+    mapping_justification: semapv:SemanticSimilarityThresholdMatching
+    author_id: github-actions
+
+    # <set>.sssom.tsv  (tab-separated; 2+ spaces also work where a browser
+    # editor turned a tab into spaces, see _tabs_for_spaces)
     subject_id  predicate_id  object_id  confidence  review_status  author_id  reviewer_id  review_date  comment
+
+  An older form with the metadata as `# key: value` lines at the top of the
+  .tsv still loads, but `validate` asks for the .yml file (GitHub can't show a
+  TSV with those lines as a table).
 
   * subject_id / object_id: `source:Class` or `source:Class.prop` — the
     source label, then a class name, then optionally one of that class's
@@ -50,6 +59,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import click
+import yaml
 
 PREDICATES = {
     "skos:exactMatch":     "EXACT_MATCH",
@@ -115,10 +125,16 @@ class MappingRow:
         return str(uuid.uuid5(_NS, self.key))
 
 
+def metadata_path(tsv: Path) -> Path:
+    """The metadata file of a mapping table: x.sssom.tsv -> x.sssom.yml."""
+    return tsv.with_suffix(".yml")
+
+
 @dataclass
 class MappingFile:
     path: Path
     meta: dict[str, str] = field(default_factory=dict)
+    has_metadata_file: bool = False
     rows: list[MappingRow] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
@@ -159,9 +175,23 @@ def read_mapping_file(path: Path) -> MappingFile:
     else:
         body_start = len(lines)
 
+    meta_file = metadata_path(path)
+    if meta_file.exists():
+        mf.has_metadata_file = True
+        try:
+            loaded = yaml.safe_load(meta_file.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError as e:
+            mf.errors.append(f"{meta_file}: not valid YAML ({e})")
+            loaded = {}
+        if not isinstance(loaded, dict):
+            mf.errors.append(f"{meta_file}: expected `key: value` lines")
+            loaded = {}
+        # YAML turns 2026-10-18 into a date; keep every value as text.
+        mf.meta.update({str(k): str(v) for k, v in loaded.items() if v is not None})
+
     for key in REQUIRED_META:
         if not mf.meta.get(key):
-            mf.errors.append(f"{path}: header is missing `# {key}: ...`")
+            mf.errors.append(f"{meta_file}: missing `{key}: ...`")
 
     reader = csv.DictReader(_tabs_for_spaces(lines[body_start:]), delimiter="\t")
     missing = [c for c in REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
@@ -336,6 +366,9 @@ def validate(paths: tuple[Path, ...], registry: Path) -> None:
     n_rows = 0
     for mf in read_mapping_files(list(paths)):
         errors += mf.errors
+        if not mf.has_metadata_file:
+            errors.append(f"{mf.path}: no metadata file {metadata_path(mf.path).name} "
+                          f"(move the `# key: value` header lines there)")
         n_rows += len(mf.rows)
         for row in mf.rows:
             for ref in (row.subject, row.object):
@@ -354,13 +387,13 @@ def unattributed_reviews(rows: list[MappingRow], base_rows: list[MappingRow],
     PR's `authors` (its opener and the authors of its commits — GitHub
     vouches for both). That's what makes "who approved it" trustworthy;
     reviews made in earlier PRs are left alone."""
-    before = {(r.mapping_set_id, str(r.subject), r.predicate, str(r.object)):
+    before = {(str(r.subject), r.predicate, str(r.object)):
               (r.review_status, r.reviewer_id) for r in base_rows}
     problems = []
     for r in rows:
         if r.review_status not in ("ACCEPTED", "REJECTED"):
             continue
-        key = (r.mapping_set_id, str(r.subject), r.predicate, str(r.object))
+        key = (str(r.subject), r.predicate, str(r.object))
         if before.get(key) != (r.review_status, r.reviewer_id) and r.reviewer_id not in authors:
             problems.append(f"{r.file}:{r.line}: {r.review_status} by {r.reviewer_id!r}, "
                             f"who is not an author of this PR ({', '.join(sorted(authors))})")
@@ -372,7 +405,7 @@ def unattributed_reviews(rows: list[MappingRow], base_rows: list[MappingRow],
 @click.option("--author", "authors", required=True, multiple=True,
               help="GitHub login of a PR author (opener or commit author); repeatable.")
 @click.option("--base", "base_dir", type=click.Path(path_type=Path), default=None,
-              help="Directory with the base branch's mapping files (same file names).")
+              help="Directory with the base branch's versions of these mapping tables (same file names).")
 def check_reviewers(paths: tuple[Path, ...], authors: tuple[str, ...], base_dir: Path | None) -> None:
     """Fail if a PR accepts/rejects mappings in someone else's name."""
     problems: list[str] = []

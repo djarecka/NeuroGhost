@@ -1,0 +1,5 @@
+mapping_set_id: 2026-10-18_llm_dandi__schema.org_classes
+mapping_date: 2026-10-18
+mapping_tool: llm/claude-opus-5-5
+mapping_justification: semapv:ManualMappingCuration
+author_id: djarecka
