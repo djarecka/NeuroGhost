@@ -414,7 +414,7 @@ def ingest_schema(
             "Authorization": f"token {github_token}",
             "Accept":        "application/vnd.github+json",
             "Content-Type":  "application/json",
-            "User-Agent":    "NeuroGhost-MCP/1.0",
+            "User-Agent":    "NeuroGhost-MCP/0.1.0",
         },
         method="POST",
     )
