@@ -90,6 +90,7 @@ from db import (
     get_connection, make_iri, make_id, now_iso,
     write_registry_entities, write_structural_edges, write_rule_edges,
     ensure_schema_source, find_id_by_sha256, find_duplicate_source,
+    load_previous_ids, previous_id, id_taken_by_other_content,
 )
 from source_metadata import load_source_sidecar
 from schema_hash import content_hash
@@ -444,7 +445,7 @@ def _make_provenance(schema_source_id: str, attests_to: str, agent: str,
 
 def build_registry_entities(
     parsed: dict, schema_source_id: str, agent: str, issue: str = "",
-    registry_version: str = "", conn=None,
+    registry_version: str = "", conn=None, source_label: str = "",
 ) -> tuple[
     dict[str, RegistryProperty],
     dict[str, RegistryClass],
@@ -512,16 +513,41 @@ def build_registry_entities(
         provenance_entries[pe.id] = pe
         return pe.id
 
-    def dedup_id(kind: str, sha: str) -> str:
+    def dedup_id(kind: str, sha: str, name: str = "") -> str:
         """Return an existing id for this sha256_hash if the graph already
-        has one, otherwise mint a fresh UUID. `conn` may be None (unit
-        tests, dry-run) — in which case dedup is skipped and each entity
-        gets its own uuid, converging on the next real ingest."""
+        has one, else the id it had in the previous export (see
+        db.load_previous_ids), otherwise mint a fresh UUID. `conn` may be
+        None (unit tests, dry-run) — in which case graph dedup is skipped
+        and each entity gets its own uuid, converging on the next real
+        ingest."""
         if conn is not None:
             existing = find_id_by_sha256(conn, kind, sha)
             if existing:
                 return existing
+        prev = previous_id(kind, sha, source_label, name)
+        if prev and not (conn is not None and id_taken_by_other_content(conn, kind, prev, sha)):
+            return prev
         return make_id()
+
+    # References between entities are stored as UUIDs, but they're hashed as
+    # the referenced entity's sha256_hash, so a sha256_hash depends on content
+    # only — never on which random UUID an entity happened to get. Every
+    # referenced entity is built (and recorded here) before anything that
+    # references it: properties and permissible values reference nothing,
+    # value sets and classes come next (parents first), rules last.
+    sha_of: dict[str, str] = {}
+
+    def content_hash(model_cls, fields: dict, refs: tuple[str, ...]) -> str:
+        """compute_content_hash_for(), with the id-valued fields in `refs`
+        replaced by the referenced entities' sha256_hash."""
+        hashed = dict(fields)
+        for f in refs:
+            v = hashed.get(f)
+            if isinstance(v, list):
+                hashed[f] = sorted(sha_of.get(i, i) for i in v)
+            elif v is not None:
+                hashed[f] = sha_of.get(v, v)
+        return compute_content_hash_for(model_cls, hashed)
 
     properties: dict[str, RegistryProperty] = {}
     for slot_name in used_slots:
@@ -542,7 +568,8 @@ def build_registry_entities(
             aliases=slot.get("aliases") or [],
         )
         sha = compute_content_hash_for(RegistryProperty, fields)
-        pid = dedup_id("RegistryProperty", sha)
+        pid = dedup_id("RegistryProperty", sha, slot_name)
+        sha_of[pid] = sha
         prop = RegistryProperty(
             id=pid,
             sha256_hash=sha,
@@ -585,8 +612,10 @@ def build_registry_entities(
             skos_mappings=[],
             aliases=cls.get("aliases") or [],
         )
-        sha = compute_content_hash_for(RegistryClass, fields)
-        cid = dedup_id("RegistryClass", sha)
+        sha = content_hash(RegistryClass, fields,
+                           ("properties", "parent_class", "class_mixins"))
+        cid = dedup_id("RegistryClass", sha, cls_name)
+        sha_of[cid] = sha
         rc = RegistryClass(
             id=cid,
             sha256_hash=sha,
@@ -616,6 +645,7 @@ def build_registry_entities(
             )
             pv_sha = compute_content_hash_for(PermissibleValue, pv_fields)
             pv_id = dedup_id("PermissibleValue", pv_sha)
+            sha_of[pv_id] = pv_sha
             if pv_id not in permissible_values:
                 permissible_values[pv_id] = PermissibleValue(
                     id=pv_id,
@@ -631,8 +661,9 @@ def build_registry_entities(
             permissible_values=sorted(pv_ids),
             skos_mappings=[],
         )
-        vs_sha = compute_content_hash_for(RegistryValueSet, vs_fields)
+        vs_sha = content_hash(RegistryValueSet, vs_fields, ("permissible_values",))
         vs_id = dedup_id("RegistryValueSet", vs_sha)
+        sha_of[vs_id] = vs_sha
         vs = RegistryValueSet(
             id=vs_id,
             sha256_hash=vs_sha,
@@ -701,7 +732,8 @@ def build_registry_entities(
             error_message=error_message,
             referenced_entities=[],
         )
-        sha = compute_content_hash_for(RegistryRule, fields)
+        sha = content_hash(RegistryRule, fields, (
+            "applies_to", "used_in_class", "referenced_entities", "rule_value"))
         rid = dedup_id("RegistryRule", sha)
         rule = RegistryRule(
             id=rid,
@@ -895,6 +927,7 @@ def insert_schema(conn, parsed: dict, source_label: str, agent: str = "anonymous
 
     properties, registry_classes, value_sets, permissible_values, rules, provenance_entries = build_registry_entities(
         parsed, schema_source_id, agent, issue, registry_version, conn=conn,
+        source_label=source_label,
     )
 
     stats = write_registry_entities(
@@ -1058,8 +1091,15 @@ def _print_entities(properties: dict, registry_classes: dict,
               help="Registry semver to stamp on created nodes.")
 @click.option("--issue",   default="", help="GitHub issue number (for provenance).")
 @click.option("--agent",   default="anonymous", help="Who submitted this schema.")
+@click.option("--previous-ids", default=None,
+              help="A previous registry.json export: content already in it "
+                   "keeps its id instead of getting a fresh UUID.")
+@click.option("--carry-ids-by-name", is_flag=True,
+              help="One-time: also match --previous-ids by (source, name), so "
+                   "ids survive a rebuild where hashes changed without the "
+                   "content changing (e.g. a change to hashing itself).")
 def cli(file, db, dry_run, verbose, verbose_readable, wipe,
-        registry_version, issue, agent) -> None:
+        registry_version, issue, agent, previous_ids, carry_ids_by_name) -> None:
     """
     Ingest one or more LinkML .yml schemas into the NeuroGhost graph.
 
@@ -1070,6 +1110,7 @@ def cli(file, db, dry_run, verbose, verbose_readable, wipe,
       python ingest_linkml.py --wipe --file registry_schemas/nwb.yml
     """
     conn = get_connection(db)
+    load_previous_ids(previous_ids, by_name=carry_ids_by_name)
 
     if file:
         files = [Path(file)]

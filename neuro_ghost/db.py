@@ -54,6 +54,62 @@ def make_id() -> str:
 def make_iri(object_id: str) -> str:
     return f"{REG}obj/{object_id}"
 
+# The graph DB is not kept between runs (every rebuild is `pipeline.py
+# --fresh` on an empty DB), so find_id_by_sha256() alone can't keep ids
+# stable: unchanged content would get a fresh uuid4 on every rebuild. The
+# previous export (data/registry.json) is the registry's memory instead —
+# load its (label, sha256_hash) -> id table and consult it before minting.
+_previous_ids: dict[tuple[str, str], str] = {}
+# (label, source label, name) -> id — consulted only with by_name=True: a
+# one-time carry-over for a rebuild where hashes change for a reason other
+# than content (e.g. a change to how hashes are computed). Normally a
+# changed hash means changed content, which is a new entity with a new id.
+_previous_names: dict[tuple[str, str, str], str] = {}
+
+def load_previous_ids(path: str | Path | None, by_name: bool = False) -> int:
+    """Load (label, sha256_hash) -> id from a previous registry.json export,
+    for RegistryClass and RegistryProperty (the entities it carries ids for).
+    With by_name, also load (label, source, name) -> id. Returns the number
+    of ids loaded; a missing path loads nothing."""
+    import json
+    _previous_ids.clear()
+    _previous_names.clear()
+    if not path or not Path(path).exists():
+        return 0
+    data = json.loads(Path(path).read_text())
+
+    def remember(label: str, entity: dict) -> None:
+        if not (entity.get("sha256_hash") and entity.get("id")):
+            return
+        _previous_ids[(label, entity["sha256_hash"])] = entity["id"]
+        if by_name:
+            for source in entity.get("sources", []):
+                _previous_names[(label, source, entity.get("name", ""))] = entity["id"]
+
+    for cls in data.get("classes", []):
+        remember("RegistryClass", cls)
+        for prop in cls.get("properties", []):
+            if isinstance(prop, dict):
+                remember("RegistryProperty", prop)
+    return len(_previous_ids)
+
+def previous_id(label: str, sha256_hash: str,
+                source: str = "", name: str = "") -> str | None:
+    """The id this content had in the previous export, if any — matched by
+    sha256_hash, or (only after load_previous_ids(by_name=True)) by
+    (source, name)."""
+    return (_previous_ids.get((label, sha256_hash))
+            or _previous_names.get((label, source, name)))
+
+def id_taken_by_other_content(conn, label: str, entity_id: str, sha256_hash: str) -> bool:
+    """True if `entity_id` already belongs to a node with different content —
+    a carried-over id must never end up on two different entities."""
+    r = conn.execute(
+        f"MATCH (n:{label} {{id: $id}}) RETURN n.sha256_hash LIMIT 1",
+        {"id": entity_id},
+    )
+    return r.has_next() and r.get_next()[0] != sha256_hash
+
 def bump_version(ver: str, bump: str = "patch") -> str:
     """
     Bump a semver string.

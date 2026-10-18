@@ -33,6 +33,9 @@ HERE     = Path(__file__).parent
 ROOT     = HERE.parent
 SCHEMAS  = ROOT / "registry_schemas"
 DB_PATH  = str(ROOT / "registry.lbug")
+# The previous export — read before it is overwritten, so content that's
+# already registered keeps its id across --fresh rebuilds.
+PREVIOUS = ROOT / "data" / "registry.json"
 
 
 def _run(cmd: list[str]) -> None:
@@ -59,8 +62,12 @@ def _run(cmd: list[str]) -> None:
               help="Who is running this pipeline (recorded in provenance).")
 @click.option("--issue",            default="",
               help="GitHub issue number to record in provenance (schema submissions).")
+@click.option("--carry-ids-by-name", is_flag=True,
+              help="One-time: keep ids by (source, name) as well as by hash — "
+                   "for the rebuild after a change to how hashes are computed.")
 def cli(db: str, fresh: bool, skip_converters: bool,
-        schemas: tuple, bump: str, agent: str, issue: str) -> None:
+        schemas: tuple, bump: str, agent: str, issue: str,
+        carry_ids_by_name: bool) -> None:
     """Run the full NeuroGhost ingestion pipeline."""
 
     py = sys.executable
@@ -73,7 +80,10 @@ def cli(db: str, fresh: bool, skip_converters: bool,
             print(f"Deleted {db_path}")
 
     # 2. Seed schema.org
-    _run([py, str(HERE / "seed.py"), "--db", db])
+    prev_ids = ["--previous-ids", str(PREVIOUS)] if PREVIOUS.exists() else []
+    if prev_ids and carry_ids_by_name:
+        prev_ids.append("--carry-ids-by-name")
+    _run([py, str(HERE / "seed.py"), "--db", db, *prev_ids])
 
     # 3. External converters
     if not skip_converters:
@@ -94,7 +104,7 @@ def cli(db: str, fresh: bool, skip_converters: bool,
         cmd = [py, str(HERE / "ingest_linkml.py"),
                "--file", str(schema_file),
                "--db",   db,
-               "--agent", agent]
+               "--agent", agent, *prev_ids]
         if issue:
             cmd += ["--issue", issue]
         _run(cmd)

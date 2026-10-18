@@ -445,6 +445,13 @@ slots:
       sha256_hash values, and ingestion uses that equality to reuse an
       existing `id` rather than mint a new UUID for the duplicate.
 
+      A HashSubset field that references other entities (a class's
+      properties / parent_class / class_mixins, a value set's
+      permissible_values, a rule's applies_to, ...) is stored as their ids
+      but hashed as their sha256_hash, so the fingerprint depends on content
+      only — never on which UUIDs were minted — and is reproducible from
+      scratch.
+
       A change in any HashSubset field produces a different sha256_hash
       (a different entity), never an edit of the old one; lineage is
       tracked via was_derived_from on each ProvenanceEntry.
@@ -597,7 +604,9 @@ slots:
     range: string
     description: >-
       UUID (uuid4) primary key for every registered object, minted at
-      first ingest and stable across content changes. Used uniformly by
+      first ingest and kept across rebuilds (content already in the
+      previous export keeps its id). Changed content is a new entity with a
+      new id — see sha256_hash. Used uniformly by
       RegistryEntity subclasses and by non-content-addressed classes
       (ProvenanceEntry, SchemaSource, SchemaVersionSnapshot, Mapping),
       so cross-references are the same shape regardless of the referent's
