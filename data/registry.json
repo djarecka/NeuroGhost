@@ -1,6 +1,6 @@
 {
-  "registry_version": "1.15.13",
-  "generated_at": "2026-10-18T03:23:35.188441+00:00",
+  "registry_version": "1.15.14",
+  "generated_at": "2026-10-18T16:53:23.904660+00:00",
   "bundles": [
     {
       "label": "schema.org",
@@ -11,7 +11,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T03:22:15.056057+00:00",
+      "created_at": "2026-10-18T16:52:00.655867+00:00",
       "parts": [
         "schema.org"
       ],
@@ -26,7 +26,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T03:22:22.682428+00:00",
+      "created_at": "2026-10-18T16:52:08.455192+00:00",
       "parts": [
         "aind"
       ],
@@ -41,7 +41,7 @@
       "contact": "",
       "homepage": "https://www.dandiarchive.org/",
       "license": "",
-      "created_at": "2026-10-18T03:22:49.371377+00:00",
+      "created_at": "2026-10-18T16:52:36.124073+00:00",
       "parts": [
         "asset",
         "dandiset"
@@ -57,7 +57,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T03:22:54.523039+00:00",
+      "created_at": "2026-10-18T16:52:41.521428+00:00",
       "parts": [
         "bbqs"
       ],
@@ -72,7 +72,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T03:22:57.289904+00:00",
+      "created_at": "2026-10-18T16:52:44.386086+00:00",
       "parts": [
         "bids"
       ],
@@ -87,7 +87,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T03:23:13.848957+00:00",
+      "created_at": "2026-10-18T16:53:01.770119+00:00",
       "parts": [
         "personinfo"
       ],
@@ -102,7 +102,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T03:23:15.079686+00:00",
+      "created_at": "2026-10-18T16:53:03.036081+00:00",
       "parts": [
         "nwb"
       ],
@@ -117,7 +117,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T03:23:20.341665+00:00",
+      "created_at": "2026-10-18T16:53:08.566947+00:00",
       "parts": [
         "openminds"
       ],
@@ -133,10 +133,10 @@
       "description": "",
       "homepage": "",
       "source_id": "",
-      "source_iri": "https://registry.sensein.io/source/a474af96-4acb-4e89-8158-224735f3a63e",
+      "source_iri": "https://registry.sensein.io/source/cf2a6baa-d741-4b35-a1b6-4336cab4e263",
       "class_count": 38,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T03:22:15.058777+00:00",
+      "created_at": "2026-10-18T16:52:00.658473+00:00",
       "registry_version": "1.0.0",
       "content_hash": ""
     },
@@ -148,10 +148,10 @@
       "description": "Allen Institute for Neural Dynamics data schema.",
       "homepage": "",
       "source_id": "https://aind-data-schema.readthedocs.io/en/stable/",
-      "source_iri": "https://registry.sensein.io/source/159a4b69-3844-440b-bde4-2332a029c2be",
+      "source_iri": "https://registry.sensein.io/source/98936130-3468-4279-acec-ab79cd8464d9",
       "class_count": 382,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T03:22:22.685445+00:00",
+      "created_at": "2026-10-18T16:52:08.458002+00:00",
       "registry_version": "",
       "content_hash": "924f43727b112d6933f39e52d4a8ddddf6819d09b158aedf09584bbd0fb66eb1"
     },
@@ -163,10 +163,10 @@
       "description": "Metadata used to describe an asset on the server.",
       "homepage": "",
       "source_id": "https://github.com/dandi/schema",
-      "source_iri": "https://registry.sensein.io/source/442b8088-ac2e-4bf3-b5f0-1dbfe57c77d1",
+      "source_iri": "https://registry.sensein.io/source/30349890-6815-4dda-87d9-0225f4e83379",
       "class_count": 32,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T03:22:49.374173+00:00",
+      "created_at": "2026-10-18T16:52:36.127093+00:00",
       "registry_version": "",
       "content_hash": "eadc75ef4074574999f6a1ebb1845492a2ed67a3644d19fa056554906b8967d6"
     },
@@ -178,10 +178,10 @@
       "description": "LinkML representation of the BBQS (Brain Behavior Quantification and Synchronization) type hierarchy, aligned to schema.org. Mirrors the browsable schema published at https://brain-bbqs.org/schema. Frontend-only source of truth \u2014 no database coupling.",
       "homepage": "",
       "source_id": "https://brain-bbqs.org/schema/bbqs",
-      "source_iri": "https://registry.sensein.io/source/6fa70bb6-3db7-4849-8878-66d6c99c99b3",
+      "source_iri": "https://registry.sensein.io/source/d02f8880-8d2a-4ed1-9d66-9345fa02ecaf",
       "class_count": 29,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T03:22:54.525934+00:00",
+      "created_at": "2026-10-18T16:52:41.524162+00:00",
       "registry_version": "",
       "content_hash": "82083818c1386ae614c9dec3e6eeb0a5e49d71ca5ebcb0da7bdfae2057ca2334"
     },
@@ -193,10 +193,10 @@
       "description": "Brain Imaging Data Structure (BIDS) specification schema.",
       "homepage": "",
       "source_id": "https://bids-specification.readthedocs.io/en/stable/",
-      "source_iri": "https://registry.sensein.io/source/ab902a70-8f3f-4bb4-bb1b-a1d462783e07",
+      "source_iri": "https://registry.sensein.io/source/4aa09e17-80f4-4982-ad7c-4819dc471919",
       "class_count": 128,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T03:22:57.292628+00:00",
+      "created_at": "2026-10-18T16:52:44.389008+00:00",
       "registry_version": "",
       "content_hash": "a16a063c581475ee59aecf70dac0e826d60b852682f7937514f44a31e1bd9584"
     },
@@ -208,10 +208,10 @@
       "description": "A body of structured information describing a DANDI dataset.",
       "homepage": "",
       "source_id": "https://github.com/dandi/schema",
-      "source_iri": "https://registry.sensein.io/source/6cb4f325-cfdf-43d6-a37d-50f8b41b1265",
+      "source_iri": "https://registry.sensein.io/source/242904ce-7d40-4adf-a0f6-976f9b8ac305",
       "class_count": 21,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T03:23:10.178851+00:00",
+      "created_at": "2026-10-18T16:52:57.945040+00:00",
       "registry_version": "",
       "content_hash": "0b55bddaddeca48d45f3af0778f278edb09be028d7175870e13ee531a275aea6"
     },
@@ -223,10 +223,10 @@
       "description": "",
       "homepage": "",
       "source_id": "https://w3id.org/linkml/examples/personinfo",
-      "source_iri": "https://registry.sensein.io/source/4e494214-4ec9-4f67-8898-1320744e9ce5",
+      "source_iri": "https://registry.sensein.io/source/ece02576-0075-4f12-9349-9c25ac112c8d",
       "class_count": 1,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T03:23:13.851857+00:00",
+      "created_at": "2026-10-18T16:53:01.772928+00:00",
       "registry_version": "",
       "content_hash": "716f7e7847025045061c19c72054030d9a5e11ae39e151bc0e1b85498a9347d5"
     },
@@ -238,10 +238,10 @@
       "description": "Neurodata Without Borders (NWB) format specification.",
       "homepage": "",
       "source_id": "https://nwb-schema.readthedocs.io/en/latest/",
-      "source_iri": "https://registry.sensein.io/source/8d39388a-dcce-4802-82f2-2cbf848967e8",
+      "source_iri": "https://registry.sensein.io/source/ff3ba5be-2943-4984-a6d7-0c1d1bdfc48e",
       "class_count": 53,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T03:23:15.082384+00:00",
+      "created_at": "2026-10-18T16:53:03.039036+00:00",
       "registry_version": "",
       "content_hash": "669b4db373d5efacd34784d1103508c0ad271c91831bd45e68805e985633dca2"
     },
@@ -253,10 +253,10 @@
       "description": "Open Metadata Initiative for Neuroscience Data Structures.",
       "homepage": "",
       "source_id": "https://openminds.ebrains.eu/",
-      "source_iri": "https://registry.sensein.io/source/68218f61-bf4a-453e-8237-a76d1c0e23e3",
+      "source_iri": "https://registry.sensein.io/source/b35dd270-7325-41cc-a1ef-d2e2bf89f4ae",
       "class_count": 20,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T03:23:20.344320+00:00",
+      "created_at": "2026-10-18T16:53:08.569849+00:00",
       "registry_version": "",
       "content_hash": "5bf26ed315edb47f4d06ef9fe24e9d66747f256419218ccefdef80ed846d3029"
     }
@@ -325,7 +325,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -432,7 +432,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -730,7 +730,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "3089a856-d9f7-4d32-852d-ed6d0c3c5d27",
+              "value": "e877b959-7581-41fd-bf60-35f26e1a6281",
               "label": "AccessType",
               "scope": "schema"
             },
@@ -1438,7 +1438,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "ba8ca755-4e68-4ef5-a934-169a81a5c298",
+              "value": "4fdbd6e0-b9c7-4c08-9f58-ca69f0c5a1b9",
               "label": "MassUnit",
               "scope": "schema"
             }
@@ -1615,7 +1615,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "96e537f9-0cd5-4626-aae0-8fecea467ad8",
+              "value": "1a2216a3-d87f-41a2-ae54-1c810bc5148c",
               "label": "schemaKey_options",
               "scope": "class"
             },
@@ -1784,7 +1784,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -1869,7 +1869,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "b42d10c6-9e0c-461b-b8b1-1780250fd672",
+              "value": "7139fda0-5a42-40ce-a1ab-902d9e6acc29",
               "label": "ImagingDeviceType",
               "scope": "schema"
             },
@@ -2641,7 +2641,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -2866,7 +2866,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -2952,7 +2952,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -3170,7 +3170,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a0fd7ee4-cbbb-43b9-befd-e61478c6fdf4",
+              "value": "d2502e4c-bb90-4442-9449-e45b0db080e3",
               "label": "AnatomicalRelative",
               "scope": "schema"
             },
@@ -3224,7 +3224,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "55a743a9-c295-4b0d-9549-ed95d7e57d5f",
+              "value": "d7c42055-a4ef-47d9-8dab-eebe4a7a2cc0",
               "label": "Valence",
               "scope": "schema"
             }
@@ -3315,7 +3315,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -3683,7 +3683,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -3790,7 +3790,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -3897,7 +3897,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -4004,7 +4004,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -4111,7 +4111,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -4229,7 +4229,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "76bd575d-cd9a-4e5a-81b7-4abb2a79ae9d",
+              "value": "0226ff2d-f762-4dab-9f07-cd6923d7daf2",
               "label": "TimeUnit",
               "scope": "schema"
             }
@@ -4948,7 +4948,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -5262,7 +5262,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -5369,7 +5369,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -5637,7 +5637,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -6442,7 +6442,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "6efa0021-045f-4103-9949-4362e4af7ba6",
+              "value": "ce3ec7b5-43c9-47ad-acaa-4d9da659b99e",
               "label": "LicenseType",
               "scope": "schema"
             }
@@ -7227,7 +7227,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -7318,7 +7318,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -7345,7 +7345,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "9c009012-7837-4cad-b80b-530e4a443178",
+              "value": "4c352d03-d7fb-4081-81ef-9871632faace",
               "label": "AtlasName",
               "scope": "class"
             },
@@ -7394,7 +7394,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "766fec0e-1691-46c7-a1db-0c9a2111698b",
+              "value": "05ff3855-709b-4366-af37-7399a14f38e6",
               "label": "Origin",
               "scope": "schema"
             },
@@ -7448,7 +7448,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -7502,7 +7502,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -7716,7 +7716,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "55c50d94-5c31-4196-85bc-fea61bbb388b",
+              "value": "9a19d712-109f-46ed-ad01-ffbc5360abb7",
               "label": "Direction",
               "scope": "schema"
             },
@@ -7743,7 +7743,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "8c227d3e-3281-4d73-8702-30e48c6af5b4",
+              "value": "482d9257-74c5-412a-a56a-bf1381a42881",
               "label": "AxisName",
               "scope": "class"
             },
@@ -20298,7 +20298,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -20486,7 +20486,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -20593,7 +20593,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -21531,7 +21531,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -21745,7 +21745,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a0fd7ee4-cbbb-43b9-befd-e61478c6fdf4",
+              "value": "d2502e4c-bb90-4442-9449-e45b0db080e3",
               "label": "AnatomicalRelative",
               "scope": "schema"
             },
@@ -22226,7 +22226,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -22333,7 +22333,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -22419,7 +22419,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -22548,7 +22548,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -22747,13 +22747,13 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
               "label": "PowerUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "72904265-2beb-49b9-84cf-6ef019ad8202",
+              "value": "92623c2f-59f9-4f38-b751-3db306c60866",
               "label": "VoltageUnit",
               "scope": "schema"
             },
@@ -22876,110 +22876,110 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "10ce47b4-199e-4c6f-ace6-6a255a1ecab4",
-              "label": "SpeedUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "17a996d8-4e1b-4a51-ac3d-c9b6e14c9943",
-              "label": "AngleUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "28d18d43-0577-45e5-9ae2-d19f4dbc1ba7",
-              "label": "CurrentUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "330d509f-2613-4fb4-a1c5-e60a52644936",
-              "label": "VolumeUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
-              "label": "PowerUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "48b0568f-ed8f-4f7c-b7bd-99194ceef0e9",
-              "label": "FrequencyUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "6f59b59e-4491-4e3b-a470-4d4113f94092",
-              "label": "MemoryUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "72904265-2beb-49b9-84cf-6ef019ad8202",
-              "label": "VoltageUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "76bd575d-cd9a-4e5a-81b7-4abb2a79ae9d",
+              "value": "0226ff2d-f762-4dab-9f07-cd6923d7daf2",
               "label": "TimeUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "795696f0-2e10-4e51-b33f-0bcf94c15950",
-              "label": "TemperatureUnit",
+              "value": "050c8dc5-b05d-49dd-9729-7012cdfaf06f",
+              "label": "CurrentUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "7eaff9a2-6a70-42b9-b2d5-a45785da0d5d",
-              "label": "PressureUnit",
+              "value": "1d983faf-252d-4497-8d51-28f777aa79aa",
+              "label": "VolumeUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
-              "label": "SizeUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "b1bb89d9-bdd4-40fe-af6a-6e0b8aeffb71",
+              "value": "2f29fddc-960f-492e-9831-e6a5d5e19994",
               "label": "ConcentrationUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "ba8ca755-4e68-4ef5-a934-169a81a5c298",
+              "value": "4fdbd6e0-b9c7-4c08-9f58-ca69f0c5a1b9",
               "label": "MassUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "c681216a-c4a4-456b-9776-7eb9bbe28fda",
-              "label": "TorqueUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "da159ac2-63e1-46fe-9753-75e12e0ed19b",
-              "label": "MagneticFieldUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "f0aa8e73-a3af-4860-a2e8-9cf268d9ef23",
+              "value": "5c47ef0c-d914-4210-96bc-8e5bfa1d8382",
               "label": "SoundIntensityUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "f87c805f-6b84-454b-aa43-11572042b8d5",
+              "value": "67d58745-ac57-4bfe-8a91-4681a8af421b",
+              "label": "FrequencyUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "705539fb-c803-432c-bd81-bdca2810f6c8",
+              "label": "MagneticFieldUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "80a1c590-fb88-4893-a116-b65b1c731168",
+              "label": "PressureUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
+              "label": "PowerUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "8dae1a88-2faa-4650-8570-e10aeb464e14",
+              "label": "AngleUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "92623c2f-59f9-4f38-b751-3db306c60866",
+              "label": "VoltageUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
+              "label": "SizeUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "a091b3f4-9de3-49c2-8bb3-bd7e3cf96ae8",
+              "label": "MemoryUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "ad437f45-d320-4374-be4a-829c76a11fdd",
+              "label": "TorqueUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "bee4b288-3c57-4c4e-bec2-20986bbfb9dd",
               "label": "UnitlessUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "c4676b6a-632b-4950-b52d-88c5acfabafa",
+              "label": "TemperatureUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "c6752d77-f853-46ff-a2fb-1575c4a6b1bf",
+              "label": "SpeedUnit",
               "scope": "schema"
             },
             {
@@ -22989,7 +22989,7 @@
               "scope": "schema"
             }
           ],
-          "value_range": "SpeedUnit | AngleUnit | CurrentUnit | VolumeUnit | PowerUnit | FrequencyUnit | MemoryUnit | VoltageUnit | TimeUnit | TemperatureUnit | PressureUnit | SizeUnit | ConcentrationUnit | MassUnit | TorqueUnit | MagneticFieldUnit | SoundIntensityUnit | UnitlessUnit",
+          "value_range": "TimeUnit | CurrentUnit | VolumeUnit | ConcentrationUnit | MassUnit | SoundIntensityUnit | FrequencyUnit | MagneticFieldUnit | PressureUnit | PowerUnit | AngleUnit | VoltageUnit | SizeUnit | MemoryUnit | TorqueUnit | UnitlessUnit | TemperatureUnit | SpeedUnit",
           "units": "",
           "sources": [
             "aind"
@@ -23084,7 +23084,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "42e5eccf-bd4c-4f8c-9af1-0842d4e943be",
+              "value": "13370c1c-10e7-4ee8-81a9-320cef0cb779",
               "label": "FitType",
               "scope": "schema"
             },
@@ -23298,7 +23298,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -23405,7 +23405,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -23511,7 +23511,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f01802bf-87fd-445b-a5cb-50e649125bd9",
+              "value": "29a73386-3da6-4e8f-967f-9efeffd4d09a",
               "label": "BinMode",
               "scope": "schema"
             }
@@ -23532,7 +23532,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -23616,7 +23616,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "3d7e9f22-60aa-40ca-8683-c95a4cce5334",
+              "value": "cc0610eb-6e3c-405d-a0b3-1f4d4d9fad04",
               "label": "Cooling",
               "scope": "schema"
             }
@@ -23700,7 +23700,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -23742,7 +23742,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "0830e82d-556d-4af2-a0f4-cd8f8185ba8d",
+              "value": "e1bc3250-1fca-4453-af73-f3e3f4985713",
               "label": "DataInterface",
               "scope": "schema"
             },
@@ -23769,7 +23769,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "ac621d56-0f24-4dc2-9539-7b0954c62806",
+              "value": "cc980a1f-b518-4bd0-81ea-29c39635cd66",
               "label": "DetectorType",
               "scope": "schema"
             },
@@ -23865,7 +23865,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "48b0568f-ed8f-4f7c-b7bd-99194ceef0e9",
+              "value": "67d58745-ac57-4bfe-8a91-4681a8af421b",
               "label": "FrequencyUnit",
               "scope": "schema"
             }
@@ -23913,7 +23913,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "fb1537f3-1a5a-4ee2-9ee2-27ef863de0a6",
+              "value": "a2ab205d-8e05-4922-9d54-189dc13fb299",
               "label": "ImmersionMedium",
               "scope": "schema"
             },
@@ -24186,7 +24186,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -24368,7 +24368,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a0fd7ee4-cbbb-43b9-befd-e61478c6fdf4",
+              "value": "d2502e4c-bb90-4442-9449-e45b0db080e3",
               "label": "AnatomicalRelative",
               "scope": "schema"
             },
@@ -24395,7 +24395,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "e9c85e59-278b-423b-8254-ec5125884a6f",
+              "value": "f6d809ad-e9ab-4f83-ad71-16f0386fe371",
               "label": "CameraTarget",
               "scope": "schema"
             },
@@ -24626,7 +24626,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -24733,7 +24733,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -24833,7 +24833,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "93b80b4c-0bbb-4db9-baac-1c749faae99f",
+              "value": "1138d32c-0dff-40b9-8878-1c4e9ed8ff22",
               "label": "CatheterDesign",
               "scope": "schema"
             },
@@ -24860,7 +24860,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "66e41cbc-f3de-4f27-9a93-4912d641b3d5",
+              "value": "4f22299a-2bfe-44fc-bb70-878fdc36bceb",
               "label": "CatheterMaterial",
               "scope": "schema"
             },
@@ -24887,7 +24887,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f39dc815-c013-4125-9e24-a0b13e5d482d",
+              "value": "9f8b1c12-7450-425a-9fe1-2b723059b9de",
               "label": "CatheterPort",
               "scope": "schema"
             },
@@ -25323,7 +25323,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -25445,7 +25445,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -25552,7 +25552,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -25933,7 +25933,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -26115,7 +26115,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -26808,7 +26808,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -26930,7 +26930,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -27182,7 +27182,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -27727,7 +27727,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -28196,7 +28196,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -28272,7 +28272,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "766fec0e-1691-46c7-a1db-0c9a2111698b",
+              "value": "05ff3855-709b-4366-af37-7399a14f38e6",
               "label": "Origin",
               "scope": "schema"
             },
@@ -28429,7 +28429,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -28558,7 +28558,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
               "label": "PowerUnit",
               "scope": "schema"
             },
@@ -28655,7 +28655,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f3732e46-3cd3-4e2d-a1e0-cd400c936da4",
+              "value": "68d5e664-2693-4f83-be63-67f8bdf7a178",
               "label": "CraniotomyType",
               "scope": "schema"
             },
@@ -28835,7 +28835,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -30602,7 +30602,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -30917,7 +30917,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "d5165600-a794-43e8-a64f-7007f7878032",
+              "value": "bca0dad4-c2b1-4219-ac3c-719c809c30d0",
               "label": "Stage",
               "scope": "class"
             },
@@ -31158,7 +31158,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -31394,7 +31394,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "86e85ed4-cf25-4116-b983-860921de90a7",
+              "value": "221571d2-a86b-418d-8563-9279b744e344",
               "label": "DaqChannelType",
               "scope": "schema"
             },
@@ -31596,7 +31596,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "0830e82d-556d-4af2-a0f4-cd8f8185ba8d",
+              "value": "e1bc3250-1fca-4453-af73-f3e3f4985713",
               "label": "DataInterface",
               "scope": "schema"
             },
@@ -32329,7 +32329,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "6efa0021-045f-4103-9949-4362e4af7ba6",
+              "value": "ce3ec7b5-43c9-47ad-acaa-4d9da659b99e",
               "label": "LicenseType",
               "scope": "schema"
             },
@@ -32832,7 +32832,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "e1d7b633-c7b5-40d9-bc78-9b6bb319ef79",
+              "value": "08105cdc-e208-418e-89cf-dc31ff7ac926",
               "label": "DataLevel",
               "scope": "schema"
             },
@@ -33003,7 +33003,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "aec98d54-1c37-4842-ae79-6178a151ba67",
+              "value": "f85885b1-5872-46a6-ab66-5131956d95f0",
               "label": "License",
               "scope": "schema"
             }
@@ -33456,7 +33456,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "847696e3-a4a1-438d-8855-967549ef226e",
+              "value": "cbd27776-04b6-4449-807d-4c4135515983",
               "label": "ProcessName",
               "scope": "schema"
             },
@@ -33504,7 +33504,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f983ec65-d1fd-4f74-927f-44465976481e",
+              "value": "c5a807cc-92b0-4cd8-9429-0a626b3fc170",
               "label": "ProcessStage",
               "scope": "schema"
             },
@@ -34227,7 +34227,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f01802bf-87fd-445b-a5cb-50e649125bd9",
+              "value": "29a73386-3da6-4e8f-967f-9efeffd4d09a",
               "label": "BinMode",
               "scope": "schema"
             }
@@ -34248,7 +34248,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -34332,7 +34332,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "3d7e9f22-60aa-40ca-8683-c95a4cce5334",
+              "value": "cc0610eb-6e3c-405d-a0b3-1f4d4d9fad04",
               "label": "Cooling",
               "scope": "schema"
             }
@@ -34416,7 +34416,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -34458,7 +34458,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "0830e82d-556d-4af2-a0f4-cd8f8185ba8d",
+              "value": "e1bc3250-1fca-4453-af73-f3e3f4985713",
               "label": "DataInterface",
               "scope": "schema"
             },
@@ -34485,7 +34485,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "ac621d56-0f24-4dc2-9539-7b0954c62806",
+              "value": "cc980a1f-b518-4bd0-81ea-29c39635cd66",
               "label": "DetectorType",
               "scope": "schema"
             },
@@ -34587,7 +34587,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "48b0568f-ed8f-4f7c-b7bd-99194ceef0e9",
+              "value": "67d58745-ac57-4bfe-8a91-4681a8af421b",
               "label": "FrequencyUnit",
               "scope": "schema"
             }
@@ -34635,7 +34635,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "fb1537f3-1a5a-4ee2-9ee2-27ef863de0a6",
+              "value": "a2ab205d-8e05-4922-9d54-189dc13fb299",
               "label": "ImmersionMedium",
               "scope": "schema"
             },
@@ -34908,7 +34908,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -35119,7 +35119,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "76bd575d-cd9a-4e5a-81b7-4abb2a79ae9d",
+              "value": "0226ff2d-f762-4dab-9f07-cd6923d7daf2",
               "label": "TimeUnit",
               "scope": "schema"
             }
@@ -35161,7 +35161,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "c2708e53-e0ae-48ab-bc50-df6a309d73e9",
+              "value": "83956605-ebd5-42c8-8904-9c0101d55a7d",
               "label": "TriggerType",
               "scope": "schema"
             },
@@ -35939,7 +35939,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -36105,7 +36105,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -36321,7 +36321,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -36703,7 +36703,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -36995,7 +36995,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -37102,7 +37102,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -37736,7 +37736,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -37902,7 +37902,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -38752,7 +38752,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -39128,7 +39128,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -39755,7 +39755,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "3fe7586c-0477-4d8e-a223-c75306371be1",
+              "value": "0a9a39bd-cefc-4896-9d1b-a5887179e415",
               "label": "ProbeModel",
               "scope": "schema"
             },
@@ -40217,7 +40217,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -40459,7 +40459,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -41409,7 +41409,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -42442,7 +42442,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -42484,7 +42484,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -42821,7 +42821,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "608f560c-5201-4882-9262-c1ee29f3d5e1",
+              "value": "a3cf5354-0114-42e9-9a7e-0eb301cd2d39",
               "label": "FilterType",
               "scope": "schema"
             },
@@ -42989,7 +42989,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -43319,7 +43319,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a4b3d66c-066f-42cc-801b-d2c7be91c785",
+              "value": "1b2e6251-30c6-43e2-819f-d8b9a8a428bf",
               "label": "StainType",
               "scope": "schema"
             },
@@ -43389,7 +43389,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -43410,7 +43410,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "ece86cc7-ceac-4156-b670-241f89b87edc",
+              "value": "9b0179c1-fea9-427e-99ae-a788acc8dbf4",
               "label": "FluorophoreType",
               "scope": "schema"
             },
@@ -43762,7 +43762,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -44200,7 +44200,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -45598,7 +45598,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -45705,7 +45705,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -45838,7 +45838,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "0830e82d-556d-4af2-a0f4-cd8f8185ba8d",
+              "value": "e1bc3250-1fca-4453-af73-f3e3f4985713",
               "label": "DataInterface",
               "scope": "schema"
             }
@@ -46413,7 +46413,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -46519,7 +46519,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "289a93ff-d56e-43a2-9c90-bdb2c679c4aa",
+              "value": "ebbeeea1-31fe-44dd-bf46-5ca95926c3c5",
               "label": "HomeCageEnrichment",
               "scope": "schema"
             }
@@ -46662,7 +46662,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -46747,7 +46747,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "792616cd-267d-49ae-a47c-91963ecabe39",
+              "value": "d39a5843-6972-4846-9b98-5d7895a8250a",
               "label": "Sex",
               "scope": "schema"
             },
@@ -47285,7 +47285,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -47423,7 +47423,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "17a996d8-4e1b-4a51-ac3d-c9b6e14c9943",
+              "value": "8dae1a88-2faa-4650-8570-e10aeb464e14",
               "label": "AngleUnit",
               "scope": "schema"
             }
@@ -48494,7 +48494,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "fb1537f3-1a5a-4ee2-9ee2-27ef863de0a6",
+              "value": "a2ab205d-8e05-4922-9d54-189dc13fb299",
               "label": "ImmersionMedium",
               "scope": "schema"
             },
@@ -48775,7 +48775,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -48935,7 +48935,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a0fd7ee4-cbbb-43b9-befd-e61478c6fdf4",
+              "value": "d2502e4c-bb90-4442-9449-e45b0db080e3",
               "label": "AnatomicalRelative",
               "scope": "schema"
             },
@@ -49131,7 +49131,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f91e6c3d-4d73-44cb-be04-6c3e7e6505db",
+              "value": "084e78fe-bf00-4c3e-85af-5d53e849cc2e",
               "label": "InjectionProfile",
               "scope": "schema"
             },
@@ -49667,7 +49667,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -49774,7 +49774,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -50120,7 +50120,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -50227,7 +50227,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -50408,7 +50408,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -50515,7 +50515,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -50622,7 +50622,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -50729,7 +50729,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -50836,7 +50836,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -51090,7 +51090,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -51197,7 +51197,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -51304,7 +51304,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -51411,7 +51411,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -51552,7 +51552,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -51856,7 +51856,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -52151,7 +52151,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -52457,7 +52457,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
               "label": "PowerUnit",
               "scope": "schema"
             },
@@ -52511,7 +52511,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -52650,7 +52650,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -52816,7 +52816,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -53101,7 +53101,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -53429,7 +53429,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -53669,7 +53669,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a0fd7ee4-cbbb-43b9-befd-e61478c6fdf4",
+              "value": "d2502e4c-bb90-4442-9449-e45b0db080e3",
               "label": "AnatomicalRelative",
               "scope": "schema"
             },
@@ -53696,7 +53696,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "fb614e20-e313-4d82-8e35-327c233a1567",
+              "value": "1256c067-1f23-42cd-80b7-af3fc7f0503b",
               "label": "Liquid",
               "scope": "schema"
             },
@@ -53723,7 +53723,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "55a743a9-c295-4b0d-9549-ed95d7e57d5f",
+              "value": "d7c42055-a4ef-47d9-8dab-eebe4a7a2cc0",
               "label": "Valence",
               "scope": "schema"
             },
@@ -53804,7 +53804,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "330d509f-2613-4fb4-a1c5-e60a52644936",
+              "value": "1d983faf-252d-4497-8d51-28f777aa79aa",
               "label": "VolumeUnit",
               "scope": "class"
             },
@@ -53949,7 +53949,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -54335,7 +54335,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -54468,7 +54468,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
               "label": "PowerUnit",
               "scope": "schema"
             },
@@ -54739,7 +54739,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -54846,7 +54846,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -55063,7 +55063,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a0fd7ee4-cbbb-43b9-befd-e61478c6fdf4",
+              "value": "d2502e4c-bb90-4442-9449-e45b0db080e3",
               "label": "AnatomicalRelative",
               "scope": "schema"
             },
@@ -55133,7 +55133,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "17a996d8-4e1b-4a51-ac3d-c9b6e14c9943",
+              "value": "8dae1a88-2faa-4650-8570-e10aeb464e14",
               "label": "AngleUnit",
               "scope": "schema"
             }
@@ -55959,7 +55959,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "76bd575d-cd9a-4e5a-81b7-4abb2a79ae9d",
+              "value": "0226ff2d-f762-4dab-9f07-cd6923d7daf2",
               "label": "TimeUnit",
               "scope": "schema"
             }
@@ -56034,7 +56034,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "5a3e1702-88dd-4dc7-a661-a65df21b1b18",
+              "value": "b5549a8a-8550-4bcc-8c8b-824fe30c3693",
               "label": "MRAcquisitionType",
               "scope": "schema"
             },
@@ -56103,7 +56103,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "76e698ef-44c8-46c0-a362-6164ba1409bd",
+              "value": "f2852270-813d-42a7-9b63-a006b08d41b5",
               "label": "PulseSequenceType",
               "scope": "schema"
             },
@@ -56184,7 +56184,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "76bd575d-cd9a-4e5a-81b7-4abb2a79ae9d",
+              "value": "0226ff2d-f762-4dab-9f07-cd6923d7daf2",
               "label": "TimeUnit",
               "scope": "schema"
             }
@@ -56295,7 +56295,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "db2745a2-a001-43bc-aea8-805428fee781",
+              "value": "4eac2018-509e-410b-9874-0c3146e7d7a9",
               "label": "SubjectPosition",
               "scope": "schema"
             },
@@ -56761,7 +56761,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -57654,7 +57654,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -57761,7 +57761,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -57868,7 +57868,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -57975,7 +57975,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -59518,7 +59518,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -59812,7 +59812,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -59919,7 +59919,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -60026,7 +60026,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -60133,7 +60133,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -60197,7 +60197,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "e693c997-036d-44b3-8237-927ba2175f42",
+              "value": "ec87a94d-dd21-4201-b80f-878ebf98d446",
               "label": "ModelArchitecture",
               "scope": "schema"
             },
@@ -60772,7 +60772,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "847696e3-a4a1-438d-8855-967549ef226e",
+              "value": "cbd27776-04b6-4449-807d-4c4135515983",
               "label": "ProcessName",
               "scope": "schema"
             }
@@ -60814,7 +60814,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f983ec65-d1fd-4f74-927f-44465976481e",
+              "value": "c5a807cc-92b0-4cd8-9429-0a626b3fc170",
               "label": "ProcessStage",
               "scope": "schema"
             },
@@ -61149,7 +61149,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "847696e3-a4a1-438d-8855-967549ef226e",
+              "value": "cbd27776-04b6-4449-807d-4c4135515983",
               "label": "ProcessName",
               "scope": "schema"
             }
@@ -61191,7 +61191,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f983ec65-d1fd-4f74-927f-44465976481e",
+              "value": "c5a807cc-92b0-4cd8-9429-0a626b3fc170",
               "label": "ProcessStage",
               "scope": "schema"
             },
@@ -61517,7 +61517,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -61887,7 +61887,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a0fd7ee4-cbbb-43b9-befd-e61478c6fdf4",
+              "value": "d2502e4c-bb90-4442-9449-e45b0db080e3",
               "label": "AnatomicalRelative",
               "scope": "schema"
             },
@@ -61935,7 +61935,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -62016,7 +62016,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -62328,7 +62328,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -62393,7 +62393,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -62756,7 +62756,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "792616cd-267d-49ae-a47c-91963ecabe39",
+              "value": "d39a5843-6972-4846-9b98-5d7895a8250a",
               "label": "Sex",
               "scope": "schema"
             },
@@ -62975,7 +62975,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -63335,7 +63335,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -63435,7 +63435,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "371f5939-dbd6-49d9-80cd-e1373e7eb0a0",
+              "value": "ff409fd1-5076-411b-ac7f-a2495efbcffb",
               "label": "MyomatrixArrayType",
               "scope": "schema"
             },
@@ -63742,7 +63742,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a0fd7ee4-cbbb-43b9-befd-e61478c6fdf4",
+              "value": "d2502e4c-bb90-4442-9449-e45b0db080e3",
               "label": "AnatomicalRelative",
               "scope": "schema"
             },
@@ -64399,7 +64399,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -64506,7 +64506,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -64613,7 +64613,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -64720,7 +64720,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -64827,7 +64827,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -65155,7 +65155,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -65262,7 +65262,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -65487,7 +65487,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "0830e82d-556d-4af2-a0f4-cd8f8185ba8d",
+              "value": "e1bc3250-1fca-4453-af73-f3e3f4985713",
               "label": "DataInterface",
               "scope": "schema"
             }
@@ -65798,7 +65798,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -65905,7 +65905,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -66012,7 +66012,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -66127,7 +66127,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f24a8c0-2e1e-4a62-ac98-03bdbfbb0f27",
+              "value": "50b9c377-12c2-4b65-847b-b955267ed5ee",
               "label": "MatingStatus",
               "scope": "schema"
             },
@@ -66175,7 +66175,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "792616cd-267d-49ae-a47c-91963ecabe39",
+              "value": "d39a5843-6972-4846-9b98-5d7895a8250a",
               "label": "Sex",
               "scope": "schema"
             },
@@ -66715,7 +66715,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -66800,7 +66800,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "fb1537f3-1a5a-4ee2-9ee2-27ef863de0a6",
+              "value": "a2ab205d-8e05-4922-9d54-189dc13fb299",
               "label": "ImmersionMedium",
               "scope": "schema"
             },
@@ -67166,7 +67166,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "0c239e87-8fb6-469f-90b2-bc3798b1e276",
+              "value": "b8301b91-6b7d-431e-a4d8-a1059a5fe900",
               "label": "OlfactometerChannelType",
               "scope": "class"
             },
@@ -67332,7 +67332,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "b1bb89d9-bdd4-40fe-af6a-6e0b8aeffb71",
+              "value": "2f29fddc-960f-492e-9831-e6a5d5e19994",
               "label": "ConcentrationUnit",
               "scope": "schema"
             }
@@ -67643,7 +67643,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -68332,7 +68332,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -68832,7 +68832,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -70212,7 +70212,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "5dbb1639-1dd6-404d-b6e1-ddf7e0ea8810",
+              "value": "ade8735f-1951-4321-b33c-3909aeb6aceb",
               "label": "RoleType",
               "scope": "schema"
             }
@@ -70538,7 +70538,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "5dbb1639-1dd6-404d-b6e1-ddf7e0ea8810",
+              "value": "ade8735f-1951-4321-b33c-3909aeb6aceb",
               "label": "RoleType",
               "scope": "schema"
             }
@@ -70674,7 +70674,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -70781,7 +70781,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -70947,7 +70947,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -71054,7 +71054,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -71167,7 +71167,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -73259,7 +73259,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -73508,7 +73508,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "5dbb1639-1dd6-404d-b6e1-ddf7e0ea8810",
+              "value": "ade8735f-1951-4321-b33c-3909aeb6aceb",
               "label": "RoleType",
               "scope": "schema"
             }
@@ -73836,7 +73836,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "5dbb1639-1dd6-404d-b6e1-ddf7e0ea8810",
+              "value": "ade8735f-1951-4321-b33c-3909aeb6aceb",
               "label": "RoleType",
               "scope": "schema"
             }
@@ -75031,7 +75031,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -75143,7 +75143,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -75363,7 +75363,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -75411,7 +75411,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -75507,7 +75507,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "e32e365d-9df9-423d-b8d0-d4723fb4e075",
+              "value": "7fd9377e-1bf9-4aa4-b96f-d57bb3340a4d",
               "label": "PowerFunction",
               "scope": "schema"
             },
@@ -75842,7 +75842,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "1ccd1344-eda2-46ee-bfbc-9915bb588d9a",
+              "value": "eba651f7-25dc-4eb3-b0df-999b4e6eae56",
               "label": "SectionOrientation",
               "scope": "schema"
             },
@@ -75945,7 +75945,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -76020,7 +76020,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
               "label": "PowerUnit",
               "scope": "schema"
             },
@@ -76591,7 +76591,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f87c805f-6b84-454b-aa43-11572042b8d5",
+              "value": "bee4b288-3c57-4c4e-bec2-20986bbfb9dd",
               "label": "UnitlessUnit",
               "scope": "schema"
             }
@@ -76897,7 +76897,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "10ce47b4-199e-4c6f-ace6-6a255a1ecab4",
+              "value": "c6752d77-f853-46ff-a2fb-1575c4a6b1bf",
               "label": "SpeedUnit",
               "scope": "schema"
             }
@@ -77140,13 +77140,13 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
               "label": "PowerUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "72904265-2beb-49b9-84cf-6ef019ad8202",
+              "value": "92623c2f-59f9-4f38-b751-3db306c60866",
               "label": "VoltageUnit",
               "scope": "schema"
             },
@@ -77269,110 +77269,110 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "10ce47b4-199e-4c6f-ace6-6a255a1ecab4",
-              "label": "SpeedUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "17a996d8-4e1b-4a51-ac3d-c9b6e14c9943",
-              "label": "AngleUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "28d18d43-0577-45e5-9ae2-d19f4dbc1ba7",
-              "label": "CurrentUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "330d509f-2613-4fb4-a1c5-e60a52644936",
-              "label": "VolumeUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
-              "label": "PowerUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "48b0568f-ed8f-4f7c-b7bd-99194ceef0e9",
-              "label": "FrequencyUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "6f59b59e-4491-4e3b-a470-4d4113f94092",
-              "label": "MemoryUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "72904265-2beb-49b9-84cf-6ef019ad8202",
-              "label": "VoltageUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "76bd575d-cd9a-4e5a-81b7-4abb2a79ae9d",
+              "value": "0226ff2d-f762-4dab-9f07-cd6923d7daf2",
               "label": "TimeUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "795696f0-2e10-4e51-b33f-0bcf94c15950",
-              "label": "TemperatureUnit",
+              "value": "050c8dc5-b05d-49dd-9729-7012cdfaf06f",
+              "label": "CurrentUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "7eaff9a2-6a70-42b9-b2d5-a45785da0d5d",
-              "label": "PressureUnit",
+              "value": "1d983faf-252d-4497-8d51-28f777aa79aa",
+              "label": "VolumeUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
-              "label": "SizeUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "b1bb89d9-bdd4-40fe-af6a-6e0b8aeffb71",
+              "value": "2f29fddc-960f-492e-9831-e6a5d5e19994",
               "label": "ConcentrationUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "ba8ca755-4e68-4ef5-a934-169a81a5c298",
+              "value": "4fdbd6e0-b9c7-4c08-9f58-ca69f0c5a1b9",
               "label": "MassUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "c681216a-c4a4-456b-9776-7eb9bbe28fda",
-              "label": "TorqueUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "da159ac2-63e1-46fe-9753-75e12e0ed19b",
-              "label": "MagneticFieldUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "f0aa8e73-a3af-4860-a2e8-9cf268d9ef23",
+              "value": "5c47ef0c-d914-4210-96bc-8e5bfa1d8382",
               "label": "SoundIntensityUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "f87c805f-6b84-454b-aa43-11572042b8d5",
+              "value": "67d58745-ac57-4bfe-8a91-4681a8af421b",
+              "label": "FrequencyUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "705539fb-c803-432c-bd81-bdca2810f6c8",
+              "label": "MagneticFieldUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "80a1c590-fb88-4893-a116-b65b1c731168",
+              "label": "PressureUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
+              "label": "PowerUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "8dae1a88-2faa-4650-8570-e10aeb464e14",
+              "label": "AngleUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "92623c2f-59f9-4f38-b751-3db306c60866",
+              "label": "VoltageUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
+              "label": "SizeUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "a091b3f4-9de3-49c2-8bb3-bd7e3cf96ae8",
+              "label": "MemoryUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "ad437f45-d320-4374-be4a-829c76a11fdd",
+              "label": "TorqueUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "bee4b288-3c57-4c4e-bec2-20986bbfb9dd",
               "label": "UnitlessUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "c4676b6a-632b-4950-b52d-88c5acfabafa",
+              "label": "TemperatureUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "c6752d77-f853-46ff-a2fb-1575c4a6b1bf",
+              "label": "SpeedUnit",
               "scope": "schema"
             },
             {
@@ -77382,7 +77382,7 @@
               "scope": "schema"
             }
           ],
-          "value_range": "SpeedUnit | AngleUnit | CurrentUnit | VolumeUnit | PowerUnit | FrequencyUnit | MemoryUnit | VoltageUnit | TimeUnit | TemperatureUnit | PressureUnit | SizeUnit | ConcentrationUnit | MassUnit | TorqueUnit | MagneticFieldUnit | SoundIntensityUnit | UnitlessUnit",
+          "value_range": "TimeUnit | CurrentUnit | VolumeUnit | ConcentrationUnit | MassUnit | SoundIntensityUnit | FrequencyUnit | MagneticFieldUnit | PressureUnit | PowerUnit | AngleUnit | VoltageUnit | SizeUnit | MemoryUnit | TorqueUnit | UnitlessUnit | TemperatureUnit | SpeedUnit",
           "units": "",
           "sources": [
             "aind"
@@ -77499,7 +77499,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -79252,7 +79252,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "3414a2ef-8af7-4a4e-acf0-033e8bbc2467",
+              "value": "7ca8ef05-54b0-4460-9d13-3b2aa6bdf723",
               "label": "IdentifierType",
               "scope": "schema"
             },
@@ -79451,7 +79451,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "ba8ca755-4e68-4ef5-a934-169a81a5c298",
+              "value": "4fdbd6e0-b9c7-4c08-9f58-ca69f0c5a1b9",
               "label": "MassUnit",
               "scope": "schema"
             }
@@ -80453,7 +80453,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "d5165600-a794-43e8-a64f-7007f7878032",
+              "value": "bca0dad4-c2b1-4219-ac3c-719c809c30d0",
               "label": "Stage",
               "scope": "class"
             },
@@ -80613,7 +80613,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "2523bb81-e38b-42a5-8ec2-48880d321d90",
+              "value": "1210efc9-a618-47d0-b738-bfe45e8edba5",
               "label": "Status",
               "scope": "schema"
             },
@@ -80943,7 +80943,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -81095,7 +81095,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -81202,7 +81202,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -81541,7 +81541,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "febc309f-f2d2-466c-8a71-12da7cc82594",
+              "value": "c5da8778-3508-4a3e-826d-215d51e31027",
               "label": "ParticipantRelationType",
               "scope": "schema"
             },
@@ -81811,7 +81811,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "3ee7c967-eba1-4a68-84a6-3859f598c020",
+              "value": "8c6851c0-dfcc-40fd-a183-34f4277ec942",
               "label": "RelationType",
               "scope": "schema"
             },
@@ -81867,7 +81867,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7a9be70e-9cc4-4940-b4a5-d3aa5f536c6b",
+              "value": "105b84fa-98ca-460c-acdb-24e106d43f4d",
               "label": "ResourceType",
               "scope": "schema"
             }
@@ -82060,7 +82060,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "3ee7c967-eba1-4a68-84a6-3859f598c020",
+              "value": "8c6851c0-dfcc-40fd-a183-34f4277ec942",
               "label": "RelationType",
               "scope": "schema"
             },
@@ -82116,7 +82116,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7a9be70e-9cc4-4940-b4a5-d3aa5f536c6b",
+              "value": "105b84fa-98ca-460c-acdb-24e106d43f4d",
               "label": "ResourceType",
               "scope": "schema"
             }
@@ -82839,7 +82839,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "17a996d8-4e1b-4a51-ac3d-c9b6e14c9943",
+              "value": "8dae1a88-2faa-4650-8570-e10aeb464e14",
               "label": "AngleUnit",
               "scope": "schema"
             }
@@ -82955,7 +82955,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -83179,7 +83179,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "330d509f-2613-4fb4-a1c5-e60a52644936",
+              "value": "1d983faf-252d-4497-8d51-28f777aa79aa",
               "label": "VolumeUnit",
               "scope": "schema"
             },
@@ -83227,7 +83227,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "b74bd786-efd7-4baa-b545-492bb7a9684a",
+              "value": "ab754646-d6ae-4205-81f4-847602366863",
               "label": "SampleType",
               "scope": "schema"
             },
@@ -83459,7 +83459,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "48b0568f-ed8f-4f7c-b7bd-99194ceef0e9",
+              "value": "67d58745-ac57-4bfe-8a91-4681a8af421b",
               "label": "FrequencyUnit",
               "scope": "schema"
             }
@@ -83644,7 +83644,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "da159ac2-63e1-46fe-9753-75e12e0ed19b",
+              "value": "705539fb-c803-432c-bd81-bdca2810f6c8",
               "label": "MagneticFieldUnit",
               "scope": "schema"
             },
@@ -83999,7 +83999,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "937f793e-b8f9-4976-92ad-af7bd5b5dd57",
+              "value": "51db4bd2-0031-4845-8084-09f018a34b4d",
               "label": "StageAxisDirection",
               "scope": "schema"
             },
@@ -84026,7 +84026,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "8c227d3e-3281-4d73-8702-30e48c6af5b4",
+              "value": "482d9257-74c5-412a-a56a-bf1381a42881",
               "label": "AxisName",
               "scope": "schema"
             },
@@ -84086,7 +84086,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -84181,7 +84181,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -84319,7 +84319,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -84485,7 +84485,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -84921,7 +84921,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -85427,7 +85427,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -85534,7 +85534,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -85641,7 +85641,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -85850,7 +85850,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             },
@@ -85925,7 +85925,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "48b0568f-ed8f-4f7c-b7bd-99194ceef0e9",
+              "value": "67d58745-ac57-4bfe-8a91-4681a8af421b",
               "label": "FrequencyUnit",
               "scope": "schema"
             }
@@ -85994,7 +85994,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
               "label": "PowerUnit",
               "scope": "schema"
             },
@@ -86021,7 +86021,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "d6b1358e-51cd-4e14-8a51-49290567bc3a",
+              "value": "8f00cfa5-7b98-4194-8328-dd4e4db2fd57",
               "label": "Slap2AcquisitionType",
               "scope": "schema"
             },
@@ -86144,7 +86144,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -86208,7 +86208,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "ba8ca755-4e68-4ef5-a934-169a81a5c298",
+              "value": "4fdbd6e0-b9c7-4c08-9f58-ca69f0c5a1b9",
               "label": "MassUnit",
               "scope": "schema"
             }
@@ -87802,7 +87802,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "a0fd7ee4-cbbb-43b9-befd-e61478c6fdf4",
+              "value": "d2502e4c-bb90-4442-9449-e45b0db080e3",
               "label": "AnatomicalRelative",
               "scope": "schema"
             },
@@ -88150,7 +88150,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -88506,7 +88506,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "1624b1c4-50db-4592-8324-d2e17c4609af",
+              "value": "3c8bea89-2e9c-4cfc-b5ea-ea2a05cb8c18",
               "label": "SpecimenProcedureType",
               "scope": "schema"
             },
@@ -88688,7 +88688,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -88941,7 +88941,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -89415,7 +89415,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "aca4b1fb-0653-41be-96d0-e37996e38570",
+              "value": "e6548fff-8976-4c51-9abf-4c701792e70a",
               "label": "StimulusModality",
               "scope": "schema"
             },
@@ -90416,7 +90416,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "ba8ca755-4e68-4ef5-a934-169a81a5c298",
+              "value": "4fdbd6e0-b9c7-4c08-9f58-ca69f0c5a1b9",
               "label": "MassUnit",
               "scope": "schema"
             }
@@ -90770,7 +90770,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -91182,7 +91182,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -91289,7 +91289,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -91396,7 +91396,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -91503,7 +91503,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -91625,7 +91625,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -91732,7 +91732,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -91839,7 +91839,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -92006,7 +92006,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -92357,7 +92357,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -92955,7 +92955,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -93196,7 +93196,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -93573,7 +93573,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -93978,7 +93978,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -94085,7 +94085,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -94192,7 +94192,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -94506,7 +94506,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -94613,7 +94613,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -94955,13 +94955,13 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
               "label": "PowerUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "72904265-2beb-49b9-84cf-6ef019ad8202",
+              "value": "92623c2f-59f9-4f38-b751-3db306c60866",
               "label": "VoltageUnit",
               "scope": "schema"
             },
@@ -95084,110 +95084,110 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "10ce47b4-199e-4c6f-ace6-6a255a1ecab4",
-              "label": "SpeedUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "17a996d8-4e1b-4a51-ac3d-c9b6e14c9943",
-              "label": "AngleUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "28d18d43-0577-45e5-9ae2-d19f4dbc1ba7",
-              "label": "CurrentUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "330d509f-2613-4fb4-a1c5-e60a52644936",
-              "label": "VolumeUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "409f6c76-d735-481f-b9d3-58a970cb00f4",
-              "label": "PowerUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "48b0568f-ed8f-4f7c-b7bd-99194ceef0e9",
-              "label": "FrequencyUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "6f59b59e-4491-4e3b-a470-4d4113f94092",
-              "label": "MemoryUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "72904265-2beb-49b9-84cf-6ef019ad8202",
-              "label": "VoltageUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "76bd575d-cd9a-4e5a-81b7-4abb2a79ae9d",
+              "value": "0226ff2d-f762-4dab-9f07-cd6923d7daf2",
               "label": "TimeUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "795696f0-2e10-4e51-b33f-0bcf94c15950",
-              "label": "TemperatureUnit",
+              "value": "050c8dc5-b05d-49dd-9729-7012cdfaf06f",
+              "label": "CurrentUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "7eaff9a2-6a70-42b9-b2d5-a45785da0d5d",
-              "label": "PressureUnit",
+              "value": "1d983faf-252d-4497-8d51-28f777aa79aa",
+              "label": "VolumeUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
-              "label": "SizeUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "b1bb89d9-bdd4-40fe-af6a-6e0b8aeffb71",
+              "value": "2f29fddc-960f-492e-9831-e6a5d5e19994",
               "label": "ConcentrationUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "ba8ca755-4e68-4ef5-a934-169a81a5c298",
+              "value": "4fdbd6e0-b9c7-4c08-9f58-ca69f0c5a1b9",
               "label": "MassUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "c681216a-c4a4-456b-9776-7eb9bbe28fda",
-              "label": "TorqueUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "da159ac2-63e1-46fe-9753-75e12e0ed19b",
-              "label": "MagneticFieldUnit",
-              "scope": "schema"
-            },
-            {
-              "type": "RANGE",
-              "value": "f0aa8e73-a3af-4860-a2e8-9cf268d9ef23",
+              "value": "5c47ef0c-d914-4210-96bc-8e5bfa1d8382",
               "label": "SoundIntensityUnit",
               "scope": "schema"
             },
             {
               "type": "RANGE",
-              "value": "f87c805f-6b84-454b-aa43-11572042b8d5",
+              "value": "67d58745-ac57-4bfe-8a91-4681a8af421b",
+              "label": "FrequencyUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "705539fb-c803-432c-bd81-bdca2810f6c8",
+              "label": "MagneticFieldUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "80a1c590-fb88-4893-a116-b65b1c731168",
+              "label": "PressureUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "8861f665-68a9-4c04-93fe-2ff6a8e93e52",
+              "label": "PowerUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "8dae1a88-2faa-4650-8570-e10aeb464e14",
+              "label": "AngleUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "92623c2f-59f9-4f38-b751-3db306c60866",
+              "label": "VoltageUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
+              "label": "SizeUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "a091b3f4-9de3-49c2-8bb3-bd7e3cf96ae8",
+              "label": "MemoryUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "ad437f45-d320-4374-be4a-829c76a11fdd",
+              "label": "TorqueUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "bee4b288-3c57-4c4e-bec2-20986bbfb9dd",
               "label": "UnitlessUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "c4676b6a-632b-4950-b52d-88c5acfabafa",
+              "label": "TemperatureUnit",
+              "scope": "schema"
+            },
+            {
+              "type": "RANGE",
+              "value": "c6752d77-f853-46ff-a2fb-1575c4a6b1bf",
+              "label": "SpeedUnit",
               "scope": "schema"
             },
             {
@@ -95197,7 +95197,7 @@
               "scope": "schema"
             }
           ],
-          "value_range": "SpeedUnit | AngleUnit | CurrentUnit | VolumeUnit | PowerUnit | FrequencyUnit | MemoryUnit | VoltageUnit | TimeUnit | TemperatureUnit | PressureUnit | SizeUnit | ConcentrationUnit | MassUnit | TorqueUnit | MagneticFieldUnit | SoundIntensityUnit | UnitlessUnit",
+          "value_range": "TimeUnit | CurrentUnit | VolumeUnit | ConcentrationUnit | MassUnit | SoundIntensityUnit | FrequencyUnit | MagneticFieldUnit | PressureUnit | PowerUnit | AngleUnit | VoltageUnit | SizeUnit | MemoryUnit | TorqueUnit | UnitlessUnit | TemperatureUnit | SpeedUnit",
           "units": "",
           "sources": [
             "aind"
@@ -95314,7 +95314,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },
@@ -95480,7 +95480,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "330d509f-2613-4fb4-a1c5-e60a52644936",
+              "value": "1d983faf-252d-4497-8d51-28f777aa79aa",
               "label": "VolumeUnit",
               "scope": "schema"
             }
@@ -95576,7 +95576,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "f87c805f-6b84-454b-aa43-11572042b8d5",
+              "value": "bee4b288-3c57-4c4e-bec2-20986bbfb9dd",
               "label": "UnitlessUnit",
               "scope": "schema"
             }
@@ -95597,7 +95597,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "ba8ca755-4e68-4ef5-a934-169a81a5c298",
+              "value": "4fdbd6e0-b9c7-4c08-9f58-ca69f0c5a1b9",
               "label": "MassUnit",
               "scope": "schema"
             }
@@ -96113,7 +96113,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "7f085cdc-ad4c-46f5-ad65-2250214403db",
+              "value": "a0047b38-7a0f-46de-8703-ab990b21ed6d",
               "label": "SizeUnit",
               "scope": "schema"
             }
@@ -96467,7 +96467,7 @@
           "rules": [
             {
               "type": "RANGE",
-              "value": "de68e2b5-b9a5-487e-8db9-084cf6e91e6f",
+              "value": "bd84358b-356c-4464-912d-99afe83c7dff",
               "label": "Registry",
               "scope": "schema"
             },

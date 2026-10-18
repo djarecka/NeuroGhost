@@ -553,5 +553,20 @@
       "sources_total": 9
     },
     "archive_path": "data/versions/1.15.13.json"
+  },
+  {
+    "registry_version": "1.15.14",
+    "previous_version": "1.15.13",
+    "timestamp": "2026-10-18T16:53:23.992309+00:00",
+    "bump": "patch",
+    "trigger": "manual",
+    "issue_number": "",
+    "agent": "djarecka",
+    "schema_ingested": "",
+    "stats": {
+      "classes_total": 694,
+      "sources_total": 9
+    },
+    "archive_path": "data/versions/1.15.14.json"
   }
 ]
