@@ -1,0 +1,11 @@
+# mapping_set_id: 2026-10-18_llm_dandi__schema.org_classes
+# mapping_date: 2026-10-18
+# mapping_tool: llm/claude-opus-5-5
+# mapping_justification: semapv:ManualMappingCuration
+# author_id: djarecka
+subject_id	predicate_id	object_id	confidence	review_status	reviewer_id	review_date	comment
+dandiset:Dandiset	skos:closeMatch	schema.org:Dataset	0.90	ACCEPTED	djarecka	2026-10-18	DANDI defines a Dandiset with schema.org's own Dataset definition; it is a DANDI-specific dataset.
+dandiset:Person	skos:exactMatch	schema.org:Person	0.90	ACCEPTED	djarecka	2026-10-18	Same concept: DANDI models contributors as schema.org Persons (name, email, affiliation, identifier).
+dandiset:Organization	skos:exactMatch	schema.org:Organization	0.90	ACCEPTED	djarecka	2026-10-18	Same concept: an organizational contributor or funder.
+dandiset:Software	skos:closeMatch	schema.org:SoftwareApplication	0.80	ACCEPTED	djarecka	2026-10-18	Software used in a project, with name, version and URL, is what SoftwareApplication describes.
+dandiset:Disorder	skos:closeMatch	schema.org:MedicalCondition	0.75	ACCEPTED	djarecka	2026-10-18	A disorder studied (with a diagnosis date) is a medical condition.
