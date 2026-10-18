@@ -1,6 +1,6 @@
 ---
 name: propose-mappings
-description: Propose cross-schema mappings for the NeuroGhost registry with your own model and open a PR containing only the mappings the user approved. Use when the user wants to map/align terms between two registered schemas (e.g. "map aind properties to bids", "find which dandiset classes match bbqs").
+description: Propose cross-schema mappings for the NeuroGhost registry with your own model, or review an existing mapping file (e.g. a "Propose Mappings" PR), and open/update a PR containing only the mappings the user approved. Use when the user wants to map/align terms between registered schemas ("map aind properties to bids", "find which dandiset classes match bbqs") or to review proposed mappings ("review the mappings in PR 130").
 ---
 
 # Propose mappings (user-approved)
@@ -13,6 +13,14 @@ login. Nothing is published until a maintainer merges the PR.
 
 Work in batches and keep the user in control: you propose, they decide.
 
+Two modes — ask which if it isn't clear:
+
+- **New mappings** (sections 1–6): generate candidates, judge, approve,
+  write a new file, open a PR.
+- **Review a mapping file** (section 7): the rows already exist — typically
+  a *Propose Mappings* PR, where every row is `PROPOSED` from embeddings —
+  and you judge them, the user decides, and the same file is updated.
+
 ## 1. Set up
 
 - Run from the repository root, on an up-to-date `main`
@@ -24,9 +32,10 @@ Work in batches and keep the user in control: you propose, they decide.
 - Python with `requirements.txt` installed (the candidate step needs
   `sentence-transformers`).
 - Ask which **subject** and **object** schemas (source labels as in
-  `data/registry.json` → `sources[].label`, e.g. `aind`, `bids`, `asset`)
-  and whether to map **properties** or **classes**. Suggest starting small
-  (one pair of schemas, classes first, or a subset of classes).
+  `data/registry.json` → `sources[].label`, e.g. `aind`, `bids`, `asset`;
+  either may be `all`) and whether to map **properties**, **classes**, or
+  **all**. Suggest starting small (one pair of schemas, classes first, or a
+  subset of classes) — `all` can mean hundreds of rows to approve.
 
 ## 2. Candidates
 
@@ -107,3 +116,24 @@ gh pr create --base main --title "Mappings: <subject> → <object> (<kind>)" --b
 
 The PR's **Mapping Check** verifies the file, that every reference exists,
 and that every accepted/rejected row names an author of the PR as reviewer.
+
+## 7. Review mode: an existing mapping file
+
+1. Get the file. For a PR: `gh pr checkout <number> --repo sensein/NeuroGhost`
+   (find it with `gh pr list --repo sensein/NeuroGhost --search "Proposed mappings"`).
+   For a file already on `main`, branch off `main` as in section 1.
+2. Judge each `PROPOSED` row as in section 3 — including whether the
+   predicate is right (embeddings always write `skos:closeMatch`).
+3. Approve in batches as in section 4. For each answer, edit that row in
+   place: `review_status` → `ACCEPTED` / `REJECTED`, `reviewer_id` → the
+   login from `gh api user --jq .login`, `review_date` → today, `comment` →
+   your one-sentence reason; a changed relation goes in `predicate_id`.
+   Skipped rows stay `PROPOSED`. Don't touch rows that are already reviewed.
+4. `python neuro_ghost/mappings.py validate <file>`, show the user a summary
+   (accepted / rejected / still proposed), and **ask before** committing and
+   pushing. Commit with their identity, then `git push`.
+   - On a bot-opened PR this adds their commit to it; the Mapping Check
+     accepts their reviews because they authored a commit in the PR.
+   - If they can't push to that branch (no write access to
+     sensein/NeuroGhost), push to a branch on their fork and open a new PR
+     with the reviewed file instead.

@@ -30,11 +30,16 @@ asset:Person.identifier	skos:closeMatch	bbqs:Investigator.orcid	0.723	PROPOSED
 
 ## Adding mappings
 
-- **Free model, in CI** — run the *Propose Mappings* workflow (Actions tab)
-  with two schemas; it opens a PR where every row is `PROPOSED`.
+- **Free model, in CI** — run the *Propose Mappings* workflow (Actions tab):
+  pick the subject and object schema (either can be *all*) and properties,
+  classes or *all*; it opens a PR where every row is `PROPOSED`. (The schema
+  list is fixed in `.github/workflows/propose_mappings.yml` — add a newly
+  registered schema there.)
 - **Your own model** — in Claude Code, use the `propose-mappings` skill
   (`.claude/skills/`): your model judges candidates, you approve each row,
-  and it opens a PR containing only what you approved.
+  and it opens a PR containing only what you approved. It can also **review
+  an existing file** — e.g. a *Propose Mappings* PR — updating its rows to
+  `ACCEPTED` / `REJECTED` with you as reviewer.
 - **By hand** — write or edit a file and open a PR; check it locally with
   `python neuro_ghost/mappings.py validate mappings/<file>`.
 

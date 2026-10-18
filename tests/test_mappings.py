@@ -141,3 +141,17 @@ def test_reviews_must_be_made_in_the_pr_authors_name(tmp_path):
     )).rows
     problems = unattributed_reviews(pr, base, authors={"bob"})
     assert len(problems) == 1 and "mallory" in problems[0]
+
+
+def test_schema_pairs_expand_all():
+    from propose_mappings import schema_pairs
+    reg = {"sources": [{"label": "a"}, {"label": "b"}, {"label": "c"}]}
+    assert schema_pairs(reg, "a", "b") == [("a", "b")]
+    assert schema_pairs(reg, "a", "all") == [("a", "b"), ("a", "c")]
+    assert schema_pairs(reg, "all", "c") == [("a", "c"), ("b", "c")]
+    assert schema_pairs(reg, "all", "all") == [("a", "b"), ("a", "c"), ("b", "c")]
+    import pytest
+    with pytest.raises(ValueError, match="unknown schema 'x'"):
+        schema_pairs(reg, "x", "a")
+    with pytest.raises(ValueError, match="both 'a'"):
+        schema_pairs(reg, "a", "a")
