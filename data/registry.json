@@ -1,6 +1,6 @@
 {
-  "registry_version": "1.15.9",
-  "generated_at": "2026-10-18T00:11:56.328889+00:00",
+  "registry_version": "1.15.10",
+  "generated_at": "2026-10-18T00:31:31.747619+00:00",
   "bundles": [
     {
       "label": "schema.org",
@@ -11,7 +11,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T00:06:22.740411+00:00",
+      "created_at": "2026-10-18T00:29:34.335557+00:00",
       "parts": [
         "schema.org"
       ],
@@ -26,7 +26,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T00:06:43.423805+00:00",
+      "created_at": "2026-10-18T00:29:42.536449+00:00",
       "parts": [
         "aind"
       ],
@@ -41,7 +41,7 @@
       "contact": "",
       "homepage": "https://www.dandiarchive.org/",
       "license": "",
-      "created_at": "2026-10-18T00:10:03.593975+00:00",
+      "created_at": "2026-10-18T00:30:32.549884+00:00",
       "parts": [
         "asset",
         "dandiset"
@@ -57,7 +57,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T00:10:17.025210+00:00",
+      "created_at": "2026-10-18T00:30:36.962225+00:00",
       "parts": [
         "bbqs"
       ],
@@ -72,7 +72,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T00:10:21.757206+00:00",
+      "created_at": "2026-10-18T00:30:39.818630+00:00",
       "parts": [
         "bids"
       ],
@@ -87,7 +87,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T00:11:11.457666+00:00",
+      "created_at": "2026-10-18T00:30:56.496974+00:00",
       "parts": [
         "personinfo"
       ],
@@ -102,7 +102,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T00:11:12.408255+00:00",
+      "created_at": "2026-10-18T00:30:57.756564+00:00",
       "parts": [
         "nwb"
       ],
@@ -117,7 +117,7 @@
       "contact": "",
       "homepage": "",
       "license": "",
-      "created_at": "2026-10-18T00:11:28.894815+00:00",
+      "created_at": "2026-10-18T00:31:03.380117+00:00",
       "parts": [
         "openminds"
       ],
@@ -133,10 +133,10 @@
       "description": "",
       "homepage": "",
       "source_id": "",
-      "source_iri": "https://registry.sensein.io/source/7ac963e0-c31f-472c-a106-9f55986128b0",
+      "source_iri": "https://registry.sensein.io/source/be7c928a-025b-448b-be56-b446201e9a99",
       "class_count": 38,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T00:06:22.746720+00:00",
+      "created_at": "2026-10-18T00:29:34.338175+00:00",
       "registry_version": "1.0.0",
       "content_hash": ""
     },
@@ -148,10 +148,10 @@
       "description": "Allen Institute for Neural Dynamics data schema.",
       "homepage": "",
       "source_id": "https://aind-data-schema.readthedocs.io/en/stable/",
-      "source_iri": "https://registry.sensein.io/source/999630ac-2def-4196-9545-a79c3b6a19aa",
+      "source_iri": "https://registry.sensein.io/source/d7739f33-1b38-433f-a3e1-68e250c8fbfc",
       "class_count": 406,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T00:06:43.433047+00:00",
+      "created_at": "2026-10-18T00:29:42.540312+00:00",
       "registry_version": "",
       "content_hash": "2e043d6033f0c8d81fb3620c4c098077e122fc8f3dae855ed7aa92936bac4cb1"
     },
@@ -163,10 +163,10 @@
       "description": "Metadata used to describe an asset on the server.",
       "homepage": "",
       "source_id": "https://github.com/dandi/schema",
-      "source_iri": "https://registry.sensein.io/source/fb6cc6f9-de83-48cd-a6db-1d17f937217c",
+      "source_iri": "https://registry.sensein.io/source/97304ddc-fccd-438c-9110-d8dbb5675607",
       "class_count": 32,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T00:10:03.600516+00:00",
+      "created_at": "2026-10-18T00:30:32.552665+00:00",
       "registry_version": "",
       "content_hash": "eadc75ef4074574999f6a1ebb1845492a2ed67a3644d19fa056554906b8967d6"
     },
@@ -178,10 +178,10 @@
       "description": "LinkML representation of the BBQS (Brain Behavior Quantification and Synchronization) type hierarchy, aligned to schema.org. Mirrors the browsable schema published at https://brain-bbqs.org/schema. Frontend-only source of truth \u2014 no database coupling.",
       "homepage": "",
       "source_id": "https://brain-bbqs.org/schema/bbqs",
-      "source_iri": "https://registry.sensein.io/source/2659d11b-7a53-4b56-82fc-cb02835bfc46",
+      "source_iri": "https://registry.sensein.io/source/0f403fad-5142-4f46-adfe-e6b5009ce8fe",
       "class_count": 29,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T00:10:17.030858+00:00",
+      "created_at": "2026-10-18T00:30:36.964943+00:00",
       "registry_version": "",
       "content_hash": "82083818c1386ae614c9dec3e6eeb0a5e49d71ca5ebcb0da7bdfae2057ca2334"
     },
@@ -193,10 +193,10 @@
       "description": "Brain Imaging Data Structure (BIDS) specification schema.",
       "homepage": "",
       "source_id": "https://bids-specification.readthedocs.io/en/stable/",
-      "source_iri": "https://registry.sensein.io/source/57868903-99a0-4d66-acaf-8c3304402e44",
+      "source_iri": "https://registry.sensein.io/source/cc041489-b5da-4e8c-b0c9-346535bca07d",
       "class_count": 128,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T00:10:21.764104+00:00",
+      "created_at": "2026-10-18T00:30:39.821552+00:00",
       "registry_version": "",
       "content_hash": "e1a483e9024212ea6b8c2ce3048be35f889a5cbe14fedc48de92915a01758fe6"
     },
@@ -208,10 +208,10 @@
       "description": "A body of structured information describing a DANDI dataset.",
       "homepage": "",
       "source_id": "https://github.com/dandi/schema",
-      "source_iri": "https://registry.sensein.io/source/8efd636e-9bcd-4222-972f-e967d980e18c",
+      "source_iri": "https://registry.sensein.io/source/b5d74a3f-130f-4e9c-9aed-bd14f919e306",
       "class_count": 21,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T00:11:04.129310+00:00",
+      "created_at": "2026-10-18T00:30:53.235099+00:00",
       "registry_version": "",
       "content_hash": "0b55bddaddeca48d45f3af0778f278edb09be028d7175870e13ee531a275aea6"
     },
@@ -223,10 +223,10 @@
       "description": "",
       "homepage": "",
       "source_id": "https://w3id.org/linkml/examples/personinfo",
-      "source_iri": "https://registry.sensein.io/source/d5c0484b-450b-4d01-a432-776b35911f10",
+      "source_iri": "https://registry.sensein.io/source/e3148b7a-e472-4f6d-a093-29fa32256184",
       "class_count": 1,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T00:11:11.462662+00:00",
+      "created_at": "2026-10-18T00:30:56.499792+00:00",
       "registry_version": "",
       "content_hash": "716f7e7847025045061c19c72054030d9a5e11ae39e151bc0e1b85498a9347d5"
     },
@@ -238,10 +238,10 @@
       "description": "Neurodata Without Borders (NWB) format specification.",
       "homepage": "",
       "source_id": "https://nwb-schema.readthedocs.io/en/latest/",
-      "source_iri": "https://registry.sensein.io/source/f20476ae-a32d-4a6a-9854-cd602a456dd0",
+      "source_iri": "https://registry.sensein.io/source/7b49a0d6-b283-4d20-bad1-e11ee90f0b52",
       "class_count": 53,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T00:11:12.413314+00:00",
+      "created_at": "2026-10-18T00:30:57.759510+00:00",
       "registry_version": "",
       "content_hash": "6f119e955faad616022cb2cdcde00617b3c91aada27ee99b7464146b142c3eaf"
     },
@@ -253,10 +253,10 @@
       "description": "Open Metadata Initiative for Neuroscience Data Structures.",
       "homepage": "",
       "source_id": "https://openminds.ebrains.eu/",
-      "source_iri": "https://registry.sensein.io/source/f0c05455-9e93-42ca-8a2e-81293c899d07",
+      "source_iri": "https://registry.sensein.io/source/b5ec19c8-0652-4b94-b0b9-58db183033a1",
       "class_count": 20,
       "mime_type": "application/yaml",
-      "created_at": "2026-10-18T00:11:28.904965+00:00",
+      "created_at": "2026-10-18T00:31:03.382813+00:00",
       "registry_version": "",
       "content_hash": "f41046cf3a4a7911fefc74ab052b23b3d15db0352396a8288783b497ff95ab0e"
     }
@@ -524,7 +524,7 @@
           "iri": "",
           "name": "status",
           "definition": "The access status of the item.",
-          "value_range": "b4048be9-d629-483b-9a0c-a06c9c3132c3",
+          "value_range": "d1e3860d-66de-4944-9afb-6c90936e5140",
           "units": "",
           "sources": [
             "asset",
@@ -3952,7 +3952,7 @@
           "iri": "",
           "name": "license",
           "definition": "",
-          "value_range": "f8a88bd3-6780-44ce-9412-6403912da415",
+          "value_range": "fe0188dd-dd8c-4443-ad3f-4585f908d618",
           "units": "",
           "sources": [
             "asset",
@@ -19425,7 +19425,7 @@
           "iri": "",
           "name": "license",
           "definition": "",
-          "value_range": "f8a88bd3-6780-44ce-9412-6403912da415",
+          "value_range": "fe0188dd-dd8c-4443-ad3f-4585f908d618",
           "units": "",
           "sources": [
             "asset",
@@ -43242,7 +43242,7 @@
           "iri": "",
           "name": "roleName",
           "definition": "",
-          "value_range": "71b57a49-db67-489b-bad3-36a81dc0f1bc",
+          "value_range": "d4168e4a-bdf1-4dcc-8db2-392fa4049919",
           "units": "",
           "sources": [
             "asset",
@@ -43427,7 +43427,7 @@
           "iri": "",
           "name": "roleName",
           "definition": "",
-          "value_range": "71b57a49-db67-489b-bad3-36a81dc0f1bc",
+          "value_range": "d4168e4a-bdf1-4dcc-8db2-392fa4049919",
           "units": "",
           "sources": [
             "asset",
@@ -45432,7 +45432,7 @@
           "iri": "",
           "name": "roleName",
           "definition": "",
-          "value_range": "71b57a49-db67-489b-bad3-36a81dc0f1bc",
+          "value_range": "d4168e4a-bdf1-4dcc-8db2-392fa4049919",
           "units": "",
           "sources": [
             "asset",
@@ -45618,7 +45618,7 @@
           "iri": "",
           "name": "roleName",
           "definition": "",
-          "value_range": "71b57a49-db67-489b-bad3-36a81dc0f1bc",
+          "value_range": "d4168e4a-bdf1-4dcc-8db2-392fa4049919",
           "units": "",
           "sources": [
             "asset",
@@ -48921,7 +48921,7 @@
           "iri": "",
           "name": "propertyID",
           "definition": "A commonly used identifier for the characteristic represented by the property. For example, a known prefix like DOI or a full URL.",
-          "value_range": "19794b2a-f395-42df-a655-5d2b57160315 | xsd:string",
+          "value_range": "18d5d0d0-a9a8-4049-9b18-0b8297bcece3 | xsd:string",
           "units": "",
           "sources": [
             "asset"
@@ -50292,7 +50292,7 @@
           "iri": "",
           "name": "relation",
           "definition": "Indicates how the current participant or subject is related to the other participant or subject. This relation should satisfy: Participant/Subject <relation> relatedParticipant/Subject.",
-          "value_range": "11b8ac56-f1f9-4d28-9602-4a82ea3773f0",
+          "value_range": "9eb315c7-0a01-4ae7-9bcc-c0bd012dd1e0",
           "units": "",
           "sources": [
             "asset"
@@ -50434,7 +50434,7 @@
           "iri": "",
           "name": "relation",
           "definition": "Indicates how the current participant or subject is related to the other participant or subject. This relation should satisfy: Participant/Subject <relation> relatedParticipant/Subject.",
-          "value_range": "11b8ac56-f1f9-4d28-9602-4a82ea3773f0",
+          "value_range": "9eb315c7-0a01-4ae7-9bcc-c0bd012dd1e0",
           "units": "",
           "sources": [
             "asset"
@@ -50459,7 +50459,7 @@
           "iri": "",
           "name": "resourceType",
           "definition": "The type of resource.",
-          "value_range": "c3a6e147-0f6f-4e82-b86b-db599329e8d0",
+          "value_range": "b7e195fb-9b24-4016-8873-d8cedc79bedd",
           "units": "",
           "sources": [
             "asset",
@@ -50549,7 +50549,7 @@
           "iri": "",
           "name": "relation",
           "definition": "Indicates how the resource is related to the dataset. This relation should satisfy: dandiset <relation> resource.",
-          "value_range": "6217cf1b-816a-480b-9f32-2efa4c8729cd",
+          "value_range": "f4a4b606-69a0-47d2-b679-1495c3123e1a",
           "units": "",
           "sources": [
             "dandiset"
@@ -50574,7 +50574,7 @@
           "iri": "",
           "name": "resourceType",
           "definition": "The type of resource.",
-          "value_range": "c3a6e147-0f6f-4e82-b86b-db599329e8d0",
+          "value_range": "b7e195fb-9b24-4016-8873-d8cedc79bedd",
           "units": "",
           "sources": [
             "asset",
