@@ -10,9 +10,13 @@ propose-mappings skill reads this file and asks the user to approve rows).
 
 Reads the registry.json export, not the graph, so it runs without a rebuild.
 
+Either side can be `all` (every other registered schema; `all all` = every
+pair once), and `--kind all` does classes and properties — all into one file.
+
 Usage:
     python neuro_ghost/propose_mappings.py aind bids --kind properties
     python neuro_ghost/propose_mappings.py asset bbqs --kind classes --top-k 2 --min-score 0.7
+    python neuro_ghost/propose_mappings.py aind all --kind all
 """
 from __future__ import annotations
 
@@ -56,15 +60,36 @@ def entities(registry: dict, source: str, kind: str) -> list[Entity]:
     return list(found.values())
 
 
+def schema_pairs(registry: dict, subject: str, obj: str) -> list[tuple[str, str]]:
+    """The (subject, object) schema pairs to map; either side may be "all".
+    `all all` is every pair of registered schemas, once."""
+    labels = [s["label"] for s in registry.get("sources", [])]
+    for name in (subject, obj):
+        if name != "all" and name not in labels:
+            raise ValueError(f"unknown schema {name!r}; registered: {', '.join(labels)}")
+    if subject == obj != "all":
+        raise ValueError(f"subject and object are both {subject!r}")
+    if subject == "all" and obj == "all":
+        return [(a, b) for i, a in enumerate(labels) for b in labels[i + 1:]]
+    if subject == "all":
+        return [(a, obj) for a in labels if a != obj]
+    if obj == "all":
+        return [(subject, b) for b in labels if b != subject]
+    return [(subject, obj)]
+
+
+def load_model(model_name: str):
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer(model_name)
+
+
 def propose(subjects: list[Entity], objects: list[Entity], top_k: int,
-            min_score: float, model_name: str) -> list[tuple[Entity, Entity, float]]:
+            min_score: float, model) -> list[tuple[Entity, Entity, float]]:
     """(subject, object, cosine score) for each subject's top_k objects at or
     above min_score, best first. An entity shared by both schemas (same id)
     is already one entity, so it isn't proposed as a mapping to itself."""
     if not subjects or not objects:
         return []
-    from sentence_transformers import SentenceTransformer
-    model = SentenceTransformer(model_name)
     encode = lambda es: model.encode([e.text for e in es], normalize_embeddings=True,
                                      show_progress_bar=False, batch_size=64)
     scores = encode(subjects) @ encode(objects).T
@@ -99,7 +124,7 @@ def write_mapping_file(path: Path, rows: list[tuple[Entity, Entity, float]], *,
 @click.command()
 @click.argument("subject_source")
 @click.argument("object_source")
-@click.option("--kind", type=click.Choice(["properties", "classes"]), default="properties", show_default=True)
+@click.option("--kind", type=click.Choice(["properties", "classes", "all"]), default="properties", show_default=True)
 @click.option("--top-k", default=1, show_default=True, help="Matches kept per subject entity.")
 @click.option("--min-score", default=0.6, show_default=True,
               help="Cosine cut-off (model-specific: bge models score higher overall).")
@@ -111,17 +136,25 @@ def write_mapping_file(path: Path, rows: list[tuple[Entity, Entity, float]], *,
 @click.option("--out", type=click.Path(path_type=Path), default=None,
               help="Output file. Default: mappings/<date>_embeddings_<subject>__<object>_<kind>.sssom.tsv")
 def cli(subject_source, object_source, kind, top_k, min_score, model_name, registry, author, out) -> None:
-    """Propose mappings from SUBJECT_SOURCE to OBJECT_SOURCE (source labels, e.g. aind bids)."""
+    """Propose mappings from SUBJECT_SOURCE to OBJECT_SOURCE (source labels,
+    e.g. aind bids; either may be `all`)."""
     reg = json.loads(registry.read_text())
-    subjects = entities(reg, subject_source, kind)
-    objects = entities(reg, object_source, kind)
-    if not subjects or not objects:
-        raise click.UsageError(f"no {kind} found for {subject_source!r} or {object_source!r} in {registry}")
-    rows = propose(subjects, objects, top_k, min_score, model_name)
+    try:
+        pairs = schema_pairs(reg, subject_source, object_source)
+    except ValueError as e:
+        raise click.UsageError(str(e))
+    kinds = ["classes", "properties"] if kind == "all" else [kind]
+    model = load_model(model_name)
+    rows: list = []
+    for subj, obj in pairs:
+        for k in kinds:
+            found = propose(entities(reg, subj, k), entities(reg, obj, k), top_k, min_score, model)
+            click.echo(f"  {subj} → {obj} ({k}): {len(found)}")
+            rows += found
     set_id = f"{datetime.date.today().isoformat()}_embeddings_{subject_source}__{object_source}_{kind}"
     out = out or Path("mappings") / f"{set_id}.sssom.tsv"
     write_mapping_file(out, rows, mapping_set_id=set_id, model_name=model_name, author=author)
-    click.echo(f"{len(rows)} proposed mapping(s) ({len(subjects)} × {len(objects)} {kind}) -> {out}")
+    click.echo(f"{len(rows)} proposed mapping(s) from {len(pairs)} schema pair(s) -> {out}")
 
 
 if __name__ == "__main__":

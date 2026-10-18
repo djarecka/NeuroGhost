@@ -4,23 +4,32 @@ name: Propose Mappings
 # embedding model (neuro_ghost/propose_mappings.py) and opens a PR with the
 # mapping file — every row PROPOSED, for review. Merging triggers the rebuild.
 # Manual only.
+#
+# The schema dropdowns are a fixed list (GitHub requires one, and the
+# workflow token can't edit workflow files): ADD A NEW SCHEMA'S SOURCE LABEL
+# BELOW when it's registered (labels: data/registry.json -> sources[].label).
+# "all" = every other registered schema; all + all = every pair once.
 on:
   workflow_dispatch:
     inputs:
       subject:
-        description: "Subject schema (source label, e.g. aind)"
+        description: "Subject schema"
         required: true
-        type: string
+        default: "aind"
+        type: choice
+        options: [all, aind, asset, bbqs, bids, dandiset, nwb, openminds, personinfo, schema.org]
       object:
-        description: "Object schema (source label, e.g. bids)"
+        description: "Object schema"
         required: true
-        type: string
+        default: "bids"
+        type: choice
+        options: [all, aind, asset, bbqs, bids, dandiset, nwb, openminds, personinfo, schema.org]
       kind:
         description: "What to map"
         required: true
         default: "properties"
         type: choice
-        options: [properties, classes]
+        options: [properties, classes, all]
       min_score:
         description: "Cosine cut-off"
         required: false
