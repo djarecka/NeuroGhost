@@ -25,6 +25,9 @@ land (see NOTES / upstream-PR tracking):
   * `_patch_anyof_ranges` — fills a slot's LinkML `any_of` from an `anyOf`
     union of $refs/scalars (importer can't translate it); parse_linkml reads
     it into the multivalued range, landing as several RANGE RegistryRules.
+  * `_patch_own_descriptions` — a class property with no description of its
+    own would inherit the global slot's (usually the root object's); pinned
+    per class in slot_usage, empty if the source has none.
   * `_patch_enum_definitions` — a top-level definition that IS an enum (the
     reusable `$ref`-ed idiom, e.g. dandi's RoleType) is turned into an empty
     class by the importer; re-emitted as a real LinkML enum.
@@ -57,7 +60,7 @@ from schema_automator.importers.jsonschema_import_engine import (
     JsonSchemaImportEngine, RESERVED,
 )
 from linkml_runtime.linkml_model import EnumDefinition, PermissibleValue
-from linkml_runtime.linkml_model.meta import AnonymousSlotExpression
+from linkml_runtime.linkml_model.meta import AnonymousSlotExpression, SlotDefinition
 from linkml_runtime.utils.schema_as_dict import schema_as_dict
 
 REG = "https://registry.sensein.io"
@@ -276,6 +279,43 @@ def _patch_enum_definitions(engine, sd, data: dict) -> None:
             sd.classes.pop(enum_name, None)  # drop the empty class the importer made
 
 
+def _patch_own_descriptions(engine, sd, data: dict, name: str) -> None:
+    """GAP: the importer makes one global slot per property name and gives
+    it the first description it meets — usually the root object's. A class
+    whose own property has no description (DANDI's Organization.name, which
+    only has a title) then inherits that unrelated text ("A title associated
+    with the Dandiset.") through SchemaView induction, and the same class
+    converted from two files (dandiset.json, asset.json) gets two different
+    properties — so two different classes instead of one.
+
+    Record each property's own description, empty when it has none, in its
+    class's slot_usage, so nothing is inherited from another class.
+
+    REMOVE once the importer keeps per-class property descriptions."""
+    objects = []
+    if isinstance(data.get("properties"), dict):
+        root = data.get("name") or data.get("title") or name
+        objects.append((engine._class_name(root), data["properties"]))
+    for section in ("$defs", "definitions"):
+        for key, d in (data.get(section) or {}).items():
+            if isinstance(d, dict) and isinstance(d.get("properties"), dict):
+                objects.append((engine._class_name(key), d["properties"]))
+    for cls_name, props in objects:
+        cls = sd.classes.get(cls_name)
+        if cls is None:
+            continue
+        for pname, pschema in props.items():
+            if not isinstance(pschema, dict):
+                continue
+            sname = _slot_name(pname)
+            if sname not in (cls.slots or []) and sname not in cls.slot_usage:
+                continue
+            usage = cls.slot_usage.get(sname)
+            if usage is None:
+                cls.slot_usage[sname] = usage = SlotDefinition(sname)
+            usage.description = (pschema.get("description") or "").strip()
+
+
 def _apply_registry_conventions(engine, sd, data: dict, name: str) -> None:
     """Override the importer's title-derived schema identity with the
     registry's submission name + IRI, and backfill the root-object
@@ -343,6 +383,7 @@ def convert(data: dict, name: str) -> dict:
     _patch_string_length(sd, data)   # after _patch_slot_constraints (checks pattern)
     _patch_anyof_ranges(engine, sd, data)
     _patch_enum_definitions(engine, sd, data)
+    _patch_own_descriptions(engine, sd, data, name)
     _apply_registry_conventions(engine, sd, data, name)
 
     if not sd.classes and not sd.enums:
