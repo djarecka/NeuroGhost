@@ -6,7 +6,7 @@ Source: https://github.com/NeurodataWithoutBorders/nwb-schema
 
 NWB format spec uses a custom YAML format with neurodata_types.
 We extract each neurodata_type as a SchemaClass with its datasets/attributes
-as SchemaProperty slots.
+as class attributes (bare names).
 """
 
 from __future__ import annotations
@@ -115,16 +115,13 @@ def convert() -> dict:
                     if not name:
                         continue
                     parent = ndt.get("neurodata_type_inc")
-                    attrs = extract_attributes(ndt)
-                    slot_names = []
-                    for attr_name, attr_def in attrs:
-                        key = f"{name}__{attr_name}"
-                        slots[key] = attr_def
-                        slot_names.append(key)
+                    # Class-local attributes with bare names: the same name
+                    # can mean different things on different types, which
+                    # ingest keeps apart (ingest_linkml._slot_key).
                     class_def: dict = {
                         "description": ndt.get("doc", ""),
                         "class_uri":   f"https://nwb-schema.readthedocs.io/en/latest/#{name}",
-                        "slots":       slot_names,
+                        "attributes":  dict(extract_attributes(ndt)),
                     }
                     if parent:
                         class_def["is_a"] = parent
@@ -159,7 +156,8 @@ def run(out_path: Path = OUT_PATH) -> None:
     with open(out_path, "w") as f:
         yaml.dump(schema, f, default_flow_style=False, allow_unicode=True)
     print(f"[nwb] Wrote {out_path} "
-          f"({len(schema['classes'])} classes, {len(schema['slots'])} slots)")
+          f"({len(schema['classes'])} classes, "
+          f"{sum(len(c.get('attributes') or {}) for c in schema['classes'].values())} attributes)")
 
 
 if __name__ == "__main__":

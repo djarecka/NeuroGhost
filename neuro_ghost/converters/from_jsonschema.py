@@ -297,6 +297,22 @@ def _apply_registry_conventions(engine, sd, data: dict, name: str) -> None:
         root_cls.description = data["description"].strip()
 
 
+def _normalize_descriptions(node):
+    """Join list-valued `description`s into one string, in place. Pydantic
+    emits a tuple/list when a model writes `Field(description=("a", "b"))`
+    (a stray trailing comma — aind-data-schema has one), and the importer
+    calls `.strip()` on every description."""
+    if isinstance(node, dict):
+        desc = node.get("description")
+        if isinstance(desc, (list, tuple)):
+            node["description"] = "".join(str(d) for d in desc)
+        for v in node.values():
+            _normalize_descriptions(v)
+    elif isinstance(node, list):
+        for v in node:
+            _normalize_descriptions(v)
+
+
 def convert(data: dict, name: str) -> dict:
     """
     Convert a parsed JSON Schema dict to a LinkML schema dict.
@@ -318,6 +334,7 @@ def convert(data: dict, name: str) -> dict:
     ValueError
         If the schema yields no classes.
     """
+    _normalize_descriptions(data)
     engine = JsonSchemaImportEngine()
     sd = engine.loads(data, name=name)
     # Importer-gap patches — each independently removable (see their docstrings).

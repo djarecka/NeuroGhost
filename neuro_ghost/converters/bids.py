@@ -6,9 +6,9 @@ Source: https://github.com/bids-standard/bids-specification
 
 BIDS schema is split into multiple YAML files. We ingest every object
 group so that no schema element is dropped:
-  objects/metadata.yaml   → sidecar metadata fields (→ slots on BIDSMetadata)
-  objects/columns.yaml    → data dictionary columns (→ slots on BIDSColumn)
-  objects/entities.yaml   → entities like sub, ses, task (→ slots on BIDSEntity)
+  objects/metadata.yaml   → sidecar metadata fields (→ attributes on BIDSMetadata)
+  objects/columns.yaml    → data dictionary columns (→ attributes on BIDSColumn)
+  objects/entities.yaml   → entities like sub, ses, task (→ attributes on BIDSEntity)
   objects/datatypes.yaml  → imaging datatypes (→ one SchemaClass each)
   objects/suffixes.yaml   → file suffixes (→ one SchemaClass each)
 
@@ -105,13 +105,15 @@ def convert() -> dict:
             print(f"[bids]   WARNING: {group} fetch failed — {e}")
             continue
 
-        slot_names = []
+        # Class-local attributes named by the BIDS object key itself (BIDS
+        # writes its own variants as e.g. acq_time__scans / acq_time__sessions);
+        # each group is its own class, so no group prefix is needed.
+        attributes: dict = {}
         for name, defn in (objs or {}).items():
             if not isinstance(defn, dict):
                 continue
             rng, multivalued = bids_range(defn)
-            key = f"{group}__{name}"          # namespaced to avoid cross-group clashes
-            slots[key] = {
+            attributes[name] = {
                 "description": str(defn.get("description", "") or "").strip(),
                 # anchor on the real object name so equivalent fields across
                 # groups resolve to the same IRI (and dedupe at ingest time)
@@ -119,14 +121,13 @@ def convert() -> dict:
                 "range":       rng,
                 "multivalued": multivalued,
             }
-            slot_names.append(key)
 
         classes[cls_name] = {
             "description": cls_desc,
             "class_uri":   "https://bids-specification.readthedocs.io/en/stable/",
-            "slots":       slot_names,
+            "attributes":  attributes,
         }
-        print(f"[bids]   {group}: {len(slot_names)} slots → {cls_name}")
+        print(f"[bids]   {group}: {len(attributes)} attributes → {cls_name}")
 
     # ------------------------------------------------------------------
     # Vocabulary groups: datatypes, suffixes → one class per term
@@ -154,7 +155,8 @@ def convert() -> dict:
             count += 1
         print(f"[bids]   {group}: {count} classes")
 
-    print(f"[bids]   total {len(classes)} classes, {len(slots)} slots")
+    print(f"[bids]   total {len(classes)} classes, "
+          f"{sum(len(c.get('attributes') or {}) for c in classes.values())} attributes")
 
     return {
         "id":      "https://bids-specification.readthedocs.io/en/stable/",
@@ -183,7 +185,8 @@ def run(out_path: Path = OUT_PATH) -> None:
     with open(out_path, "w") as f:
         yaml.dump(schema, f, default_flow_style=False, allow_unicode=True)
     print(f"[bids] Wrote {out_path} "
-          f"({len(schema['classes'])} classes, {len(schema['slots'])} slots)")
+          f"({len(schema['classes'])} classes, "
+          f"{sum(len(c.get('attributes') or {}) for c in schema['classes'].values())} attributes)")
 
 
 if __name__ == "__main__":

@@ -84,7 +84,10 @@ def convert() -> dict:
                         raw_name = sf["name"].replace(".schema.json","").replace(".json","")
                         cls_name = clean_name(raw_name)
                         required = set(schema.get("required") or [])
-                        slot_names = []
+                        # Class-local attributes with bare names: the same
+                        # name can mean different things in different classes,
+                        # which ingest keeps apart (ingest_linkml._slot_key).
+                        attributes: dict = {}
                         for prop, pbody in (schema.get("properties") or {}).items():
                             if prop.startswith("@") or prop.startswith("_"):
                                 continue
@@ -100,21 +103,19 @@ def convert() -> dict:
                             prop_local = re.sub(r"[^a-zA-Z0-9_]", "_", prop_local)
                             if not prop_local:
                                 continue
-                            key = f"{cls_name}__{prop_local}"
                             desc = pbody.get("description") or ""
-                            all_slots[key] = {
+                            attributes[prop_local] = {
                                 "description": desc,
                                 "slot_uri": prop if prop.startswith("http") else f"https://openminds.ebrains.eu/vocab/{prop_local}",
                                 "range":    xsd.replace("xsd:", ""),
                                 "multivalued": raw_type == "array",
                                 "required": prop in required,
                             }
-                            slot_names.append(key)
-                        if slot_names:
+                        if attributes:
                             all_classes[cls_name] = {
                                 "description": schema.get("description", f"openMINDS {raw_name}"),
                                 "class_uri":   f"https://openminds.ebrains.eu/core/{raw_name}",
-                                "slots":       slot_names,
+                                "attributes":  attributes,
                             }
                             schema_files_fetched += 1
                     except Exception as e:
@@ -133,34 +134,32 @@ def convert() -> dict:
             "Subject": {
                 "description": "A subject studied in a neuroscience experiment.",
                 "class_uri": "https://openminds.ebrains.eu/core/Subject",
-                "slots": ["subject__lookupLabel","subject__biologicalSex",
-                          "subject__species","subject__strain"],
+                "attributes": {
+                    "lookupLabel":   {"description": "Lookup label", "range": "string"},
+                    "biologicalSex": {"description": "Biological sex", "range": "string"},
+                    "species":       {"description": "Species", "range": "string"},
+                    "strain":        {"description": "Strain", "range": "string"},
+                },
             },
             "Dataset": {
                 "description": "A neuroscience dataset.",
                 "class_uri": "https://openminds.ebrains.eu/core/Dataset",
-                "slots": ["dataset__title","dataset__description",
-                          "dataset__license","dataset__digitalIdentifier"],
+                "attributes": {
+                    "title":             {"description": "Title", "range": "string", "slot_uri": "schema:name"},
+                    "description":       {"description": "Description", "range": "string", "slot_uri": "schema:description"},
+                    "license":           {"description": "License", "range": "string", "slot_uri": "schema:license"},
+                    "digitalIdentifier": {"description": "Digital identifier (DOI, etc.)", "range": "uriorcurie", "slot_uri": "schema:identifier"},
+                },
             },
             "BrainAtlas": {
                 "description": "A brain atlas reference space.",
                 "class_uri": "https://openminds.ebrains.eu/sands/BrainAtlas",
-                "slots": ["brainatlas__shortName","brainatlas__fullName",
-                          "brainatlas__ontologyIdentifier"],
+                "attributes": {
+                    "shortName":          {"description": "Short name", "range": "string"},
+                    "fullName":           {"description": "Full name", "range": "string"},
+                    "ontologyIdentifier": {"description": "Ontology term URI", "range": "uriorcurie"},
+                },
             },
-        }
-        all_slots = {
-            "subject__lookupLabel":          {"description":"Lookup label","range":"string"},
-            "subject__biologicalSex":        {"description":"Biological sex","range":"string"},
-            "subject__species":              {"description":"Species","range":"string"},
-            "subject__strain":               {"description":"Strain","range":"string"},
-            "dataset__title":                {"description":"Title","range":"string","slot_uri":"schema:name"},
-            "dataset__description":          {"description":"Description","range":"string","slot_uri":"schema:description"},
-            "dataset__license":              {"description":"License","range":"string","slot_uri":"schema:license"},
-            "dataset__digitalIdentifier":    {"description":"Digital identifier (DOI, etc.)","range":"uriorcurie","slot_uri":"schema:identifier"},
-            "brainatlas__shortName":         {"description":"Short name","range":"string"},
-            "brainatlas__fullName":          {"description":"Full name","range":"string"},
-            "brainatlas__ontologyIdentifier":{"description":"Ontology term URI","range":"uriorcurie"},
         }
 
     return {
@@ -189,7 +188,8 @@ def run(out_path: Path = OUT_PATH) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
         yaml.dump(schema, f, default_flow_style=False, allow_unicode=True)
-    print(f"[openminds] Wrote {out_path} ({len(schema['classes'])} classes, {len(schema['slots'])} slots)")
+    n_attrs = sum(len(c.get("attributes") or {}) for c in schema["classes"].values())
+    print(f"[openminds] Wrote {out_path} ({len(schema['classes'])} classes, {n_attrs} attributes)")
 
 
 if __name__ == "__main__":
