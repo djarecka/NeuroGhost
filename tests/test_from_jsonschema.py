@@ -195,3 +195,32 @@ def test_format_maps_to_linkml_type_or_warns(tmp_path, capsys):
     # unmappable format falls back to string, with a warning naming it.
     assert _range_vals(rules, properties["contact"]) == {"xsd:string"}
     assert "email" in capsys.readouterr().err
+
+
+def test_property_without_description_does_not_inherit_another_class_one(tmp_path):
+    """
+    The importer makes one global slot per property name, described by the
+    first occurrence — usually the root object's. A class whose own property
+    has no description (DANDI's Organization.name, title only) must not
+    inherit that text, or the same Organization converted from two files
+    (dandiset.json, asset.json) becomes two different classes.
+    """
+    organization = {"type": "object", "title": "Organization",
+                    "properties": {"name": {"type": "string", "title": "Name"}}}
+
+    def schema(root, root_desc):
+        return {"title": root, "type": "object",
+                "properties": {"name": {"type": "string", "description": root_desc},
+                               "org": {"$ref": "#/$defs/Organization"}},
+                "$defs": {"Organization": organization}}
+
+    _, (props_d, classes_d, *_) = _convert_and_build(
+        schema("Dandiset", "A title associated with the Dandiset."), "dandiset", tmp_path)
+    _, (props_a, classes_a, *_) = _convert_and_build(
+        schema("Asset", "The name of the item."), "asset", tmp_path)
+
+    org_props_d = [p for p in props_d.values() if p.id in classes_d["Organization"].properties]
+    assert [p.description for p in org_props_d] == [""]
+    assert classes_d["Organization"].sha256_hash == classes_a["Organization"].sha256_hash
+    # The root classes keep their own, different, descriptions of `name`.
+    assert classes_d["Dandiset"].sha256_hash != classes_a["Asset"].sha256_hash

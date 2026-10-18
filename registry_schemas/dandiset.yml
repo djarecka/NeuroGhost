@@ -126,12 +126,14 @@ slots:
     required: true
     pattern: ^([A-Z][-A-Z]*|[a-z][-a-z]*):\d{6}(/(draft|\d+\.\d+\.\d+))$
   schemaKey:
+    description: ''
     required: true
   status:
     description: The access status of the item.
     range: AccessType
     required: true
   contactPoint:
+    description: Contact for the organization
     range: ContactPoint
     multivalued: true
   description:
@@ -155,35 +157,48 @@ slots:
     range: uri
     pattern: ^[\s\S]{1,1000}$
   numberOfBytes:
+    description: ''
     range: integer
     required: true
   numberOfFiles:
+    description: ''
     range: integer
     required: true
   numberOfSubjects:
+    description: ''
     range: integer
   numberOfSamples:
+    description: ''
     range: integer
   numberOfCells:
+    description: ''
     range: integer
   dataStandard:
+    description: ''
     range: StandardsType
     multivalued: true
   approach:
+    description: ''
     range: ApproachType
     multivalued: true
   measurementTechnique:
+    description: ''
     range: MeasurementTechniqueType
     multivalued: true
   variableMeasured:
+    description: ''
     multivalued: true
   species:
+    description: ''
     range: SpeciesType
     multivalued: true
-  email: {}
+  email:
+    description: ''
   dxdate:
+    description: Dates of diagnosis
     multivalued: true
   roleName:
+    description: Role(s) of the contributor. Multiple roles can be selected.
     range: RoleType
     multivalued: true
   includeInCitation:
@@ -193,15 +208,20 @@ slots:
   awardNumber:
     description: Identifier associated with a sponsored or gift award.
   affiliation:
+    description: An organization that this person is affiliated with.
     range: Affiliation
     multivalued: true
   startDate:
+    description: ''
     range: datetime
   endDate:
+    description: ''
     range: datetime
   wasAssociatedWith:
+    description: ''
     multivalued: true
   used:
+    description: A listing of equipment used for the activity.
     range: Equipment
     multivalued: true
   repository:
@@ -217,52 +237,73 @@ slots:
     description: The type of resource.
     range: ResourceType
   version:
+    description: ''
     required: true
-  schemaVersion: {}
+  schemaVersion:
+    description: ''
   contributor:
+    description: People or Organizations that have contributed to this Dandiset.
     required: true
     multivalued: true
   about:
+    description: The subject matter of the content, such as disorders, brain anatomy.
     multivalued: true
   studyTarget:
+    description: Objectives or specific questions of the study.
     multivalued: true
   license:
+    description: Licenses associated with the item. DANDI only supports a subset of
+      Creative Commons Licenses (creativecommons.org) applicable to datasets.
     range: LicenseType
     required: true
     multivalued: true
   protocol:
+    description: A list of persistent URLs describing the protocol (e.g. protocols.io,
+      or other DOIs).
     multivalued: true
   ethicsApproval:
+    description: ''
     range: EthicsApproval
     multivalued: true
   keywords:
+    description: Keywords used to describe this content.
     multivalued: true
   acknowledgement:
     description: Any acknowledgments not covered by contributors or external resources.
   access:
+    description: ''
     range: AccessRequirements
     multivalued: true
   relatedResource:
+    description: ''
     range: Resource
     multivalued: true
   wasGeneratedBy:
+    description: Project(s) that generated this Dandiset.
     range: Project
     multivalued: true
   sameAs:
+    description: Known DANDI URLs of the Dandiset at other DANDI instances.
     multivalued: true
   dateCreated:
+    description: ''
     range: datetime
   dateModified:
+    description: ''
     range: datetime
   citation:
+    description: ''
     required: true
   assetsSummary:
+    description: ''
     range: AssetsSummary
     required: true
   manifestLocation:
+    description: ''
     required: true
     multivalued: true
   doi:
+    description: ''
     pattern: ^(10\.\d{4,}/[a-z][-a-z]*\.\d{6}/\d+\.\d+\.\d+|)$
   publishedBy:
     description: The URL should contain the provenance of the publishing process.
@@ -270,6 +311,7 @@ slots:
     - range: string
     - range: PublishActivity
   datePublished:
+    description: ''
     range: datetime
   releaseNotes:
     description: The description of the release
@@ -287,6 +329,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       status:
         description: The access status of the item.
@@ -310,6 +353,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: Use an ror.org identifier for institutions.
@@ -327,12 +371,15 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: Identifier for an agent.
       name:
+        description: ''
         required: true
-      url: {}
+      url:
+        description: ''
   Anatomy:
     description: UBERON or other identifier for anatomical part studied
     slots:
@@ -344,6 +391,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: The identifier can be any url or a compact URI, preferably supported
@@ -361,6 +409,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: The identifier can be any url or a compact URI, preferably supported
@@ -386,31 +435,42 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       numberOfBytes:
+        description: ''
         range: integer
         required: true
       numberOfFiles:
+        description: ''
         range: integer
         required: true
       numberOfSubjects:
+        description: ''
         range: integer
       numberOfSamples:
+        description: ''
         range: integer
       numberOfCells:
+        description: ''
         range: integer
       dataStandard:
+        description: ''
         range: StandardsType
         multivalued: true
       approach:
+        description: ''
         range: ApproachType
         multivalued: true
       measurementTechnique:
+        description: ''
         range: MeasurementTechniqueType
         multivalued: true
       variableMeasured:
+        description: ''
         multivalued: true
       species:
+        description: ''
         range: SpeciesType
         multivalued: true
   ContactPoint:
@@ -423,6 +483,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       email:
         description: Email address of contact.
@@ -440,6 +501,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: The identifier can be any url or a compact URI, preferably supported
@@ -447,6 +509,7 @@ classes:
       name:
         description: The name of the item.
       dxdate:
+        description: Dates of diagnosis
         multivalued: true
   Equipment:
     slots:
@@ -459,8 +522,10 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
-      identifier: {}
+      identifier:
+        description: ''
       name:
         description: A name for the equipment.
         required: true
@@ -477,6 +542,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: Approved Protocol identifier, often a number or alphanumeric
@@ -496,6 +562,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: The identifier can be any url or a compact URI, preferably supported
@@ -513,6 +580,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: The identifier can be any url or a compact URI, preferably supported
@@ -535,13 +603,18 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: Use an ror.org identifier for institutions.
-      name: {}
-      email: {}
-      url: {}
+      name:
+        description: ''
+      email:
+        description: ''
+      url:
+        description: ''
       roleName:
+        description: Role(s) of the contributor. Multiple roles can be selected.
         range: RoleType
         multivalued: true
       includeInCitation:
@@ -551,6 +624,7 @@ classes:
       awardNumber:
         description: Identifier associated with a sponsored or gift award.
       contactPoint:
+        description: Contact for the organization
         range: ContactPoint
         multivalued: true
   Person:
@@ -569,15 +643,19 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: An ORCID (orcid.org) identifier for an individual.
       name:
         description: 'Use the format: familyname, given names ...'
         required: true
-      email: {}
-      url: {}
+      email:
+        description: ''
+      url:
+        description: ''
       roleName:
+        description: Role(s) of the contributor. Multiple roles can be selected.
         range: RoleType
         multivalued: true
       includeInCitation:
@@ -587,6 +665,7 @@ classes:
       awardNumber:
         description: Identifier associated with a sponsored or gift award.
       affiliation:
+        description: An organization that this person is affiliated with.
         range: Affiliation
         multivalued: true
   Project:
@@ -604,18 +683,24 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
-      identifier: {}
+      identifier:
+        description: ''
       name:
         description: The name of the project that generated this Dandiset or asset.
         required: true
       description:
         description: A brief description of the project.
-      startDate: {}
-      endDate: {}
+      startDate:
+        description: ''
+      endDate:
+        description: ''
       wasAssociatedWith:
+        description: ''
         multivalued: true
       used:
+        description: A listing of equipment used for the activity.
         range: Equipment
         multivalued: true
   PublishActivity:
@@ -633,20 +718,26 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
-      identifier: {}
+      identifier:
+        description: ''
       name:
         description: The name of the activity.
         required: true
       description:
         description: The description of the activity.
       startDate:
+        description: ''
         range: datetime
       endDate:
+        description: ''
         range: datetime
       wasAssociatedWith:
+        description: ''
         multivalued: true
       used:
+        description: A listing of equipment used for the activity.
         range: Equipment
         multivalued: true
   Resource:
@@ -663,10 +754,14 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
-      identifier: {}
-      name: {}
-      url: {}
+      identifier:
+        description: ''
+      name:
+        description: ''
+      url:
+        description: ''
       repository:
         description: Name of the repository in which the resource is housed.
       relation:
@@ -689,12 +784,15 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: RRID of the software from scicrunch.org.
       name:
+        description: ''
         required: true
       version:
+        description: ''
         required: true
       url:
         description: Web page for the software.
@@ -709,6 +807,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: The identifier can be any url or a compact URI, preferably supported
@@ -726,6 +825,7 @@ classes:
       id:
         description: Uniform resource identifier
       schemaKey:
+        description: ''
         required: true
       identifier:
         description: The identifier can be any url or a compact URI, preferably supported
@@ -771,8 +871,10 @@ classes:
         required: true
         pattern: ^([A-Z][-A-Z]*|[a-z][-a-z]*):\d{6}(/(draft|\d+\.\d+\.\d+))$
       schemaKey:
+        description: ''
         required: true
-      schemaVersion: {}
+      schemaVersion:
+        description: ''
       name:
         description: A title associated with the Dandiset.
         required: true
@@ -782,26 +884,36 @@ classes:
         required: true
         pattern: ^[\s\S]{0,10000}$
       contributor:
+        description: People or Organizations that have contributed to this Dandiset.
         required: true
         multivalued: true
       about:
+        description: The subject matter of the content, such as disorders, brain anatomy.
         multivalued: true
       studyTarget:
+        description: Objectives or specific questions of the study.
         multivalued: true
       license:
+        description: Licenses associated with the item. DANDI only supports a subset
+          of Creative Commons Licenses (creativecommons.org) applicable to datasets.
         range: LicenseType
         required: true
         multivalued: true
       protocol:
+        description: A list of persistent URLs describing the protocol (e.g. protocols.io,
+          or other DOIs).
         multivalued: true
       ethicsApproval:
+        description: ''
         range: EthicsApproval
         multivalued: true
       keywords:
+        description: Keywords used to describe this content.
         multivalued: true
       acknowledgement:
         description: Any acknowledgments not covered by contributors or external resources.
       access:
+        description: ''
         range: AccessRequirements
         multivalued: true
       url:
@@ -813,9 +925,11 @@ classes:
         range: uri
         pattern: ^[\s\S]{1,1000}$
       relatedResource:
+        description: ''
         range: Resource
         multivalued: true
       wasGeneratedBy:
+        description: Project(s) that generated this Dandiset.
         range: Project
         multivalued: true
       identifier:
@@ -824,22 +938,30 @@ classes:
         required: true
         pattern: ^RRID:.*
       sameAs:
+        description: Known DANDI URLs of the Dandiset at other DANDI instances.
         multivalued: true
       dateCreated:
+        description: ''
         range: datetime
       dateModified:
+        description: ''
         range: datetime
       citation:
+        description: ''
         required: true
       assetsSummary:
+        description: ''
         range: AssetsSummary
         required: true
       manifestLocation:
+        description: ''
         required: true
         multivalued: true
       version:
+        description: ''
         required: true
       doi:
+        description: ''
         pattern: ^(10\.\d{4,}/[a-z][-a-z]*\.\d{6}/\d+\.\d+\.\d+|)$
       publishedBy:
         description: The URL should contain the provenance of the publishing process.
@@ -847,6 +969,7 @@ classes:
         - range: string
         - range: PublishActivity
       datePublished:
+        description: ''
         range: datetime
       releaseNotes:
         description: The description of the release
