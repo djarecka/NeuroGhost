@@ -47,15 +47,20 @@ header{height:52px;padding:0 20px;border-bottom:1px solid var(--border);
   background:linear-gradient(135deg,var(--teal),var(--purple));
   display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:11px;color:#0a1017;flex-shrink:0;}
 .brand-name{font-size:14px;font-weight:600;}
-.tab-bar{display:flex;gap:2px;flex:1;}
+.tab-bar{display:flex;gap:2px;flex:1;min-width:0;
+  /* Never cut tabs off: if they still don't fit (see the media queries
+     below), the row scrolls sideways. */
+  overflow-x:auto;scrollbar-width:none;}
+.tab-bar::-webkit-scrollbar{display:none;}
 .tab{background:none;border:none;color:var(--muted);padding:7px 14px;cursor:pointer;
   font-size:12.5px;font-family:var(--sans);font-weight:500;border-radius:6px;
-  display:inline-flex;align-items:center;gap:7px;transition:all .15s;}
+  display:inline-flex;align-items:center;gap:7px;transition:all .15s;
+  flex-shrink:0;white-space:nowrap;}
 .tab svg{width:13px;height:13px;flex-shrink:0;}
 .tab:hover{color:var(--text-dim);background:var(--surface);}
 .tab.active{color:var(--teal);background:var(--teal-soft);}
 #status-bar{margin-left:auto;color:var(--muted);font-size:11px;font-family:var(--mono);
-  display:flex;align-items:center;gap:6px;white-space:nowrap;}
+  display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--green);
   box-shadow:0 0 0 3px rgba(52,211,153,.15);}
 #theme-toggle{margin-left:12px;flex-shrink:0;background:none;border:none;
@@ -67,6 +72,18 @@ header{height:52px;padding:0 20px;border-bottom:1px solid var(--border);
 #theme-toggle .theme-icon-moon{display:none;}
 :root[data-theme="light"] #theme-toggle .theme-icon-sun{display:none;}
 :root[data-theme="light"] #theme-toggle .theme-icon-moon{display:inline;}
+/* Narrow windows: compact the header in steps, so every tab stays reachable
+   (the header keeps its one-row height — .view's height assumes 52px). Tab
+   names and the status line remain as tooltips (title, set in JS). */
+@media (max-width:1500px){ #status-text{display:none;} }
+@media (max-width:1100px){
+  .tab{font-size:0;gap:0;padding:8px 10px;}     /* icons only */
+  .tab svg{width:15px;height:15px;}
+}
+@media (max-width:760px){
+  .brand-name{display:none;}
+  header{gap:10px;padding:0 12px;}
+}
 
 /* ── View shell ── */
 #tab-desc{height:44px;box-sizing:border-box;padding:6px 20px;
@@ -1593,6 +1610,22 @@ async function initSources() {
   });
 }
 
+// Tab names as tooltips/labels, for narrow windows where only icons show.
+document.querySelectorAll('.tab').forEach(btn => {
+  const name = btn.textContent.trim();
+  if (!btn.title) btn.title = name;
+  btn.setAttribute('aria-label', name);
+});
+// When the tab row overflows (very narrow windows), let a plain mouse wheel
+// scroll it sideways — trackpads and touch scroll it natively.
+document.querySelector('.tab-bar').addEventListener('wheel', e => {
+  const bar = e.currentTarget;
+  if (bar.scrollWidth > bar.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+    bar.scrollLeft += e.deltaY;
+    e.preventDefault();
+  }
+}, { passive: false });
+
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
     const target = btn.dataset.view;
@@ -1632,8 +1665,9 @@ registryPromise.then(d => {
   const ver  = d.registry_version ? 'v' + d.registry_version : '';
   const cls  = (d.classes||[]).length;
   const srcs = (d.sources||[]).length;
-  document.getElementById('status-text').textContent =
-    `registry ${ver} · ${cls} classes · ${srcs} schemas`;
+  const status = `registry ${ver} · ${cls} classes · ${srcs} schemas`;
+  document.getElementById('status-text').textContent = status;
+  document.getElementById('status-bar').title = status;   // the text hides on narrow windows
 });
 
 // ────────────────────────────────────────────────────────
