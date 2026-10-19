@@ -35,10 +35,14 @@ USAGE
 from __future__ import annotations
 
 import sys
+import tempfile
+from pathlib import Path
 
 import click
 from linkml.linter.linter import Linter
 from linkml_runtime.utils.schemaview import SchemaView
+
+from import_resolver import resolve_external_imports
 
 
 def validate_metamodel(schema_path: str) -> list[str]:
@@ -75,21 +79,29 @@ def validate_references(schema_path: str) -> list[str]:
 @click.argument("schema_path", type=click.Path(exists=True))
 def cli(schema_path: str) -> None:
     """Validate SCHEMA_PATH is a well-formed, internally-consistent LinkML schema."""
-    metamodel_errors = validate_metamodel(schema_path)
+    # A schema may import sibling schemas that aren't in registry_schemas/
+    # (declared via the imports_source annotation — see import_resolver.py).
+    # Fetch them first, exactly as ingest does, and validate that copy.
+    with tempfile.TemporaryDirectory() as work:
+        _validate(str(resolve_external_imports(Path(schema_path), Path(work))), schema_path)
+
+
+def _validate(resolved_path: str, schema_path: str) -> None:
+    metamodel_errors = validate_metamodel(resolved_path)
     if metamodel_errors:
         click.echo(f"FAILED metamodel validation for {schema_path}:")
         for err in metamodel_errors:
             click.echo(f"  - {err}")
         sys.exit(1)
 
-    reference_errors = validate_references(schema_path)
+    reference_errors = validate_references(resolved_path)
     if reference_errors:
         click.echo(f"FAILED reference validation for {schema_path}:")
         for err in reference_errors:
             click.echo(f"  - {err}")
         sys.exit(1)
 
-    sv = SchemaView(schema_path)
+    sv = SchemaView(resolved_path)
     click.echo(
         f"Valid LinkML schema: {schema_path} "
         f"({len(sv.all_classes())} classes, {len(sv.all_slots())} slots)"
