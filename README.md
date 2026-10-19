@@ -29,7 +29,7 @@ Registered today: **AIND, BIDS, NWB, DANDI** (asset + dandiset), **openMINDS, BB
 
 **With an AI assistant** (Claude Code, in a clone of this repo) — ask, e.g., *"add my lab's schema"*. The [`ingest-schema`](.claude/skills/ingest-schema/SKILL.md) skill:
 - takes LinkML, JSON Schema, Pydantic models, or a looser description (spreadsheet, data dictionary) that it drafts into LinkML with you;
-- runs the same checks as the workflow, and **previews** what the schema adds — what's already in the registry (and will be shared), what shares a name but differs, what's new, what lacks descriptions (`python neuro_ghost/preview_schema.py <schema>`);
+- runs the same checks as the workflow, and **previews** what the schema adds — what's already in the registry (and will be shared), what shares a name but differs, what's new, what lacks descriptions;
 - handles schemas that **import** others (it pins them with an `imports_source` annotation — see BICAN's in `registry_schemas/`) and the **bundle** they belong to;
 - opens the PR for you, after asking. Use it for large schemas, which the website can't send.
 
@@ -41,7 +41,7 @@ Mappings live in [`mappings/`](mappings/README.md) as **mapping sets** — an SS
 
 - **Free model, in CI** — Actions → **Propose Mappings** → pick a subject and an object schema (either can be *all*) and properties, classes or *all*. It opens a PR where every row is `PROPOSED`, scored by a local embedding model.
 - **Your own model** — the [`propose-mappings`](.claude/skills/propose-mappings/SKILL.md) skill: your model judges candidates, **you approve each row**, and it opens a PR containing only what you approved, under your GitHub login. Its **review mode** does the same for an existing file, e.g. a *Propose Mappings* PR.
-- **By hand** — edit a file and open a PR (`python neuro_ghost/mappings.py validate mappings/<file>` checks it).
+- **By hand** — write or edit a mapping set and open a PR; the *Mapping Check* validates it (to check it locally first, see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
 To **review** proposed mappings, set a row's `review_status` to `ACCEPTED` / `REJECTED` and `reviewer_id` to your GitHub login. The **Mapping Check** on the PR verifies the file, that every reference exists, and that each new review was made by an author of the PR. Merging rebuilds the registry, and the mappings appear on the website.
 
@@ -56,7 +56,7 @@ External schemas (BIDS, NWB, AIND, openMINDS, BBQS) are **not** updated automati
 ## Use it from tools
 
 - **Data** — the whole registry is open JSON: [`data/registry.json`](data/registry.json) (classes, properties with their per-class rules, mappings, sources, bundles), with every past version in `data/versions/` and a changelog in `data/provenance.json`.
-- **MCP server** — lets an AI assistant (Claude, Cursor, …) search classes, read alignments, diff schemas and translate records: `python neuro_ghost/mcp_server.py` (stdio), or `MCP_TRANSPORT=sse` for HTTP. Configuration example in the module's docstring.
+- **MCP server** — lets an AI assistant (Claude, Cursor, …) search classes, read alignments, diff schemas and translate records; run it from a clone of the repo (see [CONTRIBUTING.md](CONTRIBUTING.md#mcp-server)).
 
 ---
 
@@ -71,37 +71,6 @@ More detail: [`docs/ingestion.md`](docs/ingestion.md), [`docs/model.md`](docs/mo
 
 ---
 
-## Running locally
-
-```bash
-git clone https://github.com/sensein/NeuroGhost.git
-cd NeuroGhost
-pip install -r requirements.txt
-python neuro_ghost/pipeline.py --fresh --skip-converters   # rebuild the registry from registry_schemas/ (+ mappings/)
-python -m http.server 8000                                 # then open http://localhost:8000
-```
-
-`pipeline.py` options: `--fresh` (start from an empty graph), `--skip-converters` (don't download external schemas), `--schemas FILE`, `--bump major|minor|patch`, `--agent TEXT`.
-
-Inspect a single schema without rebuilding — `ingest.py` takes LinkML or JSON Schema:
-
-```bash
-python neuro_ghost/ingest.py --dry-run --verbose-readable registry_schemas/bbqs.yml
-python neuro_ghost/preview_schema.py registry_schemas/bbqs.yml     # what it shares with the registry
-```
-
-Propose mappings locally (needs `pip install sentence-transformers`, which isn't in `requirements.txt`):
-
-```bash
-python neuro_ghost/propose_mappings.py aind bids --kind classes    # writes mappings/<set>.sssom.tsv + .yml
-```
-
-Tests: `pytest`.
-
-**Stack:** [LinkML](https://linkml.io/) (schemas), [LadybugDB](https://ladybugdb.com/) (embedded graph DB used during the build), a static one-file website on GitHub Pages, GitHub Actions for submissions, rebuilds and mapping proposals, and [sentence-transformers](https://sbert.net/) (`all-MiniLM-L6-v2`) for proposing mappings.
-
----
-
 ## Contributing
 
 **We're looking for suggestions and feedback.** NeuroGhost is early, and the most useful contributions right now are ideas: schemas you'd like to see, terms that should (or shouldn't) be matched, things on the website that are confusing or missing, workflows that don't fit how you work. [Open an issue](https://github.com/sensein/NeuroGhost/issues/new) — or start a discussion in one — with anything, however small.
@@ -111,14 +80,13 @@ Ways to contribute:
 - **Add a schema** — your lab's, or one you use: see [Add a schema](#add-a-schema).
 - **Propose or review mappings** — which terms mean the same thing across schemas: see [Map terms across schemas](#map-terms-across-schemas).
 - **Review upstream updates** — check a *Fetch External Schemas* PR: see [Upstream updates](#upstream-updates).
-- **Improve the code or the website** — set up as in [Running locally](#running-locally), run `pytest`, and open a PR.
+- **Improve the code or the website** — see **[CONTRIBUTING.md](CONTRIBUTING.md)** for setting up, rebuilding the registry locally, tests, and notes on the meta-model and the website.
 
 How changes land:
 
 - **Everything goes through a pull request** to `main` and is reviewed before it's merged — schemas, mappings and code alike, including upstream updates and AI-proposed mappings (a person approves each mapping; `mapping_tool` records the model).
 - **`data/` is generated, never edited by hand** — the rebuild after each merge writes it, so PRs carry only schema, mapping or code changes.
 - **Mapping reviews are made in your own name** — the *Mapping Check* rejects an accept/reject whose `reviewer_id` isn't an author of the PR.
-- **Meta-model changes need extra care** — `meta_model.yaml` defines identity and hashing for the whole registry. After editing it, regenerate and commit `./scripts/gen_models.sh` and `python scripts/gen_metamodel_json.py` (CI checks they're in sync), and explain the change in the PR.
-- **Website changes** — `index.html` is the whole site; test it served locally with real data and click through the tabs you touched.
+- **Meta-model changes need extra care** — `meta_model.yaml` defines identity and hashing for the whole registry; explain the change in the PR (details in [CONTRIBUTING.md](CONTRIBUTING.md#meta-model)).
 
 **License:** CC0-1.0 — public domain.
