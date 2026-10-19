@@ -1,0 +1,6 @@
+bundle_label: bican
+bundle_title: BICAN Data Models
+bundle_homepage: https://brain-bican.github.io/models/
+bundle_publisher: BRAIN Initiative Cell Atlas Network (BICAN)
+bundle_license: MIT
+source_id: https://github.com/brain-bican/models/blob/0117faa707d17923673bc76a8fee37e0e6973d9b/linkml-schema/anatomical_structure.yaml

@@ -18,13 +18,13 @@ on:
         required: true
         default: "aind"
         type: choice
-        options: [all, aind, asset, bbqs, bids, dandiset, nwb, openminds, personinfo, schema.org]
+        options: [all, aind, anatomical-structure-schema, asset, bbqs, bids, dandiset, nwb, openminds, personinfo, schema.org]
       object:
         description: "Object schema"
         required: true
         default: "bids"
         type: choice
-        options: [all, aind, asset, bbqs, bids, dandiset, nwb, openminds, personinfo, schema.org]
+        options: [all, aind, anatomical-structure-schema, asset, bbqs, bids, dandiset, nwb, openminds, personinfo, schema.org]
       kind:
         description: "What to map"
         required: true
