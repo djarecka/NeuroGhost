@@ -34,6 +34,8 @@
 
 No local installation needed.
 
+**With an AI assistant (Claude Code):** clone the repo and ask, e.g., *"add my lab's schema"*. The `ingest-schema` skill (`.claude/skills/`) takes LinkML, JSON Schema, Pydantic models, or a looser description (spreadsheet, data dictionary), runs the same checks locally, previews what the schema adds and what already exists in the registry (`neuro_ghost/preview_schema.py`), and opens the PR for you — useful for large schemas the website can't send. The `propose-mappings` skill then maps it to other schemas (see [`mappings/`](mappings/README.md)).
+
 ---
 
 ## Running locally
