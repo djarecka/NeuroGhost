@@ -3,8 +3,8 @@ propose_mappings.py — Candidate mappings between two schemas, from embeddings
 =============================================================================
 Embeds every class or property of a subject schema and an object schema
 ("name: definition", free local sentence-transformers model) and writes each
-subject entity's best object matches as a PROPOSED mapping file
-(mappings/*.sssom.tsv, see mappings.py). Nothing here decides what's right —
+subject entity's best object matches as a PROPOSED mapping set
+(mappings/<set>.sssom.tsv + .sssom.yml metadata, see mappings.py). Nothing here decides what's right —
 scores are evidence for a reviewer, a person, or a stronger model (the
 propose-mappings skill reads this file and asks the user to approve rows).
 
@@ -28,6 +28,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import click
+
+from mappings import metadata_path
 
 DEFAULT_MODEL = "all-MiniLM-L6-v2"
 
@@ -110,21 +112,23 @@ def propose(subjects: list[Entity], objects: list[Entity], top_k: int,
 
 def write_mapping_file(path: Path, rows: list[tuple[Entity, Entity, float]], *,
                        mapping_set_id: str, model_name: str, author: str) -> None:
-    header = {
+    """Write the mapping table (path, .sssom.tsv) and its metadata file
+    (.sssom.yml next to it) — see mappings.py for the format."""
+    meta = {
         "mapping_set_id": mapping_set_id,
         "mapping_date": datetime.date.today().isoformat(),
         "mapping_tool": f"embeddings/{model_name}",
         "mapping_justification": "semapv:SemanticSimilarityThresholdMatching",
         "author_id": author,
     }
-    lines = [f"# {k}: {v}" for k, v in header.items()]
-    lines.append("\t".join(["subject_id", "predicate_id", "object_id", "confidence",
-                            "review_status", "reviewer_id", "comment"]))
+    lines = ["\t".join(["subject_id", "predicate_id", "object_id", "confidence",
+                        "review_status", "reviewer_id", "comment"])]
     for s, o, score in rows:
         lines.append("\t".join([s.ref, "skos:closeMatch", o.ref, f"{score:.3f}",
                                 "PROPOSED", "", ""]))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    metadata_path(path).write_text("".join(f"{k}: {v}\n" for k, v in meta.items()), encoding="utf-8")
 
 
 @click.command()

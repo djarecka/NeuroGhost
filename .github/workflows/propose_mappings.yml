@@ -2,7 +2,8 @@ name: Propose Mappings
 
 # Proposes mappings between two registered schemas with the free local
 # embedding model (neuro_ghost/propose_mappings.py) and opens a PR with the
-# mapping file — every row PROPOSED, for review. Merging triggers the rebuild.
+# mapping set (.sssom.tsv table + .sssom.yml metadata) — every row PROPOSED,
+# for review. Merging triggers the rebuild.
 # Manual only.
 #
 # The schema dropdowns are a fixed list (GitHub requires one, and the
@@ -97,7 +98,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
-          git add "$OUT"
+          git add "$OUT" "${OUT%.tsv}.yml"   # the table and its metadata file
           git commit -m "chore(mappings): propose $(basename "$OUT")"
           git push -u origin "$BRANCH"
           N=$(grep -cv '^#' "$OUT"); N=$((N - 1))
